@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { videos, banners } from '../data/mockData';
-import VideoCard from './VideoCard';
+import VideoCard from '../components/VideoCard';
 import './Home.css';
 
 function Home() {
