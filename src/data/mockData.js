@@ -1,3 +1,10 @@
+// 轮播图数据
+export const banners = [
+  { id: 1, title: '本周推荐：英雄联盟高端局集锦', image: 'https://placehold.co/640x360/cccccc/666666?text=' },
+  { id: 2, title: '新游速递：黑神话悟空全 Boss 攻略', image: 'https://placehold.co/640x360/cccccc/666666?text=' },
+  { id: 3, title: '经典回顾：暗黑 2 二十年纪念', image: 'https://placehold.co/640x360/cccccc/666666?text=' },
+];
+
 // 游戏数据
 export const games = [
   { id: 'albion', name: '阿尔比恩', letter: 'A' },
@@ -50,7 +57,7 @@ export const videos = [
     game: 'lol',
     character: 'yasuo',
     type: 'attack',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+1',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '05:32',
     views: 12340
   },
@@ -60,7 +67,7 @@ export const videos = [
     game: 'lol',
     character: 'ahri',
     type: 'movement',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+2',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '08:15',
     views: 8920
   },
@@ -70,7 +77,7 @@ export const videos = [
     game: 'lol',
     character: 'zed',
     type: 'combo',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+3',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '06:48',
     views: 15670
   },
@@ -80,7 +87,7 @@ export const videos = [
     game: 'lol',
     character: 'lux',
     type: 'skill',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+4',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '10:22',
     views: 6540
   },
@@ -90,7 +97,7 @@ export const videos = [
     game: 'lol',
     character: 'thresh',
     type: 'skill',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+5',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '07:30',
     views: 9230
   },
@@ -100,7 +107,7 @@ export const videos = [
     game: 'albion',
     character: 'sword',
     type: 'pvp',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+6',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '12:45',
     views: 11200
   },
@@ -110,7 +117,7 @@ export const videos = [
     game: 'wow',
     character: 'warrior',
     type: 'combo',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+7',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '09:18',
     views: 7890
   },
@@ -120,7 +127,7 @@ export const videos = [
     game: 'blackmyth',
     character: 'wukong',
     type: 'boss',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+8',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '15:30',
     views: 25600
   },
@@ -130,7 +137,7 @@ export const videos = [
     game: 'overwatch',
     character: 'tracer',
     type: 'movement',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+9',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '06:12',
     views: 8340
   },
@@ -140,7 +147,7 @@ export const videos = [
     game: 'overwatch',
     character: 'mercy',
     type: 'skill',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+10',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '08:45',
     views: 5670
   },
@@ -150,17 +157,17 @@ export const videos = [
     game: 'elden',
     character: 'warrior',
     type: 'dodge',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+11',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '11:20',
     views: 18900
   },
   {
     id: 12,
-    title: '暗黑 4 野蛮人build 推荐',
+    title: '暗黑 4 野蛮人 build 推荐',
     game: 'd4',
     character: 'barbarian',
     type: 'build',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+12',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '14:55',
     views: 13400
   },
@@ -170,7 +177,7 @@ export const videos = [
     game: 'baldur',
     character: 'wizard',
     type: 'combo',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+13',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '10:08',
     views: 9870
   },
@@ -180,7 +187,7 @@ export const videos = [
     game: 'd2',
     character: 'sorceress',
     type: 'farming',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+14',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '16:30',
     views: 22100
   },
@@ -190,7 +197,7 @@ export const videos = [
     game: 'd3',
     character: 'demonhunter',
     type: 'farming',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+15',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '13:42',
     views: 10500
   },
@@ -200,7 +207,7 @@ export const videos = [
     game: 'overwatch',
     character: 'rein',
     type: 'skill',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+16',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '07:55',
     views: 6230
   },
@@ -210,7 +217,7 @@ export const videos = [
     game: 'wow',
     character: 'paladin',
     type: 'tank',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+17',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '11:15',
     views: 7450
   },
@@ -220,15 +227,8 @@ export const videos = [
     game: 'wow',
     character: 'priest',
     type: 'heal',
-    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+18',
+    thumbnail: 'https://placehold.co/320x180/777777/cccccc?text=',
     duration: '09:50',
     views: 5890
   },
-];
-
-// 轮播图数据
-export const banners = [
-  { id: 1, title: '本周推荐：英雄联盟高端局集锦' },
-  { id: 2, title: '新游速递：黑神话悟空全 Boss 攻略' },
-  { id: 3, title: '经典回顾：暗黑 2 二十年纪念' },
 ];

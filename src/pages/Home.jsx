@@ -27,8 +27,8 @@ function Home() {
         {/* 左侧轮播图 */}
         <div className="banner-section">
           <div className="banner">
-            <div className="banner-img">
-              {banners[currentBanner].title}
+            <div className="banner-placeholder">
+              轮播图
             </div>
             <div className="banner-title">{banners[currentBanner].title}</div>
           </div>
@@ -43,33 +43,26 @@ function Home() {
           </div>
         </div>
 
-        {/* 右侧视频网格 */}
+        {/* 右侧视频网格 - 2 行×3 列 = 6 个 */}
         <div className="video-grid-main">
-          <div className="video-row">
-            {videos.slice(0, 3).map(video => (
-              <VideoCard key={video.id} video={video} />
-            ))}
-          </div>
-          <div className="video-row">
-            {videos.slice(3, 6).map(video => (
-              <VideoCard key={video.id} video={video} />
-            ))}
-          </div>
+          {videos.slice(0, 6).map(video => (
+            <VideoCard key={video.id} video={video} />
+          ))}
         </div>
+
+        {/* 换一批按钮 - 右上角 */}
+        <button className="refresh-btn" onClick={handleRefresh}>
+          <span className="refresh-icon">🔄</span>
+          <span>换一批</span>
+        </button>
       </div>
 
-      {/* 下方视频网格 */}
+      {/* 下方视频网格 - 2 行×5 列 = 10 个 */}
       <div className="video-grid-full">
-        {videos.slice(6, 18).map(video => (
+        {videos.slice(6, 16).map(video => (
           <VideoCard key={video.id} video={video} />
         ))}
       </div>
-
-      {/* 换一批按钮 */}
-      <button className="refresh-btn" onClick={handleRefresh}>
-        <span className="refresh-icon">🔄</span>
-        <span>换一批</span>
-      </button>
     </div>
   );
 }
