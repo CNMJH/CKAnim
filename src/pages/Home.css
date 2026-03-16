@@ -28,11 +28,11 @@
 .right-section {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 236px);
+  grid-template-rows: repeat(2, 133px);
   gap: 12px;
   position: relative;
-  min-width: 0;
+  justify-content: start;
 }
 
 /* 换一批按钮 - 右上角，垂直排列 */
@@ -118,18 +118,18 @@
   width: 32px;
 }
 
-/* 下方视频网格 - 2 行×5 列 */
+/* 下方视频网格 - 2 行×5 列，固定卡片尺寸 */
 .video-grid-full {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  grid-template-columns: repeat(5, 236px);
+  grid-template-rows: repeat(2, 133px);
   gap: 12px;
   margin-top: 12px;
+  justify-content: start;
 }
 
-/* 统一视频卡片尺寸 - 固定高度，宽度自适应 */
+/* 统一视频卡片尺寸 */
 .video-card {
-  aspect-ratio: 16/9;
   width: 100%;
   height: 100%;
 }
@@ -143,8 +143,14 @@
     width: 100%;
   }
 
+  .right-section {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+  }
+
   .video-grid-full {
     grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
   }
 
   .banner-placeholder {
