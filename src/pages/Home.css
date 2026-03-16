@@ -13,23 +13,26 @@
 }
 
 .home-content {
-  display: grid;
-  grid-template-columns: 640px 1fr auto;
+  display: flex;
   gap: 12px;
   margin-bottom: 12px;
-  align-items: start;
+  position: relative;
 }
 
 .banner-section {
+  width: 640px;
+  flex-shrink: 0;
   position: relative;
 }
 
 .right-section {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(2, 1fr);
   gap: 12px;
   position: relative;
+  min-width: 0;
 }
 
 /* 换一批按钮 - 右上角，垂直排列 */
@@ -124,7 +127,7 @@
   margin-top: 12px;
 }
 
-/* 统一视频卡片尺寸 */
+/* 统一视频卡片尺寸 - 固定高度，宽度自适应 */
 .video-card {
   aspect-ratio: 16/9;
   width: 100%;
@@ -133,7 +136,11 @@
 
 @media (max-width: 1200px) {
   .home-content {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .banner-section {
+    width: 100%;
   }
 
   .video-grid-full {
