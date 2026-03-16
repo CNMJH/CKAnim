@@ -1,31 +1,32 @@
 .header {
   background: #333;
-  padding: 0.8rem 2rem;
+  padding: 0;
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
-  max-width: 1400px;
+  max-width: 1440px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0 24px;
+  height: 56px;
 }
 
 .nav {
   display: flex;
-  gap: 2rem;
+  gap: 0;
 }
 
 .nav-link {
   color: #ccc;
   text-decoration: none;
-  font-size: 1rem;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  font-size: 14px;
+  padding: 18px 16px;
   transition: all 0.3s;
   position: relative;
   cursor: pointer;
@@ -33,7 +34,15 @@
 
 .nav-link:hover {
   color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-link.active {
+  color: #fff;
+}
+
+.dropdown {
+  position: relative;
 }
 
 .dropdown-menu {
@@ -42,18 +51,19 @@
   left: 0;
   background: #444;
   border-radius: 4px;
-  padding: 0.5rem 0;
-  min-width: 150px;
+  padding: 8px 0;
+  min-width: 160px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  margin-top: 0.3rem;
+  margin-top: 0;
 }
 
 .dropdown-item {
   display: block;
   color: #ccc;
   text-decoration: none;
-  padding: 0.6rem 1.2rem;
+  padding: 10px 16px;
   transition: all 0.3s;
+  font-size: 14px;
 }
 
 .dropdown-item:hover {
@@ -65,28 +75,41 @@
   display: flex;
   align-items: center;
   background: #fff;
-  border-radius: 20px;
-  padding: 0.3rem 0.8rem;
-  width: 400px;
+  border-radius: 18px;
+  padding: 6px 12px;
+  width: 380px;
+  border: 1px solid transparent;
+  transition: all 0.3s;
+}
+
+.search-form:focus-within {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1);
 }
 
 .search-input {
   flex: 1;
   border: none;
   outline: none;
-  padding: 0.5rem;
-  font-size: 0.95rem;
+  padding: 6px 8px;
+  font-size: 14px;
   background: transparent;
+  color: #333;
+}
+
+.search-input::placeholder {
+  color: #999;
 }
 
 .search-btn {
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 1.1rem;
-  padding: 0.3rem;
-  opacity: 0.7;
+  font-size: 16px;
+  padding: 4px 8px;
+  opacity: 0.6;
   transition: opacity 0.3s;
+  color: #dc3545;
 }
 
 .search-btn:hover {
@@ -96,7 +119,9 @@
 @media (max-width: 768px) {
   .header-content {
     flex-direction: column;
-    gap: 1rem;
+    height: auto;
+    padding: 12px;
+    gap: 12px;
   }
 
   .search-form {

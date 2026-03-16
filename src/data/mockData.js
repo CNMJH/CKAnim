@@ -1,118 +1,234 @@
-// 游戏数据（按字母分类）
+// 游戏数据
 export const games = [
-  {
-    id: 'albion',
-    name: '阿尔比恩',
-    letter: 'A',
-    cover: 'https://via.placeholder.com/120x120/DC3545/FFFFFF?text=阿尔比恩'
-  },
-  {
-    id: 'elden',
-    name: '艾尔登法环',
-    letter: 'A',
-    cover: 'https://via.placeholder.com/120x120/6c757d/FFFFFF?text=艾尔登'
-  },
-  {
-    id: 'diablo2',
-    name: '暗黑破坏神 2',
-    letter: 'A',
-    cover: 'https://via.placeholder.com/120x120/6c757d/FFFFFF?text=暗黑 2'
-  },
-  {
-    id: 'diablo3',
-    name: '暗黑破坏神 3',
-    letter: 'A',
-    cover: 'https://via.placeholder.com/120x120/6c757d/FFFFFF?text=暗黑 3'
-  },
-  {
-    id: 'baldur3',
-    name: '博德之门 3',
-    letter: 'B',
-    cover: 'https://via.placeholder.com/120x120/6c757d/FFFFFF?text=博德 3'
-  },
-  {
-    id: 'shadow',
-    name: '影之刃',
-    letter: 'C',
-    cover: 'https://via.placeholder.com/120x120/6c757d/FFFFFF?text=影之刃'
-  },
-  {
-    id: 'lol',
-    name: '英雄联盟',
-    letter: 'C',
-    cover: 'https://via.placeholder.com/120x120/6c757d/FFFFFF?text=LOL'
-  },
-  {
-    id: 'overwatch',
-    name: '幽灵狙击手',
-    letter: 'C',
-    cover: 'https://via.placeholder.com/120x120/6c757d/FFFFFF?text=狙击手'
-  },
-  {
-    id: 'dnd',
-    name: '勇者斗恶龙',
-    letter: 'C',
-    cover: 'https://via.placeholder.com/120x120/6c757d/FFFFFF?text=DQ'
-  },
-  {
-    id: 'ac',
-    name: '刺客信条',
-    letter: 'C',
-    cover: 'https://via.placeholder.com/120x120/6c757d/FFFFFF?text=AC'
-  }
+  { id: 'albion', name: '阿尔比恩', letter: 'A' },
+  { id: 'elden', name: '艾尔登法环', letter: 'A' },
+  { id: 'd2', name: '暗黑 2', letter: 'A' },
+  { id: 'd3', name: '暗黑 3', letter: 'A' },
+  { id: 'd4', name: '暗黑 4', letter: 'A' },
+  { id: 'baldur', name: '博德之门 3', letter: 'B' },
+  { id: 'blackmyth', name: '黑神话', letter: 'H' },
+  { id: 'lol', name: '英雄联盟', letter: 'Y' },
+  { id: 'wow', name: '魔兽世界', letter: 'M' },
+  { id: 'overwatch', name: '守望先锋', letter: 'S' },
 ];
 
-// 角色数据（按职业分类）
-export const characters = {
-  albion: [
-    { id: 'sword', name: '剑圣', role: '战士', cover: 'https://via.placeholder.com/100x100/DC3545/FFFFFF?text=剑圣' },
-    { id: 'mage', name: '法师', role: '法师', cover: 'https://via.placeholder.com/100x100/6c757d/FFFFFF?text=法师' },
-    { id: 'assassin', name: '刺客', role: '刺客', cover: 'https://via.placeholder.com/100x100/6c757d/FFFFFF?text=刺客' },
-    { id: 'tank', name: '坦克', role: '坦克', cover: 'https://via.placeholder.com/100x100/6c757d/FFFFFF?text=坦克' },
-  ],
-  lol: [
-    { id: 'yasuo', name: '亚索', role: '战士', cover: 'https://via.placeholder.com/100x100/007bff/FFFFFF?text=亚索' },
-    { id: 'ahri', name: '阿狸', role: '法师', cover: 'https://via.placeholder.com/100x100/6c757d/FFFFFF?text=阿狸' },
-    { id: 'zed', name: '劫', role: '刺客', cover: 'https://via.placeholder.com/100x100/6c757d/FFFFFF?text=劫' },
-  ]
-};
-
-// 角色职业分类
-export const characterRoles = ['所有角色', '战士', '法师', '刺客', '坦克', '射手', '辅助'];
+// 角色数据
+export const characters = [
+  // 阿尔比恩角色
+  { id: 'sword', name: '剑圣', role: '战士', game: 'albion' },
+  { id: 'mage', name: '法师', role: '法师', game: 'albion' },
+  { id: 'assassin', name: '刺客', role: '刺客', game: 'albion' },
+  { id: 'tank', name: '坦克', role: '坦克', game: 'albion' },
+  
+  // 英雄联盟角色
+  { id: 'yasuo', name: '亚索', role: '战士', game: 'lol' },
+  { id: 'ahri', name: '阿狸', role: '法师', game: 'lol' },
+  { id: 'zed', name: '劫', role: '刺客', game: 'lol' },
+  { id: 'lux', name: '拉克丝', role: '法师', game: 'lol' },
+  { id: 'thresh', name: '锤石', role: '辅助', game: 'lol' },
+  
+  // 魔兽世界角色
+  { id: 'warrior', name: '战士', role: '战士', game: 'wow' },
+  { id: 'paladin', name: '圣骑士', role: '坦克', game: 'wow' },
+  { id: 'hunter', name: '猎人', role: '射手', game: 'wow' },
+  { id: 'priest', name: '牧师', role: '辅助', game: 'wow' },
+  
+  // 黑神话角色
+  { id: 'wukong', name: '悟空', role: '战士', game: 'blackmyth' },
+  
+  // 守望先锋角色
+  { id: 'tracer', name: '猎空', role: '刺客', game: 'overwatch' },
+  { id: 'mercy', name: '天使', role: '辅助', game: 'overwatch' },
+  { id: 'rein', name: '莱因哈特', role: '坦克', game: 'overwatch' },
+];
 
 // 视频数据
 export const videos = [
-  { id: 1, title: '三连击教学', game: 'lol', character: 'yasuo', type: 'attack', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=三连击', duration: '05:32', views: 12340 },
-  { id: 2, title: '连招演示', game: 'albion', character: 'sword', type: 'attack', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=连招', duration: '03:45', views: 8520 },
-  { id: 3, title: '走位技巧', game: 'lol', character: 'ahri', type: 'walk', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=走位', duration: '04:20', views: 15600 },
-  { id: 4, title: '团战思路', game: 'albion', character: 'tank', type: 'team', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=团战', duration: '08:15', views: 9200 },
-  { id: 5, title: '刷野路线', game: 'lol', character: 'zed', type: 'jungle', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=刷野', duration: '06:10', views: 11000 },
-  { id: 6, title: '对线细节', game: 'albion', character: 'mage', type: 'lane', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=对线', duration: '07:30', views: 7800 },
-  { id: 7, title: '技能衔接', game: 'lol', character: 'yasuo', type: 'skill', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=技能', duration: '04:50', views: 13500 },
-  { id: 8, title: '装备选择', game: 'albion', character: 'assassin', type: 'build', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=装备', duration: '05:40', views: 6700 },
-  { id: 9, title: '意识培养', game: 'lol', character: 'ahri', type: 'awareness', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=意识', duration: '09:20', views: 10200 },
-  { id: 10, title: '极限反杀', game: 'albion', character: 'sword', type: 'highlight', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=反杀', duration: '03:15', views: 18900 },
-  { id: 11, title: '操作集锦', game: 'lol', character: 'zed', type: 'highlight', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=集锦', duration: '05:00', views: 14300 },
-  { id: 12, title: '新手入门', game: 'albion', character: 'tank', type: 'guide', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=新手', duration: '10:30', views: 22000 },
-  { id: 13, title: '高级技巧', game: 'lol', character: 'yasuo', type: 'advanced', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=高级', duration: '07:45', views: 9800 },
-  { id: 14, title: '阵容搭配', game: 'albion', character: 'mage', type: 'team', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=阵容', duration: '06:50', views: 8100 },
-  { id: 15, title: '地图资源', game: 'lol', character: 'ahri', type: 'map', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=地图', duration: '08:00', views: 7500 },
-  { id: 16, title: 'gank 时机', game: 'lol', character: 'zed', type: 'gank', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=Gank', duration: '05:25', views: 11500 },
-  { id: 17, title: '防守反击', game: 'albion', character: 'tank', type: 'defense', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=防守', duration: '06:30', views: 6900 },
-  { id: 18, title: '输出手法', game: 'albion', character: 'assassin', type: 'attack', thumbnail: 'https://via.placeholder.com/320x180/333/FFF?text=输出', duration: '04:40', views: 10800 },
+  {
+    id: 1,
+    title: '三连击教学 - 基础连招入门',
+    game: 'lol',
+    character: 'yasuo',
+    type: 'attack',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+1',
+    duration: '05:32',
+    views: 12340
+  },
+  {
+    id: 2,
+    title: '高端局走位技巧详解',
+    game: 'lol',
+    character: 'ahri',
+    type: 'movement',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+2',
+    duration: '08:15',
+    views: 8920
+  },
+  {
+    id: 3,
+    title: '刺客秒杀连招 - 手速训练',
+    game: 'lol',
+    character: 'zed',
+    type: 'combo',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+3',
+    duration: '06:48',
+    views: 15670
+  },
+  {
+    id: 4,
+    title: '法师技能命中率提升指南',
+    game: 'lol',
+    character: 'lux',
+    type: 'skill',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+4',
+    duration: '10:22',
+    views: 6540
+  },
+  {
+    id: 5,
+    title: '辅助钩子精准度练习',
+    game: 'lol',
+    character: 'thresh',
+    type: 'skill',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+5',
+    duration: '07:30',
+    views: 9230
+  },
+  {
+    id: 6,
+    title: '剑圣 PVP 实战技巧',
+    game: 'albion',
+    character: 'sword',
+    type: 'pvp',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+6',
+    duration: '12:45',
+    views: 11200
+  },
+  {
+    id: 7,
+    title: '魔兽世界战士输出循环',
+    game: 'wow',
+    character: 'warrior',
+    type: 'combo',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+7',
+    duration: '09:18',
+    views: 7890
+  },
+  {
+    id: 8,
+    title: '黑神话悟空 Boss 战攻略',
+    game: 'blackmyth',
+    character: 'wukong',
+    type: 'boss',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+8',
+    duration: '15:30',
+    views: 25600
+  },
+  {
+    id: 9,
+    title: '猎空闪现技巧合集',
+    game: 'overwatch',
+    character: 'tracer',
+    type: 'movement',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+9',
+    duration: '06:12',
+    views: 8340
+  },
+  {
+    id: 10,
+    title: '天使站位与奶量控制',
+    game: 'overwatch',
+    character: 'mercy',
+    type: 'skill',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+10',
+    duration: '08:45',
+    views: 5670
+  },
+  {
+    id: 11,
+    title: '艾尔登法环 Boss 闪避教学',
+    game: 'elden',
+    character: 'warrior',
+    type: 'dodge',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+11',
+    duration: '11:20',
+    views: 18900
+  },
+  {
+    id: 12,
+    title: '暗黑 4 野蛮人build 推荐',
+    game: 'd4',
+    character: 'barbarian',
+    type: 'build',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+12',
+    duration: '14:55',
+    views: 13400
+  },
+  {
+    id: 13,
+    title: '博德之门 3 法术组合技',
+    game: 'baldur',
+    character: 'wizard',
+    type: 'combo',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+13',
+    duration: '10:08',
+    views: 9870
+  },
+  {
+    id: 14,
+    title: '暗黑 2 法师刷装备路线',
+    game: 'd2',
+    character: 'sorceress',
+    type: 'farming',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+14',
+    duration: '16:30',
+    views: 22100
+  },
+  {
+    id: 15,
+    title: '暗黑 3 巅峰等级速刷指南',
+    game: 'd3',
+    character: 'demonhunter',
+    type: 'farming',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+15',
+    duration: '13:42',
+    views: 10500
+  },
+  {
+    id: 16,
+    title: '莱因哈特盾击时机把握',
+    game: 'overwatch',
+    character: 'rein',
+    type: 'skill',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+16',
+    duration: '07:55',
+    views: 6230
+  },
+  {
+    id: 17,
+    title: '圣骑士坦克进阶技巧',
+    game: 'wow',
+    character: 'paladin',
+    type: 'tank',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+17',
+    duration: '11:15',
+    views: 7450
+  },
+  {
+    id: 18,
+    title: '牧师治疗优先级详解',
+    game: 'wow',
+    character: 'priest',
+    type: 'heal',
+    thumbnail: 'https://placehold.co/320x180/e0e0e0/999999?text=Video+18',
+    duration: '09:50',
+    views: 5890
+  },
 ];
 
 // 轮播图数据
 export const banners = [
-  { id: 1, title: '本周推荐：亚索进阶教学', image: 'https://via.placeholder.com/640x360/DC3545/FFFFFF?text=本周推荐' },
-  { id: 2, title: '新版本更新公告', image: 'https://via.placeholder.com/640x360/007bff/FFFFFF?text=更新公告' },
-  { id: 3, title: '玩家投稿征集', image: 'https://via.placeholder.com/640x360/28a745/FFFFFF?text=投稿征集' },
-];
-
-// 动作分类
-export const actionTypes = [
-  '攻击 - 正', '攻击 - 侧', '攻击 - 背',
-  '走位 - 正', '走位 - 侧', '走位 - 背',
-  '技能 -Q', '技能 -W', '技能 -E', '技能 -R',
-  '回城', '嘲讽', '舞蹈', '其他'
+  { id: 1, title: '本周推荐：英雄联盟高端局集锦' },
+  { id: 2, title: '新游速递：黑神话悟空全 Boss 攻略' },
+  { id: 3, title: '经典回顾：暗黑 2 二十年纪念' },
 ];

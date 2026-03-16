@@ -1,25 +1,26 @@
 import './VideoCard.css';
 
-function VideoCard({ video, onHover }) {
-  const handleMouseEnter = () => {
-    if (onHover) onHover(video);
+function VideoCard({ video }) {
+  const formatViews = (views) => {
+    if (views >= 10000) {
+      return (views / 10000).toFixed(1) + '万';
+    }
+    return views;
   };
 
   return (
-    <div 
-      className="video-card"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={() => onHover && onHover(null)}
-    >
+    <div className="video-card">
       <div className="video-thumbnail">
         <img src={video.thumbnail} alt={video.title} />
         <div className="play-icon">▶</div>
-        <div className="video-duration">{video.duration}</div>
+        <span className="video-duration">{video.duration}</span>
       </div>
       <div className="video-info">
-        <h3 className="video-title">{video.title}</h3>
+        <div className="video-title">{video.title}</div>
         <div className="video-meta">
-          <span className="video-views">{video.views.toLocaleString()} 次观看</span>
+          <span className="video-views">
+            👁️ {formatViews(video.views)}
+          </span>
         </div>
       </div>
     </div>

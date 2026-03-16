@@ -9,7 +9,7 @@ function Search() {
   const query = searchParams.get('q') || '';
   const [sortBy, setSortBy] = useState('relevance');
 
-  // 过滤视频（简单实现，实际项目中应该用后端搜索）
+  // 过滤视频
   const filteredVideos = videos.filter(video =>
     video.title.toLowerCase().includes(query.toLowerCase())
   );
@@ -18,14 +18,14 @@ function Search() {
   const sortedVideos = [...filteredVideos].sort((a, b) => {
     if (sortBy === 'views') return b.views - a.views;
     if (sortBy === 'newest') return b.id - a.id;
-    return 0; // relevance - 保持原顺序
+    return 0;
   });
 
   return (
     <div className="search-page">
       <div className="search-header">
         <div className="search-query">
-          搜索结果："{query}"
+          搜索结果：<span>"{query}"</span>
         </div>
         
         <div className="sort-tabs">

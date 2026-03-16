@@ -4,7 +4,7 @@ import './Header.css';
 
 function Header() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [showGameDropdown, setShowGameDropdown] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleSearch = (e) => {
@@ -18,19 +18,23 @@ function Header() {
     <header className="header">
       <div className="header-content">
         <nav className="nav">
-          <Link to="/" className="nav-link">首页</Link>
+          <Link to="/" className="nav-link active">
+            首页
+          </Link>
+          <Link to="/games" className="nav-link">
+            游戏参考
+          </Link>
           <div 
             className="nav-link dropdown"
-            onMouseEnter={() => setShowGameDropdown(true)}
-            onMouseLeave={() => setShowGameDropdown(false)}
+            onMouseEnter={() => setDropdownOpen(true)}
+            onMouseLeave={() => setDropdownOpen(false)}
           >
-            游戏参考
-            {showGameDropdown && (
+            更多
+            {dropdownOpen && (
               <div className="dropdown-menu">
-                <Link to="/games" className="dropdown-item">全部游戏</Link>
-                <Link to="/games?letter=A" className="dropdown-item">A 开头</Link>
-                <Link to="/games?letter=B" className="dropdown-item">B 开头</Link>
-                <Link to="/games?letter=C" className="dropdown-item">C 开头</Link>
+                <a href="#" className="dropdown-item">我的收藏</a>
+                <a href="#" className="dropdown-item">观看历史</a>
+                <a href="#" className="dropdown-item">设置</a>
               </div>
             )}
           </div>
@@ -40,7 +44,7 @@ function Header() {
           <input
             type="text"
             className="search-input"
-            placeholder="输入您要搜索的内容"
+            placeholder="搜索视频"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -48,6 +52,8 @@ function Header() {
             🔍
           </button>
         </form>
+
+        <div style={{ width: 100 }} /> {/* 占位，保持搜索框居中 */}
       </div>
     </header>
   );

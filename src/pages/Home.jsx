@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { videos, banners } from '../data/mockData';
 import VideoCard from './VideoCard';
 import './Home.css';
@@ -7,16 +7,16 @@ function Home() {
   const [currentBanner, setCurrentBanner] = useState(0);
 
   // 自动轮播
-  useState(() => {
+  useEffect(() => {
     const timer = setInterval(() => {
       setCurrentBanner((prev) => (prev + 1) % banners.length);
     }, 5000);
     return () => clearInterval(timer);
-  });
+  }, []);
 
   const handleRefresh = () => {
-    // 刷新视频列表（实际项目中会重新请求数据）
     console.log('刷新视频列表');
+    // 实际项目中会重新请求数据
   };
 
   return (
@@ -27,10 +27,9 @@ function Home() {
         {/* 左侧轮播图 */}
         <div className="banner-section">
           <div className="banner">
-            <img 
-              src={banners[currentBanner].image} 
-              alt={banners[currentBanner].title}
-            />
+            <div className="banner-img">
+              {banners[currentBanner].title}
+            </div>
             <div className="banner-title">{banners[currentBanner].title}</div>
           </div>
           <div className="banner-dots">
@@ -68,7 +67,8 @@ function Home() {
 
       {/* 换一批按钮 */}
       <button className="refresh-btn" onClick={handleRefresh}>
-        🔄 换一批
+        <span className="refresh-icon">🔄</span>
+        <span>换一批</span>
       </button>
     </div>
   );
