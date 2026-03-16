@@ -43,18 +43,19 @@ function Home() {
           </div>
         </div>
 
-        {/* 右侧视频网格 - 2 行×3 列 = 6 个 */}
-        <div className="video-grid-main">
+        {/* 右侧区域：视频网格 + 换一批按钮 */}
+        <div className="right-section">
+          {/* 视频卡片 - 2 行×3 列 = 6 个 */}
           {videos.slice(0, 6).map(video => (
             <VideoCard key={video.id} video={video} />
           ))}
-        </div>
 
-        {/* 换一批按钮 - 右上角 */}
-        <button className="refresh-btn" onClick={handleRefresh}>
-          <span className="refresh-icon">🔄</span>
-          <span>换一批</span>
-        </button>
+          {/* 换一批按钮 - 右上角，垂直排列 */}
+          <button className="refresh-btn" onClick={handleRefresh}>
+            <span className="refresh-icon">🔄</span>
+            <span>换一批</span>
+          </button>
+        </div>
       </div>
 
       {/* 下方视频网格 - 2 行×5 列 = 10 个 */}
