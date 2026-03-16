@@ -1,0 +1,133 @@
+.home {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.home-title {
+  text-align: center;
+  color: #333;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.home-content {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.banner-section {
+  position: relative;
+}
+
+.banner {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 16/9;
+}
+
+.banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.banner-title {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  color: #fff;
+  padding: 2rem 1rem 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.banner-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ccc;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.dot.active {
+  background: #dc3545;
+  width: 20px;
+  border-radius: 4px;
+}
+
+.video-grid-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.video-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.video-grid-full {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.refresh-btn {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #666;
+  color: #fff;
+  border: none;
+  padding: 0.8rem 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+  z-index: 100;
+}
+
+.refresh-btn:hover {
+  background: #dc3545;
+}
+
+@media (max-width: 1200px) {
+  .home-content {
+    grid-template-columns: 1fr;
+  }
+
+  .video-grid-full {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .video-grid-full {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .video-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .refresh-btn {
+    display: none;
+  }
+}
