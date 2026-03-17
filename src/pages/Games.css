@@ -49,7 +49,7 @@
   text-align: center;
 }
 
-/* 浮窗 - 悬停时滑出 */
+/* 浮窗 - 默认隐藏 */
 .game-panel-popup {
   position: absolute;
   left: 80px;
@@ -61,12 +61,11 @@
   transform: translateX(-100%);
   opacity: 0;
   transition: transform 0.3s ease, opacity 0.3s ease;
-  /* 收回时不拦截鼠标事件 */
   pointer-events: none;
 }
 
-/* 浮窗弹出时可以交互 */
-.game-panel-narrow:hover ~ .game-panel-popup {
+/* 浮窗弹出状态 */
+.game-panel-popup.show {
   transform: translateX(0);
   opacity: 1;
   pointer-events: auto;
