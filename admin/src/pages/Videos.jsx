@@ -1,0 +1,237 @@
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { gamesAPI, videosAPI, categoriesAPI } from '../lib/services'
+import Layout from '../components/Layout'
+import './Videos.css'
+
+function Videos() {
+  const [showModal, setShowModal] = useState(false)
+  const [selectedGame, setSelectedGame] = useState(null)
+  const [uploadingFile, setUploadingFile] = useState(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const queryClient = useQueryClient()
+
+  // 获取游戏列表
+  const { data: games } = useQuery({
+    queryKey: ['games'],
+    queryFn: async () => {
+      const response = await gamesAPI.getAll()
+      return response.data
+    },
+  })
+
+  // 获取视频列表
+  const { data: videosData, isLoading } = useQuery({
+    queryKey: ['videos', selectedGame?.id],
+    queryFn: async () => {
+      if (!selectedGame) return { videos: [], pagination: {} }
+      const response = await videosAPI.getAll({ gameId: selectedGame.id })
+      return response.data
+    },
+    enabled: !!selectedGame,
+  })
+
+  // 删除视频
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      if (confirm('确定要删除这个视频吗？（同时会删除七牛云上的文件）')) {
+        await videosAPI.delete(id)
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['videos'])
+    },
+  })
+
+  // 更新视频发布状态
+  const togglePublishMutation = useMutation({
+    mutationFn: async ({ id, published }) => {
+      await videosAPI.update(id, { published })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['videos'])
+    },
+  })
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file || !selectedGame) return
+
+    setUploadingFile(file)
+    setUploadProgress(0)
+
+    try {
+      // 1. 获取上传凭证
+      const tokenResponse = await videosAPI.getUploadToken(file.name, selectedGame.id)
+      const { token, key, url } = tokenResponse.data
+
+      // 2. 上传到七牛云
+      const formData = new FormData()
+      formData.append('token', token)
+      formData.append('key', key)
+      formData.append('file', file)
+
+      const xhr = new XMLHttpRequest()
+      
+      await new Promise((resolve, reject) => {
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100)
+            setUploadProgress(percent)
+          }
+        })
+
+        xhr.addEventListener('load', () => {
+          if (xhr.status === 200) {
+            resolve()
+          } else {
+            reject(new Error('上传失败'))
+          }
+        })
+
+        xhr.addEventListener('error', reject)
+
+        xhr.open('POST', 'https://upload.qiniup.com/')
+        xhr.send(formData)
+      })
+
+      // 3. 创建视频记录
+      const videoData = {
+        title: file.name.replace(/\.[^/.]+$/, ''), // 去掉扩展名
+        gameId: selectedGame.id,
+        qiniuKey: key,
+        qiniuUrl: url,
+        published: false,
+      }
+
+      await videosAPI.create(videoData)
+
+      // 4. 重置状态
+      setUploadingFile(null)
+      setUploadProgress(0)
+      setShowModal(false)
+      queryClient.invalidateQueries(['videos'])
+
+      alert('上传成功！')
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert('上传失败：' + error.message)
+      setUploadingFile(null)
+      setUploadProgress(0)
+    }
+  }
+
+  const formatDuration = (seconds) => {
+    if (!seconds) return '--:--'
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  return (
+    <Layout>
+      <div className="videos-page">
+        <div className="page-header">
+          <h2>视频管理</h2>
+          <label className="btn-primary">
+            📤 上传视频
+            <input
+              type="file"
+              accept="video/*"
+              onChange={handleFileUpload}
+              disabled={!selectedGame}
+              style={{ display: 'none' }}
+            />
+          </label>
+        </div>
+
+        {/* 游戏选择 */}
+        <div className="game-selector">
+          <label>选择游戏：</label>
+          <select
+            value={selectedGame?.id || ''}
+            onChange={(e) => {
+              const game = games?.find(g => g.id === parseInt(e.target.value))
+              setSelectedGame(game || null)
+            }}
+          >
+            <option value="">请选择游戏</option>
+            {games?.map(game => (
+              <option key={game.id} value={game.id}>{game.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* 上传进度 */}
+        {uploadingFile && (
+          <div className="upload-progress">
+            <p>正在上传：{uploadingFile.name}</p>
+            <div className="progress-bar">
+              <div className="progress" style={{ width: `${uploadProgress}%` }} />
+            </div>
+            <p>{uploadProgress}%</p>
+          </div>
+        )}
+
+        {/* 视频列表 */}
+        {!selectedGame ? (
+          <div className="empty-state">
+            <p>请先选择一个游戏</p>
+          </div>
+        ) : isLoading ? (
+          <div className="loading">加载中...</div>
+        ) : videosData?.videos?.length > 0 ? (
+          <div className="videos-grid">
+            {videosData.videos.map(video => (
+              <div key={video.id} className="video-card">
+                <div className="video-thumbnail">
+                  <video src={video.qiniuUrl} controls />
+                </div>
+                <div className="video-info">
+                  <h3>{video.title}</h3>
+                  <div className="video-meta">
+                    <span>⏱ {formatDuration(video.duration)}</span>
+                    <span className={`status ${video.published ? 'published' : 'draft'}`}>
+                      {video.published ? '已发布' : '未发布'}
+                    </span>
+                  </div>
+                  <div className="video-actions">
+                    <button
+                      className={`btn-sm ${video.published ? 'btn-warning' : 'btn-success'}`}
+                      onClick={() => togglePublishMutation.mutate({ 
+                        id: video.id, 
+                        published: !video.published 
+                      })}
+                    >
+                      {video.published ? '取消发布' : '发布'}
+                    </button>
+                    <button
+                      className="btn-sm btn-danger"
+                      onClick={() => deleteMutation.mutate(video.id)}
+                    >
+                      删除
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <p>暂无视频，点击上方按钮上传第一个视频</p>
+          </div>
+        )}
+
+        {/* 分页 */}
+        {videosData?.pagination?.totalPages > 1 && (
+          <div className="pagination">
+            <span>第 {videosData.pagination.page} / {videosData.pagination.totalPages} 页</span>
+            <span>共 {videosData.pagination.total} 个视频</span>
+          </div>
+        )}
+      </div>
+    </Layout>
+  )
+}
+
+export default Videos
