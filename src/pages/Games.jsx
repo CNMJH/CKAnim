@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { games, characters, videos } from '../data/mockData';
 import './Games.css';
 
@@ -8,8 +8,6 @@ function Games() {
   const [selectedAction, setSelectedAction] = useState(null);
   const [activeRole, setActiveRole] = useState('全部');
   const [characterSearch, setCharacterSearch] = useState('');
-  const [showGamePanel, setShowGamePanel] = useState(false);
-  const closeTimer = useRef(null);
 
   // 按字母分组游戏
   const gamesByLetter = games.reduce((acc, game) => {
@@ -39,19 +37,6 @@ function Games() {
     setSelectedAction(null);
     setActiveRole('全部');
     setCharacterSearch('');
-    // 选择游戏后保持浮窗弹出，显示已选游戏
-    // setShowGamePanel(false); // 删除这行
-  };
-  
-  const handlePanelEnter = () => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    setShowGamePanel(true);
-  };
-  
-  const handlePanelLeave = () => {
-    closeTimer.current = setTimeout(() => {
-      setShowGamePanel(false);
-    }, 100);
   };
 
   const handleCharacterSelect = (char) => {
@@ -62,11 +47,7 @@ function Games() {
     <div className="games-page">
       <div className="games-content">
         {/* 左侧游戏选择 - 悬停浮窗 */}
-        <div 
-          className="game-panel-wrapper"
-          onMouseEnter={handlePanelEnter}
-          onMouseLeave={handlePanelLeave}
-        >
+        <div className="game-panel-wrapper">
           {/* 窄条 - 始终显示 */}
           <div className="game-panel-narrow">
             <div className="letter-index">
@@ -78,8 +59,8 @@ function Games() {
             </div>
           </div>
           
-          {/* 浮窗 - 根据状态显示 */}
-          <div className={`game-panel-popup ${showGamePanel ? 'show' : ''}`}>
+          {/* 浮窗 - 鼠标悬停时显示 */}
+          <div className="game-panel-popup">
             <div className="game-list">
               {Object.entries(gamesByLetter).map(([letter, gameList]) => (
                 <div key={letter} className="letter-group">

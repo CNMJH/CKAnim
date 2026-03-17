@@ -15,6 +15,7 @@
 .game-panel-wrapper {
   position: relative;
   display: flex;
+  overflow: hidden; /* 裁切浮窗超出部分 */
 }
 
 /* 窄条 - 始终显示 */
@@ -26,6 +27,8 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  position: relative;
+  z-index: 100; /* 确保窄条在最上层 */
 }
 
 .letter-index {
@@ -49,7 +52,7 @@
   text-align: center;
 }
 
-/* 浮窗 - 默认隐藏 */
+/* 浮窗 - 默认隐藏（向左收缩） */
 .game-panel-popup {
   position: absolute;
   left: 80px;
@@ -60,12 +63,13 @@
   border-radius: 0 8px 8px 0;
   transform: translateX(-100%);
   opacity: 0;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease;
   pointer-events: none;
+  z-index: 1;
 }
 
-/* 浮窗弹出状态 */
-.game-panel-popup.show {
+/* 鼠标悬停 wrapper 时浮窗弹出 */
+.game-panel-wrapper:hover .game-panel-popup {
   transform: translateX(0);
   opacity: 1;
   pointer-events: auto;
