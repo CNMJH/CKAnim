@@ -15,8 +15,6 @@
 .game-panel-wrapper {
   position: relative;
   display: flex;
-  /* 遮罩：隐藏超出 wrapper 左边的部分 */
-  overflow: hidden;
 }
 
 /* 窄条 - 始终显示 */
@@ -30,6 +28,12 @@
   position: relative;
   z-index: 100;
   cursor: pointer;
+}
+
+/* 使用 :has() 选择器实现遮罩效果 */
+.game-panel-wrapper:has(.game-panel-narrow:hover) .game-panel-popup {
+  transform: translateX(0);
+  z-index: 99;
 }
 
 .letter-index {
@@ -63,19 +67,17 @@
   height: 100%;
   background: #e8e8e8;
   border-radius: 0 8px 8px 0;
-  overflow: hidden;
-  /* 收回时向左移动 500px，超出 wrapper 的部分被遮罩裁切 */
+  /* 收回时向左移动 500px */
   /* wrapper x=24px, 浮窗 left=0, 所以浮窗 x 起点=24px */
   /* translateX(-500px) 后：24-500=-476px 到 24px */
-  /* wrapper overflow: hidden 裁切 x<24px 的部分，只保留 x=24px 的边缘 */
-  /* 窄条 z-index: 100 盖住浮窗 */
+  /* 窄条范围：24px 到 104px，z-index: 100 盖住浮窗 (z-index: 1) */
   transform: translateX(-500px);
   transition: transform 0.3s ease;
   z-index: 1;
 }
 
-/* 使用 CSS :hover 实现悬停效果 */
-.game-panel-wrapper:hover .game-panel-popup {
+/* 使用窄条 hover 触发浮窗弹出 */
+.game-panel-narrow:hover ~ .game-panel-popup {
   /* 弹出时移回 0px，显示在 wrapper 内（24px 到 524px） */
   /* 窄条覆盖 24px 到 104px，所以浮窗 104px 到 524px 部分可见 */
   transform: translateX(0);
