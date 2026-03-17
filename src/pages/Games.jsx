@@ -39,7 +39,8 @@ function Games() {
     setSelectedAction(null);
     setActiveRole('全部');
     setCharacterSearch('');
-    setShowGamePanel(false);
+    // 选择游戏后保持浮窗弹出，显示已选游戏
+    // setShowGamePanel(false); // 删除这行
   };
   
   const handlePanelEnter = () => {
