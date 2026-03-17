@@ -8,7 +8,6 @@ function Games() {
   const [selectedAction, setSelectedAction] = useState(null);
   const [activeRole, setActiveRole] = useState('全部');
   const [characterSearch, setCharacterSearch] = useState('');
-  const [showGamePanel, setShowGamePanel] = useState(false);
 
   // 按字母分组游戏
   const gamesByLetter = games.reduce((acc, game) => {
@@ -38,7 +37,6 @@ function Games() {
     setSelectedAction(null);
     setActiveRole('全部');
     setCharacterSearch('');
-    setShowGamePanel(false);
   };
 
   const handleCharacterSelect = (char) => {
@@ -49,11 +47,7 @@ function Games() {
     <div className="games-page">
       <div className="games-content">
         {/* 左侧游戏选择 - 悬停浮窗 */}
-        <div 
-          className="game-panel-wrapper"
-          onMouseEnter={() => setShowGamePanel(true)}
-          onMouseLeave={() => setShowGamePanel(false)}
-        >
+        <div className="game-panel-wrapper">
           {/* 窄条 - 始终显示 */}
           <div className="game-panel-narrow">
             <div className="letter-index">
@@ -66,7 +60,7 @@ function Games() {
           </div>
           
           {/* 浮窗 - 悬停时显示 */}
-          <div className={`game-panel-popup ${showGamePanel ? 'show' : ''}`}>
+          <div className="game-panel-popup">
             <div className="game-list">
               {Object.entries(gamesByLetter).map(([letter, gameList]) => (
                 <div key={letter} className="letter-group">

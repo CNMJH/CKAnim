@@ -74,7 +74,8 @@
   z-index: 1;
 }
 
-.game-panel-popup.show {
+/* 使用 CSS :hover 实现悬停效果 */
+.game-panel-wrapper:hover .game-panel-popup {
   /* 弹出时移回 0px，显示在 wrapper 内（24px 到 524px） */
   /* 窄条覆盖 24px 到 104px，所以浮窗 104px 到 524px 部分可见 */
   transform: translateX(0);
