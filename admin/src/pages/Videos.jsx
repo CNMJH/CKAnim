@@ -17,6 +17,7 @@ function Videos() {
   const [selectedTags, setSelectedTags] = useState([])
   const [newTagName, setNewTagName] = useState('')
   const [selectedCategories, setSelectedCategories] = useState([])
+  const [pendingFile, setPendingFile] = useState(null) // 待上传的文件
   const queryClient = useQueryClient()
 
   // 获取游戏列表
@@ -50,11 +51,13 @@ function Videos() {
 
   // 获取所有分类（用于上传时选择）
   const { data: allCategories } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ['categories', selectedGame?.id],
     queryFn: async () => {
-      const response = await categoriesAPI.getAll()
+      if (!selectedGame) return []
+      const response = await categoriesAPI.getByGame(selectedGame.id)
       return response.data
     },
+    enabled: !!selectedGame,
   })
 
   // 删除视频
@@ -133,11 +136,11 @@ function Videos() {
     return result
   }
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0]
-    if (!file || !selectedGame) return
+  const handleStartUpload = async (e) => {
+    if (!pendingFile) return
+    const file = pendingFile
 
-    setUploadingFile(file)
+    setUploadingFile(pendingFile)
     setUploadProgress(0)
 
     try {
@@ -339,7 +342,7 @@ function Videos() {
                 <input
                   type="file"
                   accept="video/*"
-                  onChange={handleFileUpload}
+                  onChange={handleFileSelect}
                   disabled={uploadingFile}
                   id="video-upload"
                 />
@@ -425,13 +428,30 @@ function Videos() {
                 <p className="tag-hint">标签仅用于搜索，不会在前台展示</p>
               </div>
 
+              {/* 已选择的文件 */}
+              {pendingFile && (
+                <div className="selected-file">
+                  <span className="file-icon">📄</span>
+                  <span className="file-name">{pendingFile.name}</span>
+                  <span className="file-size">({(pendingFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                </div>
+              )}
+
               <div className="modal-actions">
                 <button
                   type="button"
                   className="btn-secondary"
-                  onClick={() => { setShowModal(false); setSelectedTags([]) }}
+                  onClick={() => { setShowModal(false); setSelectedTags([]); setSelectedCategories([]); setPendingFile(null) }}
                 >
                   取消
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleStartUpload}
+                  disabled={!pendingFile || uploadingFile}
+                >
+                  {uploadingFile ? '上传中...' : '📤 开始上传'}
                 </button>
               </div>
             </div>

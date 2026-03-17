@@ -265,6 +265,36 @@
   color: #888;
 }
 
+/* 已选择的文件显示 */
+.selected-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f0f7ff;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.file-icon {
+  font-size: 24px;
+}
+
+.file-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  word-break: break-all;
+}
+
+.file-size {
+  font-size: 13px;
+  color: #667eea;
+  font-weight: 600;
+}
+
 /* 标签样式 */
 .tags-section {
   margin-bottom: 24px;
