@@ -1,5 +1,5 @@
 .home {
-  max-width: 1440px;
+  max-width: 1520px;
   margin: 0 auto;
   padding: 20px 24px;
 }
@@ -19,19 +19,20 @@
   position: relative;
 }
 
-/* 轮播图宽度 = 4 个视频卡片 + 3 个间距 = 4*236 + 3*12 = 980px */
+/* 轮播图宽度 = 2 个视频卡片 + 1 个间距 = 2*280 + 12 = 572px */
+/* 轮播图高度 = 2 个视频卡片 + 1 个间距 = 2*157.5 + 12 = 327px */
 .banner-section {
-  width: 980px;
+  width: 572px;
   flex-shrink: 0;
   position: relative;
 }
 
 /* 右侧区域 = 3 个视频卡片宽度 */
 .right-section {
-  width: 732px;
+  width: 864px;
   display: grid;
-  grid-template-columns: repeat(3, 236px);
-  grid-template-rows: repeat(2, 133px);
+  grid-template-columns: repeat(3, 280px);
+  grid-template-rows: repeat(2, 157.5px);
   gap: 12px;
   position: relative;
 }
@@ -39,30 +40,45 @@
 /* 换一批按钮 - 右上角，垂直排列 */
 .refresh-btn {
   position: absolute;
-  right: -70px;
+  right: -61px;
   top: 0;
-  background: #999;
-  color: #fff;
+  background: #e0e0e0;
+  color: #666;
   border: none;
-  padding: 10px 8px;
+  padding: 12px 8px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   transition: all 0.3s;
   z-index: 100;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  min-width: 56px;
+  justify-content: center;
+  gap: 8px;
+  width: 49px;
+  height: 123px;
 }
 
 .refresh-btn:hover {
-  background: #dc3545;
+  background: #d0d0d0;
 }
 
 .refresh-icon {
-  font-size: 18px;
+  font-size: 24px;
+}
+
+.refresh-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.refresh-text span {
+  display: block;
 }
 
 .banner {
@@ -74,7 +90,7 @@
 
 .banner-placeholder {
   width: 100%;
-  height: 568px;
+  height: 327px;
   background: #cccccc;
   display: flex;
   align-items: center;
@@ -122,11 +138,10 @@
 /* 下方视频网格 - 5 列×2 行，固定卡片尺寸 */
 .video-grid-full {
   display: grid;
-  grid-template-columns: repeat(5, 236px);
-  grid-template-rows: repeat(2, 133px);
+  grid-template-columns: repeat(5, 280px);
+  grid-template-rows: repeat(2, 157.5px);
   gap: 12px;
   margin-top: 12px;
-  justify-content: start;
 }
 
 /* 统一视频卡片尺寸 */

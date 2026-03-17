@@ -53,7 +53,11 @@ function Home() {
           {/* 换一批按钮 - 右上角，垂直排列 */}
           <button className="refresh-btn" onClick={handleRefresh}>
             <span className="refresh-icon">🔄</span>
-            <span>换一批</span>
+            <span className="refresh-text">
+              <span>换</span>
+              <span>一</span>
+              <span>批</span>
+            </span>
           </button>
         </div>
       </div>

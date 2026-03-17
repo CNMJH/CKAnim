@@ -7,28 +7,27 @@
 }
 
 .header-content {
-  max-width: 1440px;
+  max-width: 1800px;
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   padding: 0 24px;
-  height: 56px;
+  height: 48px;
   position: relative;
 }
 
 .nav {
   display: flex;
   gap: 0;
-  position: absolute;
-  left: 24px;
+  flex-shrink: 0;
 }
 
 .nav-link {
   color: #ccc;
   text-decoration: none;
   font-size: 14px;
-  padding: 18px 16px;
+  padding: 14px 16px;
   transition: all 0.3s;
   cursor: pointer;
 }
@@ -45,11 +44,15 @@
   display: flex;
   align-items: center;
   background: #fff;
-  border-radius: 28px;
-  padding: 8px 16px;
+  border-radius: 20px;
+  padding: 6px 12px;
   width: 420px;
+  height: 36px;
   border: 1px solid transparent;
   transition: all 0.3s;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .search-form:focus-within {
@@ -61,8 +64,8 @@
   flex: 1;
   border: none;
   outline: none;
-  padding: 6px 8px;
-  font-size: 14px;
+  padding: 4px 8px;
+  font-size: 13px;
   background: transparent;
   color: #333;
 }
@@ -75,8 +78,8 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 16px;
-  padding: 4px 8px;
+  font-size: 18px;
+  padding: 4px 6px;
   opacity: 0.6;
   transition: opacity 0.3s;
   color: #dc3545;
