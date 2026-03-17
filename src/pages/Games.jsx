@@ -8,6 +8,7 @@ function Games() {
   const [selectedAction, setSelectedAction] = useState(null);
   const [activeRole, setActiveRole] = useState('全部');
   const [characterSearch, setCharacterSearch] = useState('');
+  const [showGamePanel, setShowGamePanel] = useState(false);
 
   // 按字母分组游戏
   const gamesByLetter = games.reduce((acc, game) => {
@@ -37,6 +38,7 @@ function Games() {
     setSelectedAction(null);
     setActiveRole('全部');
     setCharacterSearch('');
+    setShowGamePanel(false);
   };
 
   const handleCharacterSelect = (char) => {
@@ -46,29 +48,47 @@ function Games() {
   return (
     <div className="games-page">
       <div className="games-content">
-        {/* 左侧游戏选择 */}
-        <div className="game-panel">
-          <div className="game-list">
-            {Object.entries(gamesByLetter).map(([letter, gameList]) => (
-              <div key={letter} className="letter-group">
-                <span className="letter">{letter}</span>
-                <div className="game-items">
-                  {gameList.map(game => (
-                    <div
-                      key={game.id}
-                      className={`game-item ${selectedGame?.id === game.id ? 'selected' : ''}`}
-                      onClick={() => handleGameSelect(game)}
-                    >
-                      <img 
-                        src={`https://placehold.co/80x80/e0e0e0/999999?text=${game.name.charAt(0)}`}
-                        alt={game.name}
-                      />
-                      <span className="game-name">{game.name}</span>
-                    </div>
-                  ))}
+        {/* 左侧游戏选择 - 悬停浮窗 */}
+        <div 
+          className="game-panel-wrapper"
+          onMouseEnter={() => setShowGamePanel(true)}
+          onMouseLeave={() => setShowGamePanel(false)}
+        >
+          {/* 窄条 - 始终显示 */}
+          <div className="game-panel-narrow">
+            <div className="letter-index">
+              {Object.keys(gamesByLetter).map(letter => (
+                <div key={letter} className="letter-item">
+                  <span className="letter">{letter}</span>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+          
+          {/* 浮窗 - 悬停时显示 */}
+          <div className={`game-panel-popup ${showGamePanel ? 'show' : ''}`}>
+            <div className="game-list">
+              {Object.entries(gamesByLetter).map(([letter, gameList]) => (
+                <div key={letter} className="letter-group">
+                  <span className="letter">{letter}</span>
+                  <div className="game-items">
+                    {gameList.map(game => (
+                      <div
+                        key={game.id}
+                        className={`game-item ${selectedGame?.id === game.id ? 'selected' : ''}`}
+                        onClick={() => handleGameSelect(game)}
+                      >
+                        <img 
+                          src={`https://placehold.co/80x80/e0e0e0/999999?text=${game.name.charAt(0)}`}
+                          alt={game.name}
+                        />
+                        <span className="game-name">{game.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
