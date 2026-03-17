@@ -101,7 +101,8 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  height: calc((100vh - 120px) * 0.55);
+  /* 16:9 比例 - 宽度 760px，高度 = 760 × 9/16 = 427.5px */
+  height: 428px;
   min-height: 400px;
 }
 
@@ -151,7 +152,7 @@
   border-radius: 8px;
   padding: 16px;
   flex: 1;
-  min-height: 200px;
+  min-height: 240px;
 }
 
 .action-grid {
