@@ -15,7 +15,7 @@
 .game-panel-wrapper {
   position: relative;
   display: flex;
-  overflow: hidden; /* 裁切浮窗超出部分 */
+  /* 移除 overflow: hidden - 会裁切浮窗 */
 }
 
 /* 窄条 - 始终显示 */
