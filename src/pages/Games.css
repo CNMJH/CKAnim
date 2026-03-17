@@ -1,12 +1,12 @@
 .games-page {
-  max-width: 1720px;
+  max-width: 1520px;
   margin: 0 auto;
   padding: 20px 24px;
 }
 
 .games-content {
   display: grid;
-  grid-template-columns: 80px 1280px 360px;
+  grid-template-columns: 80px 1000px 360px;
   gap: 16px;
   min-height: calc(100vh - 120px);
 }
@@ -54,26 +54,31 @@
 /* 浮窗 - 悬停时滑出 */
 .game-panel-popup {
   position: absolute;
-  /* 相对于 wrapper (x=24px)，浮窗左边缘对齐 wrapper 左边缘 */
-  left: 0;
+  /* 相对于 wrapper，浮窗左边缘对齐窄条右边缘（窄条宽 80px） */
+  left: 80px;
   top: 0;
   width: 500px;
   height: 100%;
   background: #e8e8e8;
   border-radius: 0 8px 8px 0;
   overflow: hidden;
-  /* 收回时向左移动 500px，完全隐藏在窄条左边 */
-  /* wrapper x=24px, 浮窗范围：24-500=-476px 到 24px */
+  /* 收回时向左移动 500px，完全隐藏在窄条后面 */
+  /* wrapper x=24px, 浮窗 left=80px, 所以浮窗 x 起点=104px */
+  /* translateX(-500px) 后：104-500=-396px 到 104px */
   /* 窄条范围：24px 到 104px，完全遮住浮窗 */
   transform: translateX(-500px);
   transition: transform 0.3s ease;
   z-index: 1;
+  /* 强制隐藏：收回时不显示 */
+  visibility: hidden;
 }
 
 .game-panel-popup.show {
-  /* 弹出时移回 0px，显示在窄条右边（24px 到 524px） */
+  /* 弹出时移回 0px，显示在窄条右边（104px 到 604px） */
   transform: translateX(0);
   z-index: 99;
+  /* 强制显示 */
+  visibility: visible;
 }
 
 .game-list {
@@ -162,9 +167,9 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  /* 16:9 比例 - 宽度 1280px，高度 = 1280 × 9/16 = 720px */
-  width: 1280px;
-  height: 720px;
+  /* 16:9 比例 - 宽度 1000px，高度 = 1000 × 9/16 = 562.5px */
+  width: 1000px;
+  height: 562.5px;
 }
 
 .video-placeholder {
