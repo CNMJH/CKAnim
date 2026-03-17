@@ -15,6 +15,8 @@
 .game-panel-wrapper {
   position: relative;
   display: flex;
+  /* 遮罩：隐藏超出 wrapper 左边的部分 */
+  overflow: hidden;
 }
 
 /* 窄条 - 始终显示 */
@@ -54,31 +56,29 @@
 /* 浮窗 - 悬停时滑出 */
 .game-panel-popup {
   position: absolute;
-  /* 相对于 wrapper，浮窗左边缘对齐窄条右边缘（窄条宽 80px） */
-  left: 80px;
+  /* 相对于 wrapper 左边对齐 */
+  left: 0;
   top: 0;
   width: 500px;
   height: 100%;
   background: #e8e8e8;
   border-radius: 0 8px 8px 0;
   overflow: hidden;
-  /* 收回时向左移动 500px，完全隐藏在窄条后面 */
-  /* wrapper x=24px, 浮窗 left=80px, 所以浮窗 x 起点=104px */
-  /* translateX(-500px) 后：104-500=-396px 到 104px */
-  /* 窄条范围：24px 到 104px，完全遮住浮窗 */
+  /* 收回时向左移动 500px，超出 wrapper 的部分被遮罩裁切 */
+  /* wrapper x=24px, 浮窗 left=0, 所以浮窗 x 起点=24px */
+  /* translateX(-500px) 后：24-500=-476px 到 24px */
+  /* wrapper overflow: hidden 裁切 x<24px 的部分，只保留 x=24px 的边缘 */
+  /* 窄条 z-index: 100 盖住浮窗 */
   transform: translateX(-500px);
   transition: transform 0.3s ease;
   z-index: 1;
-  /* 强制隐藏：收回时不显示 */
-  visibility: hidden;
 }
 
 .game-panel-popup.show {
-  /* 弹出时移回 0px，显示在窄条右边（104px 到 604px） */
+  /* 弹出时移回 0px，显示在 wrapper 内（24px 到 524px） */
+  /* 窄条覆盖 24px 到 104px，所以浮窗 104px 到 524px 部分可见 */
   transform: translateX(0);
   z-index: 99;
-  /* 强制显示 */
-  visibility: visible;
 }
 
 .game-list {
