@@ -61,12 +61,15 @@
   transform: translateX(-100%);
   opacity: 0;
   transition: transform 0.3s ease, opacity 0.3s ease;
+  /* 收回时不拦截鼠标事件 */
+  pointer-events: none;
 }
 
-/* 使用窄条 hover 触发浮窗弹出 */
+/* 浮窗弹出时可以交互 */
 .game-panel-narrow:hover ~ .game-panel-popup {
   transform: translateX(0);
   opacity: 1;
+  pointer-events: auto;
 }
 
 .game-list {
