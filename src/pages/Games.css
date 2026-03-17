@@ -25,8 +25,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  z-index: 100;
   cursor: pointer;
 }
 
@@ -54,30 +52,21 @@
 /* 浮窗 - 悬停时滑出 */
 .game-panel-popup {
   position: absolute;
-  /* 相对于 wrapper 左边对齐 */
-  left: 0;
+  left: 80px;
   top: 0;
   width: 500px;
   height: 100%;
   background: #e8e8e8;
   border-radius: 0 8px 8px 0;
-  /* 收回时向左移动 500px + 完全透明 */
-  /* wrapper x=24px, 浮窗 left=0, 所以浮窗 x 起点=24px */
-  /* translateX(-500px) 后：24-500=-476px 到 24px */
-  /* 窄条范围：24px 到 104px，z-index: 100 盖住浮窗右边缘 */
-  transform: translateX(-500px);
+  transform: translateX(-100%);
   opacity: 0;
   transition: transform 0.3s ease, opacity 0.3s ease;
-  z-index: 1;
 }
 
 /* 使用窄条 hover 触发浮窗弹出 */
 .game-panel-narrow:hover ~ .game-panel-popup {
-  /* 弹出时移回 0px，显示在 wrapper 内（24px 到 524px） */
-  /* 窄条覆盖 24px 到 104px，所以浮窗 104px 到 524px 部分可见 */
   transform: translateX(0);
   opacity: 1;
-  z-index: 99;
 }
 
 .game-list {
