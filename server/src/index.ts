@@ -3,10 +3,13 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import multipart from '@fastify/multipart';
 import dotenv from 'dotenv';
-import { authRoutes } from './routes/auth.js';
-import { gameRoutes } from './routes/games.js';
-import { categoryRoutes } from './routes/categories.js';
-import { videoRoutes } from './routes/videos.js';
+import { writeFileSync } from 'fs';
+import { authRoutes } from './routes/auth';
+import { gameRoutes } from './routes/games';
+import { categoryRoutes } from './routes/categories';
+import { videoRoutes } from './routes/videos';
+import { tagRoutes } from './routes/tags';
+import { publicVideoRoutes } from './routes/public-videos';
 
 dotenv.config();
 
@@ -36,10 +39,19 @@ await server.register(multipart, {
 });
 
 // 注册路由
+// 公开路由（前台网站使用）
+await server.register(publicVideoRoutes, { prefix: '/api' });
+await server.register(gameRoutes, { prefix: '/api' });
+
+// 管理员路由（需要认证）
 await server.register(authRoutes, { prefix: '/api/admin' });
-await server.register(gameRoutes, { prefix: '/api/admin' });
 await server.register(categoryRoutes, { prefix: '/api/admin' });
 await server.register(videoRoutes, { prefix: '/api/admin' });
+await server.register(tagRoutes, { prefix: '/api/admin' });
+
+writeFileSync('/tmp/server_startup.log', `Server started at ${new Date().toISOString()}\nRoutes: auth, games, categories, videos, tags\n`, { append: true });
+
+console.log('✅ All routes registered, including tags!');
 
 // 健康检查
 server.get('/health', async () => {

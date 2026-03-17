@@ -4,7 +4,7 @@ import { authenticate } from '../middleware/auth.js';
 
 export const gameRoutes: FastifyPluginAsync = async (server) => {
   // 获取所有游戏
-  server.get('/games', async (request, reply) => {
+  server.get('/games', async (_request, reply) => {
     try {
       const games = await prisma.game.findMany({
         orderBy: { order: 'asc' },

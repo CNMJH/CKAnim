@@ -9,6 +9,9 @@ function Categories() {
   const [showModal, setShowModal] = useState(false)
   const [editingCategory, setEditingCategory] = useState(null)
   const [expandedNodes, setExpandedNodes] = useState({})
+  const [error, setError] = useState('')
+  const [selectedLevel, setSelectedLevel] = useState(1)
+  const [selectedParentId, setSelectedParentId] = useState(null)
   const queryClient = useQueryClient()
 
   // 获取游戏列表
@@ -30,6 +33,29 @@ function Categories() {
     },
     enabled: !!selectedGame,
   })
+
+  // 获取所有分类（用于父分类选择）
+  const { data: allCategories } = useQuery({
+    queryKey: ['all-categories', selectedGame?.id],
+    queryFn: async () => {
+      if (!selectedGame) return []
+      const response = await categoriesAPI.getByGame(selectedGame.id)
+      return response.data
+    },
+    enabled: !!selectedGame && showModal && !editingCategory,
+  })
+
+  // 扁平化分类树
+  const flattenCategories = (nodes, result = []) => {
+    if (!nodes) return result
+    nodes.forEach(node => {
+      result.push(node)
+      if (node.children && node.children.length > 0) {
+        flattenCategories(node.children, result)
+      }
+    })
+    return result
+  }
 
   // 创建分类
   const createMutation = useMutation({
@@ -70,10 +96,16 @@ function Categories() {
     const formData = new FormData(e.target)
     const data = {
       name: formData.get('name'),
-      level: parseInt(formData.get('level')),
+      level: selectedLevel,
       gameId: selectedGame?.id,
-      parentId: formData.get('parentId') ? parseInt(formData.get('parentId')) : null,
+      parentId: selectedLevel > 1 ? selectedParentId : null,
       order: parseInt(formData.get('order')) || 0,
+    }
+
+    // 2 级及以上必须有 parentId
+    if (data.level > 1 && !data.parentId) {
+      setError('请选择父分类')
+      return
     }
 
     if (editingCategory) {
@@ -81,6 +113,14 @@ function Categories() {
     } else {
       createMutation.mutate(data)
     }
+  }
+
+  const handleModalClose = () => {
+    setShowModal(false)
+    setEditingCategory(null)
+    setError('')
+    setSelectedLevel(1)
+    setSelectedParentId(null)
   }
 
   const toggleNode = (id) => {
@@ -179,7 +219,7 @@ function Categories() {
 
         {/* 新建/编辑分类弹窗 */}
         {showModal || editingCategory ? (
-          <div className="modal-overlay" onClick={() => { setShowModal(false); setEditingCategory(null) }}>
+          <div className="modal-overlay" onClick={handleModalClose}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
               <h3>{editingCategory ? '编辑分类' : '新建分类'}</h3>
               <form onSubmit={handleSubmit}>
@@ -193,19 +233,45 @@ function Categories() {
                     placeholder="请输入分类名称"
                   />
                 </div>
-                <div className="form-group">
-                  <label>层级</label>
-                  <select
-                    name="level"
-                    defaultValue={editingCategory?.level || 1}
-                    disabled={!!editingCategory}
-                  >
-                    {getLevelOptions().map(level => (
-                      <option key={level} value={level}>第{level}级</option>
-                    ))}
-                  </select>
-                  <small>注意：层级创建后不可修改</small>
-                </div>
+                {!editingCategory && (
+                  <div className="form-group">
+                    <label>层级</label>
+                    <select
+                      value={selectedLevel}
+                      onChange={(e) => {
+                        setSelectedLevel(parseInt(e.target.value))
+                        setSelectedParentId(null)
+                      }}
+                      disabled={!!editingCategory}
+                    >
+                      {getLevelOptions().map(level => (
+                        <option key={level} value={level}>第{level}级</option>
+                      ))}
+                    </select>
+                    <small>注意：层级创建后不可修改</small>
+                  </div>
+                )}
+                {/* 父分类选择（2 级及以上显示） */}
+                {!editingCategory && selectedLevel > 1 && (
+                  <div className="form-group">
+                    <label>父分类 *</label>
+                    <select
+                      value={selectedParentId || ''}
+                      onChange={(e) => setSelectedParentId(e.target.value ? parseInt(e.target.value) : null)}
+                      required
+                    >
+                      <option value="">请选择父分类</option>
+                      {flattenCategories(allCategories || [])
+                        .filter(cat => cat.level === selectedLevel - 1)
+                        .map(cat => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name} (L{cat.level})
+                          </option>
+                        ))}
+                    </select>
+                    <small>选择上一级分类</small>
+                  </div>
+                )}
                 {editingCategory && (
                   <div className="form-group">
                     <label>排序</label>
@@ -217,11 +283,12 @@ function Categories() {
                     />
                   </div>
                 )}
+                {error && <div className="error-message" style={{ marginBottom: '16px' }}>{error}</div>}
                 <div className="modal-actions">
                   <button 
                     type="button" 
                     className="btn-secondary" 
-                    onClick={() => { setShowModal(false); setEditingCategory(null) }}
+                    onClick={handleModalClose}
                   >
                     取消
                   </button>

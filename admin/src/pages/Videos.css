@@ -199,3 +199,262 @@
   color: #888;
   font-size: 16px;
 }
+
+/* 上传弹窗 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal h3 {
+  margin: 0 0 24px;
+  font-size: 24px;
+  color: #2c3e50;
+}
+
+.upload-area {
+  margin-bottom: 24px;
+  text-align: center;
+  padding: 40px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 2px dashed #dee2e6;
+}
+
+.upload-area input[type="file"] {
+  display: none;
+}
+
+.upload-label {
+  display: inline-block;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.upload-label:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.upload-hint {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #888;
+}
+
+/* 标签样式 */
+.tags-section {
+  margin-bottom: 24px;
+}
+
+.tags-section label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.tag-btn {
+  padding: 6px 14px;
+  background: #e9ecef;
+  border: 2px solid transparent;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tag-btn:hover {
+  background: #dee2e6;
+}
+
+.tag-btn.selected {
+  background: #e3f2fd;
+  border-color: #667eea;
+  color: #667eea;
+  font-weight: 600;
+}
+
+/* 分类样式 */
+.categories-section {
+  margin-bottom: 24px;
+}
+
+.categories-section label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+}
+
+.categories-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.category-btn {
+  padding: 6px 14px;
+  background: #e9ecef;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.category-btn:hover {
+  background: #dee2e6;
+}
+
+.category-btn.selected {
+  background: #e3f2fd;
+  border-color: #667eea;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.level-tag {
+  background: #dee2e6;
+  color: #666;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.category-btn.selected .level-tag {
+  background: #667eea;
+  color: white;
+}
+
+.category-hint {
+  font-size: 12px;
+  color: #888;
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+.new-tag-input {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.new-tag-input input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.new-tag-input input:focus {
+  border-color: #667eea;
+}
+
+.tag-hint {
+  font-size: 12px;
+  color: #888;
+  font-style: italic;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  background: #f5f7fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #e8ecf1;
+}
+
+/* 编辑弹窗表单样式 */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  border-color: #667eea;
+}

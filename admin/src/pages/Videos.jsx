@@ -1,14 +1,22 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { gamesAPI, videosAPI, categoriesAPI } from '../lib/services'
+import { gamesAPI, videosAPI, categoriesAPI, tagsAPI } from '../lib/services'
 import Layout from '../components/Layout'
 import './Videos.css'
 
 function Videos() {
   const [showModal, setShowModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingVideo, setEditingVideo] = useState(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editTags, setEditTags] = useState([])
+  const [editCategories, setEditCategories] = useState([])
   const [selectedGame, setSelectedGame] = useState(null)
   const [uploadingFile, setUploadingFile] = useState(null)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [selectedTags, setSelectedTags] = useState([])
+  const [newTagName, setNewTagName] = useState('')
+  const [selectedCategories, setSelectedCategories] = useState([])
   const queryClient = useQueryClient()
 
   // 获取游戏列表
@@ -29,6 +37,24 @@ function Videos() {
       return response.data
     },
     enabled: !!selectedGame,
+  })
+
+  // 获取所有标签
+  const { data: tags } = useQuery({
+    queryKey: ['tags'],
+    queryFn: async () => {
+      const response = await tagsAPI.getAll()
+      return response.data
+    },
+  })
+
+  // 获取所有分类（用于上传时选择）
+  const { data: allCategories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const response = await categoriesAPI.getAll()
+      return response.data
+    },
   })
 
   // 删除视频
@@ -53,6 +79,60 @@ function Videos() {
     },
   })
 
+  // 更新视频信息（标题、标签、分类）
+  const updateVideoMutation = useMutation({
+    mutationFn: async ({ id, title, tagIds, categoryIds }) => {
+      await videosAPI.update(id, { title, tagIds, categoryIds })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['videos'])
+      setShowEditModal(false)
+      alert('更新成功！')
+    },
+  })
+
+  // 打开编辑弹窗
+  const handleEditClick = (video) => {
+    setEditingVideo(video)
+    setEditTitle(video.title)
+    setEditTags(video.tags?.map(t => t.id) || [])
+    setEditCategories(video.categories?.map(c => c.id) || [])
+    setShowEditModal(true)
+  }
+
+  // 保存编辑
+  const handleSaveEdit = () => {
+    updateVideoMutation.mutate({
+      id: editingVideo.id,
+      title: editTitle,
+      tagIds: editTags,
+      categoryIds: editCategories,
+    })
+  }
+
+  // 创建标签
+  const createTagMutation = useMutation({
+    mutationFn: async (name) => {
+      const response = await tagsAPI.create({ name })
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tags'])
+    },
+  })
+
+  // 扁平化分类树
+  const flattenCategories = (nodes, result = []) => {
+    if (!nodes) return result
+    nodes.forEach(node => {
+      result.push(node)
+      if (node.children && node.children.length > 0) {
+        flattenCategories(node.children, result)
+      }
+    })
+    return result
+  }
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0]
     if (!file || !selectedGame) return
@@ -61,8 +141,8 @@ function Videos() {
     setUploadProgress(0)
 
     try {
-      // 1. 获取上传凭证
-      const tokenResponse = await videosAPI.getUploadToken(file.name, selectedGame.id)
+      // 1. 获取上传凭证（传递分类 ID 用于生成文件夹路径）
+      const tokenResponse = await videosAPI.getUploadToken(file.name, selectedGame.id, selectedCategories)
       const { token, key, url } = tokenResponse.data
 
       // 2. 上传到七牛云
@@ -82,26 +162,40 @@ function Videos() {
         })
 
         xhr.addEventListener('load', () => {
+          console.log('Qiniu response status:', xhr.status)
+          console.log('Qiniu response text:', xhr.responseText)
+          
           if (xhr.status === 200) {
             resolve()
           } else {
-            reject(new Error('上传失败'))
+            try {
+              const error = JSON.parse(xhr.responseText)
+              reject(new Error(error.error || '上传失败'))
+            } catch(e) {
+              reject(new Error(`上传失败 (${xhr.status})`))
+            }
           }
         })
 
-        xhr.addEventListener('error', reject)
+        xhr.addEventListener('error', (e) => {
+          console.error('XHR error:', e)
+          reject(new Error('网络错误'))
+        })
 
-        xhr.open('POST', 'https://upload.qiniup.com/')
+        // 使用七牛云华南区域上传地址
+        xhr.open('POST', 'https://up-z2.qiniup.com/')
         xhr.send(formData)
       })
 
-      // 3. 创建视频记录
+      // 3. 创建视频记录（带标签和分类）
       const videoData = {
-        title: file.name.replace(/\.[^/.]+$/, ''), // 去掉扩展名
+        title: file.name.replace(/\.[^/.]+$/, ''),
         gameId: selectedGame.id,
         qiniuKey: key,
         qiniuUrl: url,
         published: false,
+        tagIds: selectedTags,
+        categoryIds: selectedCategories,
       }
 
       await videosAPI.create(videoData)
@@ -110,6 +204,8 @@ function Videos() {
       setUploadingFile(null)
       setUploadProgress(0)
       setShowModal(false)
+      setSelectedTags([])
+      setSelectedCategories([])
       queryClient.invalidateQueries(['videos'])
 
       alert('上传成功！')
@@ -133,16 +229,14 @@ function Videos() {
       <div className="videos-page">
         <div className="page-header">
           <h2>视频管理</h2>
-          <label className="btn-primary">
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => setShowModal(true)}
+            disabled={!selectedGame}
+          >
             📤 上传视频
-            <input
-              type="file"
-              accept="video/*"
-              onChange={handleFileUpload}
-              disabled={!selectedGame}
-              style={{ display: 'none' }}
-            />
-          </label>
+          </button>
         </div>
 
         {/* 游戏选择 */}
@@ -197,6 +291,12 @@ function Videos() {
                   </div>
                   <div className="video-actions">
                     <button
+                      className="btn-sm btn-secondary"
+                      onClick={() => handleEditClick(video)}
+                    >
+                      编辑
+                    </button>
+                    <button
                       className={`btn-sm ${video.published ? 'btn-warning' : 'btn-success'}`}
                       onClick={() => togglePublishMutation.mutate({ 
                         id: video.id, 
@@ -227,6 +327,229 @@ function Videos() {
           <div className="pagination">
             <span>第 {videosData.pagination.page} / {videosData.pagination.totalPages} 页</span>
             <span>共 {videosData.pagination.total} 个视频</span>
+          </div>
+        )}
+
+        {/* 上传弹窗 */}
+        {showModal && (
+          <div className="modal-overlay" onClick={() => { setShowModal(false); setSelectedTags([]); setSelectedCategories([]) }}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <h3>上传视频</h3>
+              <div className="upload-area">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={handleFileUpload}
+                  disabled={uploadingFile}
+                  id="video-upload"
+                />
+                <label htmlFor="video-upload" className="upload-label">
+                  📤 选择视频文件
+                </label>
+                <p className="upload-hint">支持 MP4、WebM 等格式，最大 500MB</p>
+              </div>
+
+              {/* 分类选择 */}
+              <div className="categories-section">
+                <label>视频分类（可选，支持多级）</label>
+                <div className="categories-list">
+                  {flattenCategories(allCategories || []).map(cat => (
+                    <button
+                      key={cat.id}
+                      className={`category-btn ${selectedCategories.includes(cat.id) ? 'selected' : ''}`}
+                      onClick={() => {
+                        setSelectedCategories(prev =>
+                          prev.includes(cat.id)
+                            ? prev.filter(id => id !== cat.id)
+                            : [...prev, cat.id]
+                        )
+                      }}
+                    >
+                      {'\u00A0'.repeat((cat.level - 1) * 2)}
+                      {cat.name}
+                      <span className="level-tag">L{cat.level}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="category-hint">可选择多个分类，用于前台网站分类筛选</p>
+              </div>
+
+              {/* 标签选择 */}
+              <div className="tags-section">
+                <label>视频标签（可选）</label>
+                <div className="tags-list">
+                  {tags?.map(tag => (
+                    <button
+                      key={tag.id}
+                      className={`tag-btn ${selectedTags.includes(tag.id) ? 'selected' : ''}`}
+                      onClick={() => {
+                        setSelectedTags(prev =>
+                          prev.includes(tag.id)
+                            ? prev.filter(id => id !== tag.id)
+                            : [...prev, tag.id]
+                        )
+                      }}
+                    >
+                      {tag.name}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 新建标签 */}
+                <div className="new-tag-input">
+                  <input
+                    type="text"
+                    value={newTagName}
+                    onChange={(e) => setNewTagName(e.target.value)}
+                    placeholder="输入新标签名称"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newTagName.trim()) {
+                        createTagMutation.mutate(newTagName.trim())
+                        setNewTagName('')
+                      }
+                    }}
+                  />
+                  <button
+                    className="btn-sm"
+                    onClick={() => {
+                      if (newTagName.trim()) {
+                        createTagMutation.mutate(newTagName.trim())
+                        setNewTagName('')
+                      }
+                    }}
+                    disabled={!newTagName.trim() || createTagMutation.isPending}
+                  >
+                    添加
+                  </button>
+                </div>
+                <p className="tag-hint">标签仅用于搜索，不会在前台展示</p>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => { setShowModal(false); setSelectedTags([]) }}
+                >
+                  取消
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 编辑弹窗 */}
+        {showEditModal && editingVideo && (
+          <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <h3>编辑视频信息</h3>
+              
+              {/* 标题编辑 */}
+              <div className="form-group">
+                <label>视频标题</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="form-input"
+                  placeholder="输入视频标题"
+                />
+              </div>
+
+              {/* 分类选择 */}
+              <div className="form-group">
+                <label>视频分类（可选）</label>
+                <div className="categories-list">
+                  {flattenCategories(allCategories || []).map(cat => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      className={`category-btn ${editCategories.includes(cat.id) ? 'selected' : ''}`}
+                      onClick={() => {
+                        setEditCategories(prev =>
+                          prev.includes(cat.id)
+                            ? prev.filter(id => id !== cat.id)
+                            : [...prev, cat.id]
+                        )
+                      }}
+                    >
+                      {'\u00A0'.repeat((cat.level - 1) * 2)}
+                      {cat.name}
+                      <span className="level-tag">L{cat.level}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 标签选择 */}
+              <div className="form-group">
+                <label>视频标签（可选）</label>
+                <div className="tags-list">
+                  {tags?.map(tag => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      className={`tag-btn ${editTags.includes(tag.id) ? 'selected' : ''}`}
+                      onClick={() => {
+                        setEditTags(prev =>
+                          prev.includes(tag.id)
+                            ? prev.filter(id => id !== tag.id)
+                            : [...prev, tag.id]
+                        )
+                      }}
+                    >
+                      {tag.name}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 新建标签 */}
+                <div className="new-tag-input">
+                  <input
+                    type="text"
+                    value={newTagName}
+                    onChange={(e) => setNewTagName(e.target.value)}
+                    placeholder="输入新标签名称"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newTagName.trim()) {
+                        createTagMutation.mutate(newTagName.trim())
+                        setNewTagName('')
+                      }
+                    }}
+                  />
+                  <button
+                    className="btn-sm"
+                    onClick={() => {
+                      if (newTagName.trim()) {
+                        createTagMutation.mutate(newTagName.trim())
+                        setNewTagName('')
+                      }
+                    }}
+                    disabled={!newTagName.trim() || createTagMutation.isPending}
+                  >
+                    添加
+                  </button>
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleSaveEdit}
+                  disabled={updateVideoMutation.isPending}
+                >
+                  {updateVideoMutation.isPending ? '保存中...' : '保存'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

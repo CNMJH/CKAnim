@@ -20,6 +20,8 @@ export function getUploadToken(key?: string) {
   const options: qiniu.rs.PutPolicyOptions = {
     scope: key ? `${bucket}:${key}` : bucket,
     expires: 7200, // 2 小时
+    // 指定上传区域（华南）
+    zone: qiniu.zone.Zone_z2,
   };
   
   const putPolicy = new qiniu.rs.PutPolicy(options);
@@ -41,14 +43,17 @@ export function getUploadTokenWithParams(params: {
   return putPolicy.uploadToken(mac);
 }
 
-// 生成文件存储 key
-export function generateFileKey(filename: string, gameId?: number): string {
+// 生成文件存储 key（支持分类路径）
+export function generateFileKey(filename: string, gameId?: number, categoryPath?: string): string {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 8);
   const ext = filename.split('.').pop() || 'mp4';
   const gamePath = gameId ? `game-${gameId}/` : '';
   
-  return `${prefix}${gamePath}${timestamp}-${random}.${ext}`;
+  // 如果有分类路径，添加到文件路径中
+  const categoryDir = categoryPath ? `${categoryPath}/` : '';
+  
+  return `${prefix}${categoryDir}${gamePath}${timestamp}-${random}.${ext}`;
 }
 
 // 获取文件外链
@@ -61,7 +66,7 @@ export async function deleteFile(key: string) {
   const bucketManager = new qiniu.rs.BucketManager(mac);
   
   return new Promise<void>((resolve, reject) => {
-    bucketManager.delete(bucket, key, (err, respBody, respInfo) => {
+    bucketManager.delete(bucket, key, (err, _respBody, respInfo) => {
       if (err) {
         reject(err);
       } else if (respInfo.statusCode === 200) {

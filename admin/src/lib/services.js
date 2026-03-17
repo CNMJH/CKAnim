@@ -30,9 +30,16 @@ export const categoriesAPI = {
 export const videosAPI = {
   getAll: (params) => api.get('/admin/videos', { params }),
   getOne: (id) => api.get(`/admin/videos/${id}`),
-  getUploadToken: (filename, gameId) =>
-    api.post('/admin/videos/upload-token', { filename, gameId }),
+  getUploadToken: (filename, gameId, categoryIds = []) =>
+    api.post('/admin/videos/upload-token', { filename, gameId, categoryIds }),
   create: (data) => api.post('/admin/videos', data),
   update: (id, data) => api.put(`/admin/videos/${id}`, data),
   delete: (id) => api.delete(`/admin/videos/${id}`),
+}
+
+export const tagsAPI = {
+  getAll: () => api.get('/admin/tags'),
+  create: (data) => api.post('/admin/tags', data),
+  update: (id, data) => api.put(`/admin/tags/${id}`, data),
+  delete: (id) => api.delete(`/admin/tags/${id}`),
 }
