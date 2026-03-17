@@ -1,0 +1,88 @@
+// 这是你的 Prisma schema 文件
+// 使用 SQLite 进行快速开发和测试
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// 管理员表
+model Admin {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  email     String   @unique
+  role      String   @default("editor")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins")
+}
+
+// 游戏表
+model Game {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  icon        String?
+  order       Int      @default(0)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categories GameCategory[]
+  videos     Video[]
+
+  @@map("games")
+}
+
+// 游戏分类表（支持 1-7 级分类）
+model GameCategory {
+  id        Int      @id @default(autoincrement())
+  name      String
+  level     Int
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parentId  Int?
+  parent    GameCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children  GameCategory[] @relation("CategoryHierarchy")
+
+  gameId  Int?
+  game    Game? @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  videos  Video[] @relation("VideoCategories")
+
+  @@index([gameId])
+  @@index([parentId])
+  @@map("game_categories")
+}
+
+// 视频表
+model Video {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  duration    Int?
+  thumbnail   String?
+  order       Int      @default(0)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  qiniuKey  String
+  qiniuUrl  String
+
+  gameId  Int
+  game    Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  categories GameCategory[] @relation("VideoCategories")
+
+  @@index([gameId])
+  @@map("videos")
+}
