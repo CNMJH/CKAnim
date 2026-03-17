@@ -60,13 +60,15 @@
   background: #e8e8e8;
   border-radius: 0 8px 8px 0;
   overflow: hidden;
+  /* 收回时完全隐藏在窄条后面 */
   transform: translateX(-100%);
   transition: transform 0.3s ease;
-  z-index: 99;
+  z-index: 1;
 }
 
 .game-panel-popup.show {
   transform: translateX(0);
+  z-index: 99;
 }
 
 .game-list {
