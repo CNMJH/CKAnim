@@ -49,9 +49,9 @@ function Games() {
     return acc;
   }, {});
 
-  // 按职业筛选角色
+  // 按分类筛选角色
   const filteredCharacters = characters.filter(char => {
-    const matchesRole = activeRole === '全部' || char.role === activeRole;
+    const matchesRole = activeRole === '全部' || char.category?.name === activeRole;
     const matchesSearch = char.name.toLowerCase().includes(characterSearch.toLowerCase());
     return matchesRole && matchesSearch;
   });

@@ -18,7 +18,9 @@ export const publicCharacterRoutes: FastifyPluginAsync = async (server) => {
       }
 
       if (role) {
-        where.role = role;
+        where.category = {
+          name: role,
+        };
       }
 
       if (search) {
@@ -32,6 +34,13 @@ export const publicCharacterRoutes: FastifyPluginAsync = async (server) => {
             select: {
               id: true,
               name: true,
+            },
+          },
+          category: {
+            select: {
+              id: true,
+              name: true,
+              level: true,
             },
           },
         },
@@ -192,20 +201,26 @@ export const publicCharacterRoutes: FastifyPluginAsync = async (server) => {
         where.gameId = parseInt(gameId);
       }
 
-      // 获取所有不重复的角色分类
+      // 获取所有有分类的角色，包含分类信息
       const characters = await prisma.character.findMany({
         where,
-        select: { role: true },
-        distinct: ['role'],
+        select: { 
+          category: {
+            select: {
+              name: true,
+            },
+          },
+        },
       });
 
-      // 提取角色分类并过滤空值
-      const roles = characters
-        .map(c => c.role)
-        .filter(Boolean)
-        .sort();
+      // 提取不重复的分类名称
+      const roleNames = [...new Set(
+        characters
+          .map(c => c.category?.name)
+          .filter(Boolean)
+      )].sort();
 
-      reply.send({ roles });
+      reply.send({ roles: roleNames });
     } catch (error) {
       server.log.error(error);
       reply.code(500).send({

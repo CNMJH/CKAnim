@@ -60,7 +60,8 @@ model GameCategory {
   gameId  Int?
   game    Game? @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
-  videos  Video[] @relation("VideoCategories")
+  videos     Video[]     @relation("VideoCategories")
+  characters Character[]
 
   @@index([gameId])
   @@index([parentId])
@@ -112,7 +113,6 @@ model Video {
 model Character {
   id          Int      @id @default(autoincrement())
   name        String
-  role        String?  // 职业：战士/法师/刺客等
   avatar      String?  // 角色头像 URL
   description String?
   gameId      Int
@@ -123,9 +123,14 @@ model Character {
 
   game    Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
   actions CharacterAction[]
+  
+  // 角色分类关联（关联到 GameCategory）
+  categoryId Int?
+  category   GameCategory? @relation(fields: [categoryId], references: [id])
 
   @@unique([gameId, name])
   @@index([gameId])
+  @@index([categoryId])
   @@map("characters")
 }
 

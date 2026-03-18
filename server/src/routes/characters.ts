@@ -50,7 +50,7 @@ export const characterRoutes: FastifyPluginAsync = async (server) => {
       try {
         const {
           name,
-          role,
+          categoryId,
           avatar,
           description,
           gameId,
@@ -58,7 +58,7 @@ export const characterRoutes: FastifyPluginAsync = async (server) => {
           published = false,
         } = request.body as {
           name: string;
-          role?: string;
+          categoryId?: number;
           avatar?: string;
           description?: string;
           gameId: number;
@@ -76,7 +76,7 @@ export const characterRoutes: FastifyPluginAsync = async (server) => {
         const character = await prisma.character.create({
           data: {
             name,
-            role,
+            categoryId,
             avatar,
             description,
             gameId,
@@ -88,6 +88,13 @@ export const characterRoutes: FastifyPluginAsync = async (server) => {
               select: {
                 id: true,
                 name: true,
+              },
+            },
+            category: {
+              select: {
+                id: true,
+                name: true,
+                level: true,
               },
             },
           },
@@ -114,14 +121,14 @@ export const characterRoutes: FastifyPluginAsync = async (server) => {
         const characterId = parseInt(id);
         const {
           name,
-          role,
+          categoryId,
           avatar,
           description,
           order,
           published,
         } = request.body as {
           name?: string;
-          role?: string;
+          categoryId?: number;
           avatar?: string;
           description?: string;
           order?: number;
@@ -132,7 +139,7 @@ export const characterRoutes: FastifyPluginAsync = async (server) => {
           where: { id: characterId },
           data: {
             name,
-            role,
+            categoryId,
             avatar,
             description,
             order,
@@ -143,6 +150,13 @@ export const characterRoutes: FastifyPluginAsync = async (server) => {
               select: {
                 id: true,
                 name: true,
+              },
+            },
+            category: {
+              select: {
+                id: true,
+                name: true,
+                level: true,
               },
             },
           },

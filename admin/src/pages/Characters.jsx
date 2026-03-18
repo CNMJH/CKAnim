@@ -10,7 +10,7 @@ function Characters() {
   const [editingCharacter, setEditingCharacter] = useState(null)
   const [formData, setFormData] = useState({
     name: '',
-    role: '',
+    categoryId: '',
     avatar: '',
     description: '',
     order: 0,
@@ -26,6 +26,17 @@ function Characters() {
       const res = await gamesAPI.getAll()
       return res.data.games
     },
+  })
+
+  // 获取分类列表（按游戏）
+  const { data: categories } = useQuery({
+    queryKey: ['categories', selectedGame?.id],
+    queryFn: async () => {
+      if (!selectedGame) return []
+      const res = await categoriesAPI.getByGame(selectedGame.id)
+      return res.data.categories
+    },
+    enabled: !!selectedGame,
   })
 
   // 获取角色列表
@@ -79,7 +90,7 @@ function Characters() {
   const resetForm = () => {
     setFormData({
       name: '',
-      role: '',
+      categoryId: '',
       avatar: '',
       description: '',
       order: 0,
@@ -100,7 +111,7 @@ function Characters() {
     setEditingCharacter(character)
     setFormData({
       name: character.name,
-      role: character.role || '',
+      categoryId: character.categoryId || '',
       avatar: character.avatar || '',
       description: character.description || '',
       order: character.order || 0,
@@ -154,7 +165,7 @@ function Characters() {
                   )}
                   <div className="character-details">
                     <div className="character-name">{character.name}</div>
-                    {character.role && <div className="character-role">分类：{character.role}</div>}
+                    {character.category && <div className="character-role">分类：{character.category.name}</div>}
                     {character.description && <div className="character-description">{character.description}</div>}
                   </div>
                 </div>
@@ -192,12 +203,20 @@ function Characters() {
 
               <div className="form-group">
                 <label>角色分类</label>
-                <input
-                  type="text"
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  placeholder="如：战士、法师、刺客（用于前台筛选）"
-                />
+                <select
+                  value={formData.categoryId}
+                  onChange={(e) => setFormData({ ...formData, categoryId: e.target.value ? parseInt(e.target.value) : null })}
+                >
+                  <option value="">不分类</option>
+                  {categories?.map(cat => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name} (L{cat.level})
+                    </option>
+                  ))}
+                </select>
+                <small style={{color: '#888', marginTop: '4px', display: 'block'}}>
+                  分类用于前台网站筛选（如：战士、法师、刺客）
+                </small>
               </div>
 
               <div className="form-group">
