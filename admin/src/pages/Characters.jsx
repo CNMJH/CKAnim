@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { gamesAPI, charactersAPI } from '../lib/services'
+import Layout from '../components/Layout'
 import './Characters.css'
 
 function Characters() {
@@ -115,7 +116,8 @@ function Characters() {
   }
 
   return (
-    <div className="characters-page">
+    <Layout>
+      <div className="characters-page">
       <div className="page-header">
         <h1>角色管理</h1>
         <button className="btn-primary" onClick={handleNew}>+ 新建角色</button>
@@ -249,7 +251,8 @@ function Characters() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </Layout>
   )
 }
 
