@@ -5,6 +5,7 @@ import Games from './pages/Games'
 import Categories from './pages/Categories'
 import Videos from './pages/Videos'
 import Settings from './pages/Settings'
+import Characters from './pages/Characters'
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -28,6 +29,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Categories />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/characters"
+        element={
+          <ProtectedRoute>
+            <Characters />
           </ProtectedRoute>
         }
       />

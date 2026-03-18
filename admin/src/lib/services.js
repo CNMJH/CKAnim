@@ -45,3 +45,10 @@ export const tagsAPI = {
   update: (id, data) => api.put(`/admin/tags/${id}`, data),
   delete: (id) => api.delete(`/admin/tags/${id}`),
 }
+
+export const charactersAPI = {
+  getByGame: (gameId) => api.get(`/admin/characters?gameId=${gameId}`),
+  create: (data) => api.post('/admin/characters', data),
+  update: (id, data) => api.put(`/admin/characters/${id}`, data),
+  delete: (id) => api.delete(`/admin/characters/${id}`),
+}

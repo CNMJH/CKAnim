@@ -12,6 +12,7 @@ function Layout({ children }) {
   const menuItems = [
     { path: '/', label: '游戏管理', icon: '🎮' },
     { path: '/categories', label: '分类管理', icon: '📁' },
+    { path: '/characters', label: '角色管理', icon: '👤' },
     { path: '/videos', label: '视频管理', icon: '🎬' },
     { path: '/settings', label: '设置', icon: '⚙️' },
   ]
