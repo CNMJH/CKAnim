@@ -7,6 +7,14 @@ import {
   getFileUrl,
   deleteFile,
 } from '../lib/qiniu.js';
+import {
+  generateThumbnail,
+  uploadThumbnailToQiniu,
+  cleanupTempFile,
+} from '../lib/thumbnail.js';
+import os from 'os';
+import path from 'path';
+import fs from 'fs';
 
 export const videoRoutes: FastifyPluginAsync = async (server) => {
   // 获取视频列表
@@ -260,7 +268,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
     }
   );
 
-  // 创建视频记录（上传完成后调用）
+  // 创建视频记录（上传完成后调用，支持自动生成封面）
   server.post(
     '/videos',
     { preHandler: [authenticate] },
@@ -274,9 +282,11 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           qiniuUrl,
           duration,
           thumbnail,
+          coverUrl,
           categoryIds = [],
           tagIds = [],
           order = 0,
+          generateCover = true, // 是否自动生成封面
         } = request.body as {
           title: string;
           description?: string;
@@ -285,9 +295,11 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           qiniuUrl: string;
           duration?: number;
           thumbnail?: string;
+          coverUrl?: string;
           categoryIds?: number[];
           tagIds?: number[];
           order?: number;
+          generateCover?: boolean;
         };
 
         if (!title || !gameId || !qiniuKey || !qiniuUrl) {
@@ -309,6 +321,46 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           });
         }
 
+        // 如果需要自动生成封面，且没有提供 coverUrl
+        let finalCoverUrl = coverUrl;
+        if (generateCover && !coverUrl) {
+          try {
+            // 下载视频到临时目录
+            const tempDir = path.join(os.tmpdir(), 'ckanim-thumbnails');
+            const videoFilename = path.basename(qiniuKey);
+            const tempVideoPath = path.join(tempDir, videoFilename);
+
+            // 确保目录存在
+            if (!fs.existsSync(tempDir)) {
+              fs.mkdirSync(tempDir, { recursive: true });
+            }
+
+            // 从七牛云下载视频（使用 curl）
+            const { execSync } = await import('child_process');
+            execSync(`curl -s -o "${tempVideoPath}" "${qiniuUrl}"`, {
+              stdio: 'pipe',
+            });
+
+            // 生成封面
+            const thumbnailPath = await generateThumbnail(tempVideoPath, tempDir);
+
+            // 上传封面到七牛云
+            const thumbnailResult = await uploadThumbnailToQiniu(
+              thumbnailPath,
+              qiniuKey
+            );
+
+            finalCoverUrl = thumbnailResult.url;
+
+            // 清理临时文件
+            cleanupTempFile(tempVideoPath);
+            cleanupTempFile(thumbnailPath);
+          } catch (err) {
+            server.log.error('Failed to generate thumbnail:', err);
+            // 封面生成失败不影响视频创建，继续
+          }
+        }
+
         // 创建视频
         const video = await prisma.video.create({
           data: {
@@ -319,6 +371,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
             qiniuUrl,
             duration,
             thumbnail,
+            coverUrl: finalCoverUrl,
             order,
             published: false,
             categories: categoryIds.length
@@ -448,12 +501,24 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           });
         }
 
-        // 删除七牛云文件
+        // 删除七牛云文件（视频 + 封面）
         try {
+          // 删除视频文件
           await deleteFile(existing.qiniuKey);
-          server.log.info(`Deleted qiniu file: ${existing.qiniuKey}`);
+          server.log.info(`Deleted qiniu video: ${existing.qiniuKey}`);
+          
+          // 删除封面图（如果有）
+          if (existing.coverUrl) {
+            const coverKey = existing.qiniuKey.replace('.mp4', '-thumbnail.jpg');
+            try {
+              await deleteFile(coverKey);
+              server.log.info(`Deleted qiniu cover: ${coverKey}`);
+            } catch (coverErr) {
+              server.log.warn(`Failed to delete cover file: ${coverKey}`);
+            }
+          }
         } catch (error) {
-          server.log.warn(`Failed to delete qiniu file: ${existing.qiniuKey}`);
+          server.log.warn(`Failed to delete qiniu files: ${existing.qiniuKey}`);
         }
 
         // 删除数据库记录

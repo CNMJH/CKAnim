@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { gamesAPI, categoriesAPI } from '../lib/services'
 import Layout from '../components/Layout'
@@ -12,6 +12,8 @@ function Categories() {
   const [error, setError] = useState('')
   const [selectedLevel, setSelectedLevel] = useState(1)
   const [selectedParentId, setSelectedParentId] = useState(null)
+  const [uploadingIcon, setUploadingIcon] = useState(false)
+  const iconInputRef = useRef(null)
   const queryClient = useQueryClient()
 
   // 获取游戏列表
@@ -91,6 +93,43 @@ function Categories() {
     },
   })
 
+  // 上传分类图标
+  const handleIconUpload = async (e, categoryId) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    setUploadingIcon(true)
+    try {
+      // 1. 获取上传凭证
+      const { data: { token, key, url } } = await categoriesAPI.getIconToken(file.name, categoryId)
+
+      // 2. 上传到七牛云
+      const formData = new FormData()
+      formData.append('token', token)
+      formData.append('key', key)
+      formData.append('file', file)
+
+      const response = await fetch('https://up-z2.qiniup.com/', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('上传失败')
+      }
+
+      // 3. 更新分类
+      if (categoryId) {
+        updateMutation.mutate({ id: categoryId, data: { iconUrl: url } })
+      }
+    } catch (error) {
+      console.error('图标上传失败:', error)
+      alert('图标上传失败，请重试')
+    } finally {
+      setUploadingIcon(false)
+    }
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
@@ -143,10 +182,23 @@ function Categories() {
           >
             {node.children && node.children.length > 0 ? (expandedNodes[node.id] ? '▼' : '▶') : '•'}
           </button>
+          {node.iconUrl && (
+            <img src={node.iconUrl} alt={node.name} className="node-icon" />
+          )}
           <span className="node-name">{node.name}</span>
           <span className="node-level">L{node.level}</span>
           <div className="node-actions">
             <button className="btn-sm" onClick={() => setEditingCategory(node)}>编辑</button>
+            <label className="btn-sm btn-icon">
+              图标
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleIconUpload(e, node.id)}
+                disabled={uploadingIcon}
+                style={{ display: 'none' }}
+              />
+            </label>
             <button className="btn-sm btn-danger" onClick={() => deleteMutation.mutate(node.id)}>删除</button>
           </div>
         </div>
@@ -281,6 +333,14 @@ function Categories() {
                       defaultValue={editingCategory?.order || 0}
                       placeholder="0"
                     />
+                  </div>
+                )}
+                {editingCategory?.iconUrl && (
+                  <div className="form-group">
+                    <label>当前图标</label>
+                    <div className="icon-preview">
+                      <img src={editingCategory.iconUrl} alt={editingCategory.name} />
+                    </div>
                   </div>
                 )}
                 {error && <div className="error-message" style={{ marginBottom: '16px' }}>{error}</div>}

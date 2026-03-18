@@ -93,6 +93,20 @@
   margin-bottom: 12px;
 }
 
+.game-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.game-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 .game-header h3 {
   margin: 0;
   font-size: 20px;
@@ -210,6 +224,18 @@
   width: 18px;
   height: 18px;
   cursor: pointer;
+}
+
+.icon-preview {
+  margin-top: 8px;
+}
+
+.icon-preview img {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .modal-actions {

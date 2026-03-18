@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { prisma } from '../lib/db.js';
 import { authenticate } from '../middleware/auth.js';
+import { getUploadToken, generateIconKey, getFileUrl } from '../lib/qiniu.js';
 
 export const categoryRoutes: FastifyPluginAsync = async (server) => {
   // 获取游戏的分类树
@@ -73,12 +74,13 @@ export const categoryRoutes: FastifyPluginAsync = async (server) => {
     { preHandler: [authenticate] },
     async (request, reply) => {
       try {
-        const { name, level, parentId, gameId, order = 0 } = request.body as {
+        const { name, level, parentId, gameId, order = 0, iconUrl } = request.body as {
           name: string;
           level: number;
           parentId?: number;
           gameId?: number;
           order?: number;
+          iconUrl?: string;
         };
 
         if (!name || !level) {
@@ -154,6 +156,7 @@ export const categoryRoutes: FastifyPluginAsync = async (server) => {
             parentId,
             gameId,
             order,
+            iconUrl,
           },
         });
 
@@ -176,9 +179,10 @@ export const categoryRoutes: FastifyPluginAsync = async (server) => {
       try {
         const { id } = request.params as { id: string };
         const categoryId = parseInt(id);
-        const { name, order } = request.body as {
+        const { name, order, iconUrl } = request.body as {
           name?: string;
           order?: number;
+          iconUrl?: string;
         };
 
         // 检查分类是否存在
@@ -198,6 +202,7 @@ export const categoryRoutes: FastifyPluginAsync = async (server) => {
           data: {
             name,
             order,
+            iconUrl,
           },
         });
 
@@ -297,6 +302,48 @@ export const categoryRoutes: FastifyPluginAsync = async (server) => {
         reply.code(500).send({
           error: 'Internal Server Error',
           message: 'Failed to reorder category',
+        });
+      }
+    }
+  );
+
+  // 获取分类图标上传凭证
+  server.post(
+    '/categories/icon-token',
+    { preHandler: [authenticate] },
+    async (request, reply) => {
+      try {
+        const { filename, categoryId } = request.body as {
+          filename: string;
+          categoryId?: number;
+        };
+
+        if (!filename) {
+          return reply.code(400).send({
+            error: 'Bad Request',
+            message: 'Filename is required',
+          });
+        }
+
+        // 生成图标 key
+        const key = generateIconKey(filename, 'category', categoryId);
+
+        // 获取上传凭证
+        const token = getUploadToken(key);
+
+        // 生成访问 URL
+        const url = getFileUrl(key);
+
+        reply.send({
+          token,
+          key,
+          url,
+        });
+      } catch (error) {
+        server.log.error(error);
+        reply.code(500).send({
+          error: 'Internal Server Error',
+          message: 'Failed to get upload token',
         });
       }
     }

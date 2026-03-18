@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { gamesAPI } from '../lib/services'
 import Layout from '../components/Layout'
@@ -7,6 +7,8 @@ import './Games.css'
 function Games() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingGame, setEditingGame] = useState(null)
+  const [uploadingIcon, setUploadingIcon] = useState(false)
+  const iconInputRef = useRef(null)
   const queryClient = useQueryClient()
 
   const { data: games, isLoading } = useQuery({
@@ -48,6 +50,42 @@ function Games() {
     },
   })
 
+  const handleIconUpload = async (e, gameId) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    setUploadingIcon(true)
+    try {
+      // 1. 获取上传凭证
+      const { data: { token, key, url } } = await gamesAPI.getIconToken(file.name, gameId)
+
+      // 2. 上传到七牛云
+      const formData = new FormData()
+      formData.append('token', token)
+      formData.append('key', key)
+      formData.append('file', file)
+
+      const response = await fetch('https://up-z2.qiniup.com/', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('上传失败')
+      }
+
+      // 3. 更新游戏
+      if (gameId) {
+        updateMutation.mutate({ id: gameId, data: { iconUrl: url } })
+      }
+    } catch (error) {
+      console.error('图标上传失败:', error)
+      alert('图标上传失败，请重试')
+    } finally {
+      setUploadingIcon(false)
+    }
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
@@ -82,7 +120,12 @@ function Games() {
             {games?.map((game) => (
               <div key={game.id} className="game-card">
                 <div className="game-header">
-                  <h3>{game.name}</h3>
+                  <div className="game-title-row">
+                    {game.iconUrl && (
+                      <img src={game.iconUrl} alt={game.name} className="game-icon" />
+                    )}
+                    <h3>{game.name}</h3>
+                  </div>
                   <span className={`status ${game.published ? 'published' : 'draft'}`}>
                     {game.published ? '已发布' : '未发布'}
                   </span>
@@ -96,6 +139,16 @@ function Games() {
                   <button className="btn-secondary" onClick={() => setEditingGame(game)}>
                     编辑
                   </button>
+                  <label className="btn-secondary">
+                    上传图标
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleIconUpload(e, game.id)}
+                      disabled={uploadingIcon}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
                   <button className="btn-danger" onClick={() => deleteMutation.mutate(game.id)}>
                     删除
                   </button>
@@ -138,6 +191,14 @@ function Games() {
                     placeholder="0"
                   />
                 </div>
+                {editingGame?.iconUrl && (
+                  <div className="form-group">
+                    <label>当前图标</label>
+                    <div className="icon-preview">
+                      <img src={editingGame.iconUrl} alt={editingGame.name} />
+                    </div>
+                  </div>
+                )}
                 <div className="form-group checkbox">
                   <label>
                     <input type="checkbox" name="published" defaultChecked={editingGame?.published} />

@@ -123,16 +123,60 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.game-item:hover img {
-  border-color: #dc3545;
+/* 游戏图标占位符 */
+.game-icon-placeholder {
+  width: 100%;
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.game-icon-placeholder span {
+  font-size: 28px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.game-item:hover .game-icon-placeholder {
+  border-color: transparent;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 0 2px #dc3545, 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.game-item.selected .game-icon-placeholder {
+  border-color: transparent;
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  box-shadow: 0 0 0 2px #dc3545, 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.game-icon-img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.game-item:hover img {
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px #dc3545, 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .game-item.selected img {
-  border-color: #dc3545;
+  border-color: transparent;
   background: #fff5f5;
-  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+  box-shadow: 0 0 0 2px #dc3545, 0 4px 8px rgba(220, 53, 69, 0.2);
 }
 
 .game-name {
@@ -155,7 +199,7 @@
 }
 
 .video-player {
-  background: #888;
+  background: #000;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -164,46 +208,118 @@
   /* 16:9 比例 - 宽度 1000px，高度 = 1000 × 9/16 = 562.5px */
   width: 1000px;
   height: 562.5px;
+  overflow: hidden;
 }
 
-.video-placeholder {
-  text-align: center;
-  color: #ccc;
+/* 视频元素 */
+.video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
 }
 
-.video-placeholder.empty {
-  color: #aaa;
-}
-
-.play-button-large {
+/* 播放/暂停按钮 */
+.play-pause-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 72px;
   height: 72px;
   background: rgba(255, 255, 255, 0.15);
+  border: none;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 28px;
   color: #fff;
-  margin: 0 auto 16px;
   cursor: pointer;
   transition: all 0.3s;
+  z-index: 10;
 }
 
-.play-button-large:hover {
+.play-pause-btn:hover {
   background: rgba(255, 255, 255, 0.25);
-  transform: scale(1.08);
+  transform: translate(-50%, -50%) scale(1.08);
 }
 
-.empty-text {
-  font-size: 14px;
-  color: #aaa;
+/* 控制栏 */
+.video-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
 }
 
+/* 进度条 */
+.progress-slider {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.progress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #dc3545;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.progress-slider::-webkit-slider-thumb:hover {
+  background: #ff4757;
+  transform: scale(1.2);
+}
+
+.progress-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #dc3545;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.progress-slider::-moz-range-thumb:hover {
+  background: #ff4757;
+  transform: scale(1.2);
+}
+
+/* 时间显示 */
+.time-display {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+/* 视频信息 */
 .video-info-text {
   color: #fff;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 /* 动作选择区域 */
@@ -337,7 +453,7 @@
 .character-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 12px;
   max-height: calc(100vh - 400px);
   overflow-y: auto;
 }
@@ -362,15 +478,15 @@
 }
 
 .character-item:hover img {
-  border-color: #dc3545;
+  border-color: transparent;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 0 2px #dc3545, 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .character-item.selected img {
-  border-color: #dc3545;
+  border-color: transparent;
   background: #fff5f5;
-  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+  box-shadow: 0 0 0 2px #dc3545, 0 4px 8px rgba(220, 53, 69, 0.2);
 }
 
 .character-name {

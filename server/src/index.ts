@@ -10,6 +10,9 @@ import { categoryRoutes } from './routes/categories';
 import { videoRoutes } from './routes/videos';
 import { tagRoutes } from './routes/tags';
 import { publicVideoRoutes } from './routes/public-videos';
+import { publicCharacterRoutes } from './routes/public-characters';
+import { publicGameRoutes } from './routes/public-games';
+import { characterRoutes } from './routes/characters';
 
 dotenv.config();
 
@@ -40,14 +43,17 @@ await server.register(multipart, {
 
 // 注册路由
 // 公开路由（前台网站使用）
+await server.register(publicGameRoutes, { prefix: '/api' });
 await server.register(publicVideoRoutes, { prefix: '/api' });
-await server.register(gameRoutes, { prefix: '/api' });
+await server.register(publicCharacterRoutes, { prefix: '/api' });
 
 // 管理员路由（需要认证）
 await server.register(authRoutes, { prefix: '/api/admin' });
+await server.register(gameRoutes, { prefix: '/api/admin' });
 await server.register(categoryRoutes, { prefix: '/api/admin' });
 await server.register(videoRoutes, { prefix: '/api/admin' });
 await server.register(tagRoutes, { prefix: '/api/admin' });
+await server.register(characterRoutes, { prefix: '/api/admin' });
 
 writeFileSync('/tmp/server_startup.log', `Server started at ${new Date().toISOString()}\nRoutes: auth, games, categories, videos, tags\n`, { append: true });
 

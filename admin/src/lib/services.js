@@ -16,6 +16,7 @@ export const gamesAPI = {
   create: (data) => api.post('/admin/games', data),
   update: (id, data) => api.put(`/admin/games/${id}`, data),
   delete: (id) => api.delete(`/admin/games/${id}`),
+  getIconToken: (filename, gameId) => api.post('/admin/games/icon-token', { filename, gameId }),
 }
 
 export const categoriesAPI = {
@@ -25,6 +26,7 @@ export const categoriesAPI = {
   delete: (id) => api.delete(`/admin/categories/${id}`),
   reorder: (categoryId, newOrder) =>
     api.put('/admin/categories/reorder', { categoryId, newOrder }),
+  getIconToken: (filename, categoryId) => api.post('/admin/categories/icon-token', { filename, categoryId }),
 }
 
 export const videosAPI = {

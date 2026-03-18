@@ -61,6 +61,14 @@
   transition: all 0.2s;
 }
 
+.node-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
 .node-content:hover {
   background: #e9ecef;
 }
@@ -121,6 +129,15 @@
 }
 
 .btn-sm:hover {
+  background: #e8ecf1;
+}
+
+.btn-sm.btn-icon {
+  cursor: pointer;
+  display: inline-block;
+}
+
+.btn-sm.btn-icon:hover {
   background: #e8ecf1;
 }
 
@@ -206,6 +223,18 @@
   margin-top: 6px;
   font-size: 12px;
   color: #888;
+}
+
+.icon-preview {
+  margin-top: 8px;
+}
+
+.icon-preview img {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .modal-actions {

@@ -17,7 +17,10 @@ function Videos() {
   const [selectedTags, setSelectedTags] = useState([])
   const [newTagName, setNewTagName] = useState('')
   const [selectedCategories, setSelectedCategories] = useState([])
-  const [pendingFile, setPendingFile] = useState(null) // 待上传的文件
+  const [pendingFile, setPendingFile] = useState(null) // 待上传的单个文件
+  const [pendingFiles, setPendingFiles] = useState([]) // 待上传的批量文件
+  const [batchProgress, setBatchProgress] = useState([]) // 批量上传进度
+  const [isBatchMode, setIsBatchMode] = useState(false) // 是否批量模式
   const queryClient = useQueryClient()
 
   // 获取游戏列表
@@ -136,6 +139,130 @@ function Videos() {
     return result
   }
 
+  // 处理单个文件选择
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setPendingFile(file)
+      setPendingFiles([])
+      setIsBatchMode(false)
+    }
+  }
+
+  // 处理批量文件选择
+  const handleBatchFileSelect = (e) => {
+    const files = Array.from(e.target.files)
+    if (files.length > 0) {
+      setPendingFiles(files)
+      setPendingFile(null)
+      setIsBatchMode(true)
+    }
+  }
+
+  // 批量上传
+  const handleBatchUpload = async () => {
+    if (pendingFiles.length === 0) return
+
+    setUploadingFile({ name: 'batch_uploading' })
+    
+    const results = []
+    const totalFiles = pendingFiles.length
+
+    for (let i = 0; i < totalFiles; i++) {
+      const file = pendingFiles[i]
+      try {
+        setBatchProgress(prev => {
+          const updated = [...prev]
+          updated[i] = { name: file.name, progress: 0, status: 'uploading' }
+          return updated
+        })
+
+        // 1. 获取上传凭证
+        const tokenResponse = await videosAPI.getUploadToken({
+          gameId: selectedGame.id,
+          categoryIds: selectedCategories,
+        })
+        const { token, key, url } = tokenResponse.data
+
+        // 2. 上传到七牛云
+        const formData = new FormData()
+        formData.append('token', token)
+        formData.append('key', key)
+        formData.append('file', file)
+
+        const xhr = new XMLHttpRequest()
+
+        await new Promise((resolve, reject) => {
+          xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+              const percent = Math.round((e.loaded / e.total) * 100)
+              setBatchProgress(prev => {
+                const updated = [...prev]
+                updated[i] = { name: file.name, progress: percent, status: 'uploading' }
+                return updated
+              })
+            }
+          })
+
+          xhr.addEventListener('load', () => {
+            if (xhr.status === 200) {
+              resolve()
+            } else {
+              reject(new Error(`上传失败 (${xhr.status})`))
+            }
+          })
+
+          xhr.addEventListener('error', () => {
+            reject(new Error('网络错误'))
+          })
+
+          xhr.open('POST', 'https://up-z2.qiniup.com/')
+          xhr.send(formData)
+        })
+
+        // 3. 创建视频记录
+        await videosAPI.create({
+          title: file.name.replace(/\.[^/.]+$/, ''),
+          gameId: selectedGame.id,
+          qiniuKey: key,
+          qiniuUrl: url,
+          published: false,
+          tagIds: selectedTags,
+          categoryIds: selectedCategories,
+          generateCover: true,
+        })
+
+        setBatchProgress(prev => {
+          const updated = [...prev]
+          updated[i] = { name: file.name, progress: 100, status: 'success' }
+          return updated
+        })
+
+        results.push({ name: file.name, success: true })
+      } catch (error) {
+        console.error(`Upload error for ${file.name}:`, error)
+        setBatchProgress(prev => {
+          const updated = [...prev]
+          updated[i] = { name: file.name, progress: 0, status: 'error', error: error.message }
+          return updated
+        })
+        results.push({ name: file.name, success: false, error: error.message })
+      }
+    }
+
+    // 完成
+    setUploadingFile(null)
+    setBatchProgress([])
+    setPendingFiles([])
+    setShowModal(false)
+    setSelectedTags([])
+    setSelectedCategories([])
+    queryClient.invalidateQueries(['videos'])
+
+    const successCount = results.filter(r => r.success).length
+    alert(`批量上传完成：成功 ${successCount}/${totalFiles} 个`)
+  }
+
   const handleStartUpload = async (e) => {
     if (!pendingFile) return
     const file = pendingFile
@@ -190,7 +317,7 @@ function Videos() {
         xhr.send(formData)
       })
 
-      // 3. 创建视频记录（带标签和分类）
+      // 3. 创建视频记录（带标签和分类，自动生成封面）
       const videoData = {
         title: file.name.replace(/\.[^/.]+$/, ''),
         gameId: selectedGame.id,
@@ -199,6 +326,7 @@ function Videos() {
         published: false,
         tagIds: selectedTags,
         categoryIds: selectedCategories,
+        generateCover: true, // 自动生成封面
       }
 
       await videosAPI.create(videoData)
@@ -282,7 +410,14 @@ function Videos() {
             {videosData.videos.map(video => (
               <div key={video.id} className="video-card">
                 <div className="video-thumbnail">
-                  <video src={video.qiniuUrl} controls />
+                  {video.coverUrl ? (
+                    <img src={video.coverUrl} alt={video.title} />
+                  ) : (
+                    <video src={video.qiniuUrl} />
+                  )}
+                  <div className="video-overlay">
+                    <video src={video.qiniuUrl} controls />
+                  </div>
                 </div>
                 <div className="video-info">
                   <h3>{video.title}</h3>
@@ -338,18 +473,56 @@ function Videos() {
           <div className="modal-overlay" onClick={() => { setShowModal(false); setSelectedTags([]); setSelectedCategories([]) }}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
               <h3>上传视频</h3>
+              
+              {/* 上传模式切换 */}
+              <div className="upload-mode-switch">
+                <button
+                  type="button"
+                  className={`mode-btn ${!isBatchMode ? 'active' : ''}`}
+                  onClick={() => { setIsBatchMode(false); setPendingFile(null); setPendingFiles([]); }}
+                >
+                  单个上传
+                </button>
+                <button
+                  type="button"
+                  className={`mode-btn ${isBatchMode ? 'active' : ''}`}
+                  onClick={() => { setIsBatchMode(true); setPendingFile(null); setPendingFiles([]); }}
+                >
+                  批量上传
+                </button>
+              </div>
+
               <div className="upload-area">
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={handleFileSelect}
-                  disabled={uploadingFile}
-                  id="video-upload"
-                />
-                <label htmlFor="video-upload" className="upload-label">
-                  📤 选择视频文件
-                </label>
-                <p className="upload-hint">支持 MP4、WebM 等格式，最大 500MB</p>
+                {!isBatchMode ? (
+                  <>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={handleFileSelect}
+                      disabled={uploadingFile}
+                      id="video-upload"
+                    />
+                    <label htmlFor="video-upload" className="upload-label">
+                      📤 选择视频文件
+                    </label>
+                    <p className="upload-hint">支持 MP4、WebM 等格式，最大 500MB</p>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      multiple
+                      onChange={handleBatchFileSelect}
+                      disabled={uploadingFile}
+                      id="video-batch-upload"
+                    />
+                    <label htmlFor="video-batch-upload" className="upload-label">
+                      📤 选择多个视频文件
+                    </label>
+                    <p className="upload-hint">支持 MP4、WebM 等格式，最多选择 20 个文件</p>
+                  </>
+                )}
               </div>
 
               {/* 分类选择 */}
@@ -429,11 +602,58 @@ function Videos() {
               </div>
 
               {/* 已选择的文件 */}
-              {pendingFile && (
-                <div className="selected-file">
-                  <span className="file-icon">📄</span>
-                  <span className="file-name">{pendingFile.name}</span>
-                  <span className="file-size">({(pendingFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+              {!isBatchMode ? (
+                pendingFile && (
+                  <div className="selected-file">
+                    <span className="file-icon">📄</span>
+                    <span className="file-name">{pendingFile.name}</span>
+                    <span className="file-size">({(pendingFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                  </div>
+                )
+              ) : (
+                pendingFiles.length > 0 && (
+                  <div className="batch-file-list">
+                    <div className="file-list-header">
+                      <span className="file-icon">📁</span>
+                      <span>已选择 {pendingFiles.length} 个文件</span>
+                    </div>
+                    <div className="file-list">
+                      {pendingFiles.slice(0, 5).map((file, index) => (
+                        <div key={index} className="file-item">
+                          <span className="file-name">{file.name}</span>
+                          <span className="file-size">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                        </div>
+                      ))}
+                      {pendingFiles.length > 5 && (
+                        <div className="file-item more">
+                          <span>还有 {pendingFiles.length - 5} 个文件...</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              )}
+
+              {/* 批量上传进度 */}
+              {batchProgress.length > 0 && (
+                <div className="batch-progress">
+                  <h4>上传进度</h4>
+                  {batchProgress.map((item, index) => (
+                    <div key={index} className={`progress-item ${item.status}`}>
+                      <span className="progress-name">{item.name}</span>
+                      <div className="progress-bar">
+                        <div 
+                          className="progress-fill" 
+                          style={{ width: `${item.progress}%` }}
+                        />
+                      </div>
+                      <span className="progress-status">
+                        {item.status === 'uploading' && `${item.progress}%`}
+                        {item.status === 'success' && '✅'}
+                        {item.status === 'error' && `❌ ${item.error}`}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -441,17 +661,17 @@ function Videos() {
                 <button
                   type="button"
                   className="btn-secondary"
-                  onClick={() => { setShowModal(false); setSelectedTags([]); setSelectedCategories([]); setPendingFile(null) }}
+                  onClick={() => { setShowModal(false); setSelectedTags([]); setSelectedCategories([]); setPendingFile(null); setPendingFiles([]); setBatchProgress([]); }}
                 >
                   取消
                 </button>
                 <button
                   type="button"
                   className="btn-primary"
-                  onClick={handleStartUpload}
-                  disabled={!pendingFile || uploadingFile}
+                  onClick={isBatchMode ? handleBatchUpload : handleStartUpload}
+                  disabled={(isBatchMode ? pendingFiles.length === 0 : !pendingFile) || uploadingFile}
                 >
-                  {uploadingFile ? '上传中...' : '📤 开始上传'}
+                  {uploadingFile ? '上传中...' : (isBatchMode ? `📤 开始上传 (${pendingFiles.length}个)` : '📤 开始上传')}
                 </button>
               </div>
             </div>

@@ -1,9 +1,9 @@
 .video-card {
-  background: #777;
+  background: #000;
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.2s;
   position: relative;
   width: 100%;
   height: 100%;
@@ -13,32 +13,56 @@
 }
 
 .video-card:hover {
-  background: #888;
   transform: translateY(-2px);
 }
 
-.play-icon {
+/* 封面图 */
+.video-cover {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 56px;
-  height: 56px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.2s;
+  z-index: 1;
+}
+
+/* 视频元素 */
+.video-element {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+/* 进度条 */
+.progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
   background: rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 24px;
-  transition: all 0.3s;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-.video-card:hover .play-icon {
-  background: rgba(255, 255, 255, 0.4);
-  transform: translate(-50%, -50%) scale(1.08);
+.video-card:hover .progress-bar {
+  opacity: 1;
 }
 
+.progress-fill {
+  height: 100%;
+  background: #4CAF50;
+  transition: width 0.1s linear;
+}
+
+/* 时长 */
 .video-duration {
   position: absolute;
   bottom: 8px;
@@ -49,4 +73,27 @@
   border-radius: 4px;
   font-size: 12px;
   font-weight: 500;
+  z-index: 2;
+}
+
+/* 标题 */
+.video-title {
+  position: absolute;
+  bottom: 36px;
+  left: 8px;
+  right: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  z-index: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.video-card:hover .video-title {
+  opacity: 1;
 }

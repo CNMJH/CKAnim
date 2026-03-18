@@ -28,7 +28,8 @@ model Game {
   id          Int      @id @default(autoincrement())
   name        String   @unique
   description String?
-  icon        String?
+  icon        String?  // 本地图标路径（保留兼容）
+  iconUrl     String?  // 七牛云图标 URL（新增）
   order       Int      @default(0)
   published   Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -36,6 +37,7 @@ model Game {
 
   categories GameCategory[]
   videos     Video[]
+  characters Character[]
 
   @@map("games")
 }
@@ -44,6 +46,8 @@ model Game {
 model GameCategory {
   id        Int      @id @default(autoincrement())
   name      String
+  icon      String?  // 本地图标路径（保留兼容）
+  iconUrl   String?  // 七牛云图标 URL（新增）
   level     Int
   order     Int      @default(0)
   createdAt DateTime @default(now())
@@ -81,7 +85,8 @@ model Video {
   title       String
   description String?
   duration    Int?
-  thumbnail   String?
+  thumbnail   String?  // 本地缩略图路径（保留兼容）
+  coverUrl    String?  // 七牛云封面图 URL（新增）
   order       Int      @default(0)
   published   Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -95,7 +100,69 @@ model Video {
 
   categories GameCategory[] @relation("VideoCategories")
   tags       VideoTag[]     @relation("VideoTags")
+  
+  // 角色动作关联（新增）
+  characterActions CharacterAction[]
 
   @@index([gameId])
   @@map("videos")
+}
+
+// 角色表（新增）
+model Character {
+  id          Int      @id @default(autoincrement())
+  name        String
+  role        String?  // 职业：战士/法师/刺客等
+  avatar      String?  // 角色头像 URL
+  description String?
+  gameId      Int
+  order       Int      @default(0)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  game    Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  actions CharacterAction[]
+
+  @@unique([gameId, name])
+  @@index([gameId])
+  @@map("characters")
+}
+
+// 动作表（新增）
+model Action {
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String   // 动作代码：attack/walk/skill 等
+  description String?
+  order       Int      @default(0)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  characters CharacterAction[]
+
+  @@map("actions")
+}
+
+// 角色 - 动作关联表（新增）
+model CharacterAction {
+  id          Int      @id @default(autoincrement())
+  characterId Int
+  actionId    Int
+  videoId     Int?     // 关联的视频 ID（可选）
+  videoUrl    String?  // 直接存储视频 URL（可选）
+  order       Int      @default(0)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  action    Action    @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  video     Video?    @relation(fields: [videoId], references: [id])
+
+  @@unique([characterId, actionId])
+  @@index([characterId])
+  @@index([actionId])
+  @@map("character_actions")
 }

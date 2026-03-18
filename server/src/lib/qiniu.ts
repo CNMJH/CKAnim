@@ -56,6 +56,16 @@ export function generateFileKey(filename: string, gameId?: number, categoryPath?
   return `${prefix}${categoryDir}${gamePath}${timestamp}-${random}.${ext}`;
 }
 
+// 生成图标文件 key
+export function generateIconKey(filename: string, type: 'game' | 'category' | 'character', id?: number): string {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 8);
+  const ext = filename.split('.').pop() || 'png';
+  const idPath = id ? `${id}/` : '';
+  
+  return `${prefix}icons/${type}/${idPath}${timestamp}-${random}.${ext}`;
+}
+
 // 获取文件外链
 export function getFileUrl(key: string): string {
   return `${domain}/${key}`;
