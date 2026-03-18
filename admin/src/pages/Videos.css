@@ -363,6 +363,7 @@
   color: #495057;
   cursor: pointer;
   transition: all 0.2s;
+  position: relative;
 }
 
 .tag-btn:hover {
@@ -370,10 +371,27 @@
 }
 
 .tag-btn.selected {
-  background: #e3f2fd;
+  background: #667eea;
   border-color: #667eea;
-  color: #667eea;
+  color: #fff;
   font-weight: 600;
+  padding-right: 28px; /* 为删除图标留空间 */
+}
+
+.tag-btn.selected::after {
+  content: '×';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  opacity: 0.8;
+}
+
+.tag-btn.selected:hover::after {
+  opacity: 1;
 }
 
 /* 分类样式 */

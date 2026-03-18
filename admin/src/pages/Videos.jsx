@@ -178,10 +178,11 @@ function Videos() {
         })
 
         // 1. 获取上传凭证
-        const tokenResponse = await videosAPI.getUploadToken({
-          gameId: selectedGame.id,
-          categoryIds: selectedCategories,
-        })
+        const tokenResponse = await videosAPI.getUploadToken(
+          file.name,
+          selectedGame.id,
+          selectedCategories
+        )
         const { token, key, url } = tokenResponse.data
 
         // 2. 上传到七牛云

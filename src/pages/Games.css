@@ -368,6 +368,7 @@
   background: #e8e8e8;
   border-radius: 8px;
   padding: 16px;
+  padding-top: 24px; /* 增加顶部间距，避免遮挡 */
   display: none;
 }
 
