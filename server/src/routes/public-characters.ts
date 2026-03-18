@@ -181,4 +181,37 @@ export const publicCharacterRoutes: FastifyPluginAsync = async (server) => {
       });
     }
   });
+
+  // 获取角色分类列表（公开 API）
+  server.get('/character-roles', async (request, reply) => {
+    try {
+      const { gameId } = request.query as { gameId?: string };
+
+      const where: any = { published: true };
+      if (gameId) {
+        where.gameId = parseInt(gameId);
+      }
+
+      // 获取所有不重复的角色分类
+      const characters = await prisma.character.findMany({
+        where,
+        select: { role: true },
+        distinct: ['role'],
+      });
+
+      // 提取角色分类并过滤空值
+      const roles = characters
+        .map(c => c.role)
+        .filter(Boolean)
+        .sort();
+
+      reply.send({ roles });
+    } catch (error) {
+      server.log.error(error);
+      reply.code(500).send({
+        error: 'Internal Server Error',
+        message: 'Failed to fetch character roles',
+      });
+    }
+  });
 };

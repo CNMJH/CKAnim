@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { gamesAPI, charactersAPI, actionsAPI } from '../lib/api';
+import { gamesAPI, charactersAPI, actionsAPI, characterRolesAPI } from '../lib/api';
 import './Games.css';
 
 function Games() {
@@ -14,6 +14,7 @@ function Games() {
   const [characters, setCharacters] = useState([]);
   const [actions, setActions] = useState([]);
   const [characterActions, setCharacterActions] = useState([]);
+  const [characterRoles, setCharacterRoles] = useState([]); // 角色分类列表
   
   // 加载状态
   const [gamesLoading, setGamesLoading] = useState(true);
@@ -117,17 +118,26 @@ function Games() {
   useEffect(() => {
     if (!selectedGame) {
       setCharacters([]);
+      setCharacterRoles([]);
       return;
     }
 
     const loadCharacters = async () => {
       try {
         setCharactersLoading(true);
-        const response = await charactersAPI.getByGame(selectedGame.id);
-        setCharacters(response.data.characters || []);
+        
+        // 并行加载角色列表和角色分类
+        const [charactersResponse, rolesResponse] = await Promise.all([
+          charactersAPI.getByGame(selectedGame.id),
+          characterRolesAPI.getAll(selectedGame.id),
+        ]);
+        
+        setCharacters(charactersResponse.data.characters || []);
+        setCharacterRoles(rolesResponse.data.roles || []);
       } catch (error) {
         console.error('Failed to load characters:', error);
         setCharacters([]);
+        setCharacterRoles([]);
       } finally {
         setCharactersLoading(false);
       }
@@ -448,7 +458,7 @@ function Games() {
                 >
                   全部
                 </button>
-                {['战士', '法师', '刺客', '坦克', '射手', '辅助'].map(role => (
+                {characterRoles.map(role => (
                   <button
                     key={role}
                     className={`role-tab ${activeRole === role ? 'active' : ''}`}

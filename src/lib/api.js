@@ -34,6 +34,16 @@ export const actionsAPI = {
   },
 };
 
+// 角色分类 API
+export const characterRolesAPI = {
+  // 获取角色分类列表
+  getAll: (gameId) => {
+    return api.get('/character-roles', {
+      params: { gameId },
+    });
+  },
+};
+
 // 游戏 API
 export const gamesAPI = {
   // 获取游戏列表
