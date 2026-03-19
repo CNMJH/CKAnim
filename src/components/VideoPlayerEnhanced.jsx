@@ -18,6 +18,8 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
   const [brushSize, setBrushSize] = useState(5);
   const [brushColor, setBrushColor] = useState('#FF0000');
   const [showDrawing, setShowDrawing] = useState(true);
+  const [showBrushSizeSlider, setShowBrushSizeSlider] = useState(false); // 画笔粗细滑条显示
+  const [showColorPicker, setShowColorPicker] = useState(false); // 颜色选择器显示
   
   // Canvas 相关
   const videoRef = useRef(null);
@@ -576,25 +578,47 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
           </button>
           
           <button 
-            className="control-btn icon-btn"
-            onClick={() => {
-              const size = prompt('画笔粗细 (1-50):', brushSize);
-              if (size) setBrushSize(Math.max(1, Math.min(50, parseInt(size))));
-            }}
+            className={`control-btn icon-btn ${showBrushSizeSlider ? 'active' : ''}`}
+            onClick={() => setShowBrushSizeSlider(!showBrushSizeSlider)}
             title="画笔粗细设置"
           >
             ●
           </button>
           
+          {/* 画笔粗细滑条 */}
+          {showBrushSizeSlider && (
+            <div className="brush-size-slider-container">
+              <input
+                type="range"
+                className="brush-size-slider"
+                min="1"
+                max="50"
+                value={brushSize}
+                onChange={(e) => setBrushSize(Number(e.target.value))}
+              />
+              <span className="brush-size-value">{brushSize}px</span>
+            </div>
+          )}
+          
           <button 
             className="control-btn icon-btn color-btn"
-            onClick={() => {
-              const color = prompt('画笔颜色 (HEX):', brushColor);
-              if (color) setBrushColor(color);
-            }}
+            onClick={() => setShowColorPicker(!showColorPicker)}
             style={{ backgroundColor: brushColor }}
             title="画笔颜色设置"
           />
+          
+          {/* 颜色选择器 */}
+          {showColorPicker && (
+            <div className="color-picker-container">
+              <input
+                type="color"
+                className="color-picker"
+                value={brushColor}
+                onChange={(e) => setBrushColor(e.target.value)}
+              />
+              <span className="color-value">{brushColor}</span>
+            </div>
+          )}
           
           <button 
             className={`control-btn icon-btn ${brushType === 'permanent' && currentTool === 'brush' ? 'active' : ''}`}
