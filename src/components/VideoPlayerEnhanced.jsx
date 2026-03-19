@@ -31,6 +31,13 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   
+  // 获取当前绘画状态描述
+  const getHistoryStatus = () => {
+    if (history.length === 0) return '无历史记录';
+    if (historyIndex === -1) return '已撤销到初始状态';
+    return `第 ${historyIndex + 1} 步 / 共 ${history.length} 步`;
+  };
+  
   // 加载视频元数据
   useEffect(() => {
     const video = videoRef.current;
@@ -92,7 +99,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     frameDrawings.forEach(drawing => {
       renderDrawing(ctx, drawing);
     });
-  }, [drawings, showDrawing]);
+  }, [drawings, showDrawing, renderDrawing]);
   
   // 监听帧变化，重新渲染
   const [lastFrame, setLastFrame] = useState(-1);
@@ -101,9 +108,30 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     const currentFrame = Math.floor(currentTime * 30);
     if (currentFrame !== lastFrame) {
       setLastFrame(currentFrame);
-      renderCurrentFrameDrawings(currentTime);
+      // 直接使用 renderCurrentFrameDrawings，确保使用最新的 drawings
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext('2d');
+      if (!canvas || !ctx) return;
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (!showDrawing) return;
+      
+      // 渲染全程绘画（所有帧都显示）
+      const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+      permanentDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
+      
+      // 渲染当前帧的单帧绘画
+      const frameDrawings = drawings.filter(d => 
+        d.type === 'single' && d.frameIndex === currentFrame
+      );
+      frameDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
     }
-  }, [currentTime, lastFrame, renderCurrentFrameDrawings]);
+  }, [currentTime, lastFrame, drawings, showDrawing, renderDrawing]);
   
   // 监听 drawings 变化（撤销/重做时），重新渲染 Canvas
   useEffect(() => {
@@ -111,9 +139,30 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
       const currentTime = videoRef.current.currentTime;
       const currentFrame = Math.floor(currentTime * 30);
       setLastFrame(currentFrame);
-      renderCurrentFrameDrawings(currentTime);
+      
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (!showDrawing) return;
+      
+      // 渲染全程绘画
+      const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+      permanentDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
+      
+      // 渲染当前帧的单帧绘画
+      const frameDrawings = drawings.filter(d => 
+        d.type === 'single' && d.frameIndex === currentFrame
+      );
+      frameDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
     }
-  }, [drawings, renderCurrentFrameDrawings]);
+  }, [drawings, showDrawing, renderDrawing]);
   
   // 渲染单个绘画
   const renderDrawing = (ctx, drawing) => {
@@ -276,17 +325,18 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
   // 历史记录
   const addToHistory = (newDrawings) => {
     const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newDrawings);
+    newHistory.push([...newDrawings]); // 深拷贝
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
   };
   
   const undo = () => {
+    if (history.length === 0) return;
+    
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
       setHistoryIndex(newIndex);
-      const prevDrawings = history[newIndex];
-      setDrawings(prevDrawings);
+      setDrawings([...history[newIndex]]); // 深拷贝
     } else if (historyIndex === 0) {
       setHistoryIndex(-1);
       setDrawings([]);
@@ -297,8 +347,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     if (historyIndex < history.length - 1) {
       const newIndex = historyIndex + 1;
       setHistoryIndex(newIndex);
-      const nextDrawings = history[newIndex];
-      setDrawings(nextDrawings);
+      setDrawings([...history[newIndex]]); // 深拷贝
     }
   };
   
@@ -567,11 +616,21 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
             T
           </button>
           
-          <button className="control-btn icon-btn" onClick={undo} title="上一步 (Ctrl+Z)">
+          <button 
+            className="control-btn icon-btn" 
+            onClick={undo} 
+            disabled={historyIndex === -1}
+            title={`上一步 (Ctrl+Z) - ${getHistoryStatus()}`}
+          >
             ↩️
           </button>
           
-          <button className="control-btn icon-btn" onClick={redo} title="下一步 (Ctrl+Y)">
+          <button 
+            className="control-btn icon-btn" 
+            onClick={redo}
+            disabled={historyIndex >= history.length - 1}
+            title={`下一步 (Ctrl+Y) - ${getHistoryStatus()}`}
+          >
             ↪️
           </button>
           
