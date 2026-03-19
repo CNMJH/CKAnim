@@ -179,23 +179,6 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     video.currentTime = Math.min(duration, video.currentTime + FRAME_DURATION);
   };
   
-  // 保存当前帧
-  const saveCurrentFrame = () => {
-    const video = videoRef.current;
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // 下载图片
-    const link = document.createElement('a');
-    link.download = `frame_${Date.now()}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  };
-  
   // Canvas 绘画事件
   const getCanvasCoordinates = (e) => {
     const canvas = canvasRef.current;
@@ -331,22 +314,77 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     }
   };
   
-  // 保存绘画到本地
-  const saveDrawings = (mode) => {
-    const data = {
-      videoId: 1, // TODO: 从 props 获取
-      videoTitle: videoTitle || '未命名视频',
-      exportedAt: new Date().toISOString(),
-      drawings: mode === 'all' ? drawings : drawings.filter(d => 
-        d.frameIndex === Math.floor(videoRef.current.currentTime * 30)
-      )
-    };
+  // 保存当前帧为带绘画的图片
+  const saveDrawings = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
     
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.download = `annotations_${Date.now()}.json`;
-    link.href = URL.createObjectURL(blob);
-    link.click();
+    // 创建临时 canvas 合并视频帧和绘画
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = video.videoWidth || 1000;
+    tempCanvas.height = video.videoHeight || 562.5;
+    const ctx = tempCanvas.getContext('2d');
+    
+    // 1. 绘制当前视频帧
+    ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+    
+    // 2. 绘制所有绘画内容
+    const currentFrame = Math.floor(video.currentTime * 30);
+    
+    // 绘制全程绘画
+    const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+    permanentDrawings.forEach(drawing => {
+      renderDrawingToCanvas(ctx, drawing);
+    });
+    
+    // 绘制当前帧的单帧绘画
+    const frameDrawings = drawings.filter(d => 
+      d.type === 'single' && d.frameIndex === currentFrame
+    );
+    frameDrawings.forEach(drawing => {
+      renderDrawingToCanvas(ctx, drawing);
+    });
+    
+    // 3. 保存为 PNG 图片
+    tempCanvas.toBlob((blob) => {
+      const link = document.createElement('a');
+      link.download = `frame_with_drawing_${Date.now()}.png`;
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      
+      // 清理 URL
+      setTimeout(() => {
+        URL.revokeObjectURL(link.href);
+      }, 100);
+    }, 'image/png');
+  };
+  
+  // 渲染绘画到 Canvas（用于保存）
+  const renderDrawingToCanvas = (ctx, drawing) => {
+    if (drawing.tool === 'brush') {
+      ctx.strokeStyle = drawing.color;
+      ctx.lineWidth = drawing.size;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      drawing.paths.forEach(path => {
+        if (!path.points || path.points.length < 2) return;
+        
+        ctx.beginPath();
+        ctx.moveTo(path.points[0].x, path.points[0].y);
+        
+        for (let i = 1; i < path.points.length; i++) {
+          ctx.lineTo(path.points[i].x, path.points[i].y);
+        }
+        
+        ctx.stroke();
+      });
+    } else if (drawing.tool === 'text' && drawing.text) {
+      ctx.font = `${drawing.size * 3}px Arial`;
+      ctx.fillStyle = drawing.color;
+      ctx.fillText(drawing.text, drawing.position.x, drawing.position.y);
+    }
   };
   
   // 快捷键
@@ -366,7 +404,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
         case 's':
         case 'S':
           e.preventDefault();
-          saveCurrentFrame();
+          saveDrawings(); // 保存当前帧为 PNG 图片（带绘画）
           break;
         case 'z':
           if (e.ctrlKey) {
@@ -465,11 +503,6 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
             下一帧
           </button>
           
-          {/* 截图功能 */}
-          <button className="control-btn" onClick={saveCurrentFrame} title="保存此帧 (S)">
-            保存此帧
-          </button>
-          
           <div className="separator"></div>
           
           {/* 绘画工具 */}
@@ -548,11 +581,8 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
           
           <button 
             className="control-btn icon-btn save-btn"
-            onClick={() => {
-              const mode = window.confirm('选择保存模式:\n确定 - 保存全部\n取消 - 仅保存当前帧');
-              saveDrawings(mode ? 'all' : 'current');
-            }}
-            title="保存绘画标记到本地"
+            onClick={saveDrawings}
+            title="保存当前帧为 PNG 图片（带绘画内容）"
           >
             💾
           </button>
