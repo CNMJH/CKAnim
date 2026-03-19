@@ -242,12 +242,24 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
   };
   
   const startDrawing = (e) => {
-    if (!isDrawingBoardOpen || currentTool === 'eraser') return;
+    if (!isDrawingBoardOpen) return;
     
     const pos = getCanvasCoordinates(e);
     setIsDrawing(true);
     setLastPos(pos);
     setCurrentPath([pos]); // 开始新路径
+    
+    // 橡皮擦工具 - 擦除最近的笔画
+    if (currentTool === 'eraser') {
+      if (drawings.length > 0) {
+        // 删除最后一个绘画
+        const newDrawings = drawings.slice(0, -1);
+        setDrawings(newDrawings);
+        addToHistory(newDrawings);
+      }
+      setIsDrawing(false);
+      return;
+    }
     
     // 如果是文本工具
     if (currentTool === 'text') {
@@ -603,7 +615,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
           <button 
             className={`control-btn icon-btn ${currentTool === 'eraser' ? 'active' : ''}`}
             onClick={() => setCurrentTool('eraser')}
-            title="橡皮擦"
+            title="橡皮擦 - 点击擦除最后一笔"
           >
             🧹
           </button>
