@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { gamesAPI, charactersAPI, actionsAPI, characterRolesAPI } from '../lib/api';
+import VideoPlayerEnhanced from '../components/VideoPlayerEnhanced';
 import './Games.css';
 
 function Games() {
@@ -311,67 +312,20 @@ function Games() {
 
         {/* 中间视频区域 */}
         <div className="video-section">
-          <div className="video-player">
-            {selectedCharacter ? (
-              <>
-                {/* 视频元素 */}
-                <video
-                  ref={videoRef}
-                  className="video-element"
-                  loop
-                  playsInline
-                  onTimeUpdate={handleTimeUpdate}
-                  onEnded={handleEnded}
-                  onClick={togglePlay}
-                />
-                
-                {/* 播放/暂停按钮 */}
-                <button
-                  className="play-pause-btn"
-                  onClick={togglePlay}
-                  style={{ opacity: isPlaying ? 0 : 1 }}
-                >
-                  {isPlaying ? '⏸' : '▶'}
-                </button>
-                
-                {/* 控制栏 */}
-                <div className="video-controls">
-                  {/* 进度条 */}
-                  <input
-                    type="range"
-                    className="progress-slider"
-                    min="0"
-                    max="100"
-                    value={progress}
-                    onChange={handleProgressChange}
-                  />
-                  
-                  {/* 时间显示 */}
-                  <div className="time-display">
-                    <span>{formatTime(currentTime)}</span>
-                    <span>/</span>
-                    <span>{formatTime(duration || 0)}</span>
-                  </div>
-                  
-                  {/* 视频信息 */}
-                  <div className="video-info-text">
-                    {selectedCharacter.name} - {
-                      characterActions.find(ca => ca.id === selectedAction)?.name ||
-                      '选择动作'
-                    }
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="video-placeholder empty">
-                <div className="empty-text">
-                  {selectedGame 
-                    ? '请选择角色' 
-                    : '请选择游戏'}
-                </div>
+          {selectedCharacter && selectedAction ? (
+            <VideoPlayerEnhanced
+              videoUrl={getCurrentVideoUrl()}
+              videoTitle={`${selectedCharacter.name} - ${characterActions.find(ca => ca.id === selectedAction)?.name || '未命名'}`}
+            />
+          ) : (
+            <div className="video-player video-placeholder empty">
+              <div className="empty-text">
+                {selectedGame 
+                  ? '请选择角色和动作' 
+                  : '请选择游戏'}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className="action-section">
             {actionsLoading ? (
