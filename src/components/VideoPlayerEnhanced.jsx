@@ -24,6 +24,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPos, setLastPos] = useState(null);
+  const [currentPath, setCurrentPath] = useState([]); // 当前正在画的路径
   
   // 绘画数据
   const [drawings, setDrawings] = useState([]);
@@ -93,6 +94,17 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     });
   }, [drawings, showDrawing]);
   
+  // 监听帧变化，重新渲染
+  const [lastFrame, setLastFrame] = useState(-1);
+  
+  useEffect(() => {
+    const currentFrame = Math.floor(currentTime * 30);
+    if (currentFrame !== lastFrame) {
+      setLastFrame(currentFrame);
+      renderCurrentFrameDrawings(currentTime);
+    }
+  }, [currentTime, lastFrame, renderCurrentFrameDrawings]);
+  
   // 渲染单个绘画
   const renderDrawing = (ctx, drawing) => {
     if (drawing.tool === 'brush') {
@@ -102,7 +114,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
       ctx.lineJoin = 'round';
       
       drawing.paths.forEach(path => {
-        if (path.points.length < 2) return;
+        if (!path.points || path.points.length < 2) return;
         
         ctx.beginPath();
         ctx.moveTo(path.points[0].x, path.points[0].y);
@@ -193,6 +205,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     const pos = getCanvasCoordinates(e);
     setIsDrawing(true);
     setLastPos(pos);
+    setCurrentPath([pos]); // 开始新路径
     
     // 如果是文本工具
     if (currentTool === 'text') {
@@ -225,7 +238,10 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     
-    // 绘制线条
+    // 保存路径点
+    setCurrentPath(prev => [...prev, pos]);
+    
+    // 实时绘制（在 Canvas 上直接画）
     ctx.strokeStyle = brushColor;
     ctx.lineWidth = brushSize;
     ctx.lineCap = 'round';
@@ -243,21 +259,25 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     if (!isDrawing) return;
     setIsDrawing(false);
     
-    // 保存绘画数据（简化版，实际应该保存路径）
-    const newDrawing = {
-      id: Date.now(),
-      type: brushType,
-      frameIndex: Math.floor(videoRef.current.currentTime * 30),
-      tool: 'brush',
-      color: brushColor,
-      size: brushSize,
-      paths: [{ points: [lastPos] }], // 简化
-      timestamp: Date.now()
-    };
+    // 保存完整路径数据
+    if (currentPath.length > 0) {
+      const newDrawing = {
+        id: Date.now(),
+        type: brushType,
+        frameIndex: Math.floor(videoRef.current.currentTime * 30),
+        tool: 'brush',
+        color: brushColor,
+        size: brushSize,
+        paths: [{ points: currentPath }], // 保存完整路径
+        timestamp: Date.now()
+      };
+      
+      const newDrawings = [...drawings, newDrawing];
+      setDrawings(newDrawings);
+      addToHistory(newDrawings);
+    }
     
-    const newDrawings = [...drawings, newDrawing];
-    setDrawings(newDrawings);
-    addToHistory(newDrawings);
+    setCurrentPath([]); // 清空当前路径
   };
   
   // 历史记录
