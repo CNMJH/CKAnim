@@ -105,6 +105,16 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     }
   }, [currentTime, lastFrame, renderCurrentFrameDrawings]);
   
+  // 监听 drawings 变化（撤销/重做时），重新渲染 Canvas
+  useEffect(() => {
+    if (canvasRef.current && videoRef.current) {
+      const currentTime = videoRef.current.currentTime;
+      const currentFrame = Math.floor(currentTime * 30);
+      setLastFrame(currentFrame);
+      renderCurrentFrameDrawings(currentTime);
+    }
+  }, [drawings, renderCurrentFrameDrawings]);
+  
   // 渲染单个绘画
   const renderDrawing = (ctx, drawing) => {
     if (drawing.tool === 'brush') {
@@ -290,8 +300,10 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
   
   const undo = () => {
     if (historyIndex > 0) {
-      setHistoryIndex(historyIndex - 1);
-      setDrawings(history[historyIndex - 1]);
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      const prevDrawings = history[newIndex];
+      setDrawings(prevDrawings);
     } else if (historyIndex === 0) {
       setHistoryIndex(-1);
       setDrawings([]);
@@ -300,8 +312,10 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
   
   const redo = () => {
     if (historyIndex < history.length - 1) {
-      setHistoryIndex(historyIndex + 1);
-      setDrawings(history[historyIndex + 1]);
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      const nextDrawings = history[newIndex];
+      setDrawings(nextDrawings);
     }
   };
   
