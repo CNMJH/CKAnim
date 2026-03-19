@@ -1,10 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { siteSettingsAPI } from '../lib/api';
 import './Header.css';
 
 function Header() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [siteName, setSiteName] = useState('CKAnim');
   const navigate = useNavigate();
+
+  // 加载网站名称
+  useEffect(() => {
+    const loadSiteName = async () => {
+      try {
+        const response = await siteSettingsAPI.getOne('siteName');
+        setSiteName(response.data.value || 'CKAnim');
+      } catch (error) {
+        console.error('加载网站名称失败:', error);
+      }
+    };
+    loadSiteName();
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -18,6 +33,9 @@ function Header() {
       <div className="header-content">
         {/* 左侧导航 */}
         <nav className="nav">
+          <Link to="/" className="nav-link logo">
+            {siteName}
+          </Link>
           <Link to="/" className="nav-link active">
             首页
           </Link>

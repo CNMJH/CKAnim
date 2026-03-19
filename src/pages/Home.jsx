@@ -1,10 +1,42 @@
 import { useState, useEffect } from 'react';
 import { videos, banners } from '../data/mockData';
+import { siteSettingsAPI } from '../lib/api';
 import VideoCard from '../components/VideoCard';
 import './Home.css';
 
 function Home() {
   const [currentBanner, setCurrentBanner] = useState(0);
+  const [siteSettings, setSiteSettings] = useState({
+    siteName: 'CKAnim',
+    announcement: {
+      text: '随机参考，每日一看',
+      enabled: true,
+      color: '#666',
+    },
+  });
+
+  // 加载网站设置
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const response = await siteSettingsAPI.getAll();
+        const settings = response.data.settings;
+        
+        setSiteSettings({
+          siteName: settings.siteName?.value || 'CKAnim',
+          announcement: settings.siteAnnouncement?.value 
+            ? JSON.parse(settings.siteAnnouncement.value)
+            : { text: '随机参考，每日一看', enabled: true, color: '#666' },
+        });
+
+        // 更新页面标题
+        document.title = settings.siteName?.value || 'CKAnim';
+      } catch (error) {
+        console.error('加载网站设置失败:', error);
+      }
+    };
+    loadSettings();
+  }, []);
 
   // 自动轮播
   useEffect(() => {
@@ -21,7 +53,14 @@ function Home() {
 
   return (
     <div className="home">
-      <div className="home-title">随机参考，每日一看</div>
+      {siteSettings.announcement.enabled && (
+        <div 
+          className="home-title" 
+          style={{ color: siteSettings.announcement.color }}
+        >
+          {siteSettings.announcement.text}
+        </div>
+      )}
 
       <div className="home-content">
         {/* 左侧轮播图 */}

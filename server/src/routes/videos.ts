@@ -17,16 +17,26 @@ import path from 'path';
 import fs from 'fs';
 
 export const videoRoutes: FastifyPluginAsync = async (server) => {
-  // 获取视频列表
+  // 获取视频列表（支持多条件筛选）
   server.get('/videos', async (request, reply) => {
     try {
-      const { gameId, published, page = 1, limit = 20 } =
-        request.query as unknown as {
-          gameId?: string;
-          published?: boolean;
-          page?: number;
-          limit?: number;
-        };
+      const { 
+        gameId, 
+        categoryId,
+        characterId,
+        actionId,
+        published, 
+        page = 1, 
+        limit = 20 
+      } = request.query as unknown as {
+        gameId?: string;
+        categoryId?: string;
+        characterId?: string;
+        actionId?: string;
+        published?: boolean;
+        page?: number;
+        limit?: number;
+      };
 
       const where: any = {};
       if (gameId) {
@@ -34,6 +44,44 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
       }
       if (published !== undefined) {
         where.published = published;
+      }
+      
+      // 按动作筛选
+      if (actionId) {
+        where.actionId = parseInt(actionId);
+      }
+      
+      // 按角色筛选（通过动作关联）
+      if (characterId && !actionId) {
+        // 需要先获取该角色的所有动作，再筛选视频
+        const characterActions = await prisma.action.findMany({
+          where: { characterId: parseInt(characterId) },
+          select: { id: true },
+        });
+        const actionIds = characterActions.map(a => a.id);
+        if (actionIds.length > 0) {
+          where.actionId = { in: actionIds };
+        } else {
+          // 该角色没有动作，返回空结果
+          return reply.send({
+            videos: [],
+            pagination: {
+              page,
+              limit,
+              total: 0,
+              totalPages: 0,
+            },
+          });
+        }
+      }
+      
+      // 按分类筛选（通过视频 - 分类关联表）
+      if (categoryId) {
+        where.categories = {
+          some: {
+            id: parseInt(categoryId),
+          },
+        };
       }
 
       const [videos, total] = await Promise.all([
@@ -43,6 +91,20 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           skip: (page - 1) * limit,
           take: limit,
           include: {
+            action: {
+              select: {
+                id: true,
+                name: true,
+                characterId: true,
+                character: {
+                  select: {
+                    id: true,
+                    name: true,
+                    gameId: true,
+                  },
+                },
+              },
+            },
             game: {
               select: {
                 id: true,
@@ -98,63 +160,79 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
         published: true, // 只搜索已发布的视频
       };
 
-      // 如果有搜索关键词，搜索标题或标签
-      if (q && q.trim()) {
-        const searchQuery = q.trim();
-        where.OR = [
-          {
-            title: {
-              contains: searchQuery,
-            },
-          },
-          {
-            tags: {
-              some: {
-                name: {
-                  contains: searchQuery,
+      if (q) {
+        // 搜索标题或标签
+        const videos = await prisma.video.findMany({
+          where: {
+            ...where,
+            OR: [
+              { title: { contains: q } },
+              {
+                tags: {
+                  some: {
+                    name: { contains: q },
+                  },
                 },
               },
-            },
+            ],
           },
-        ];
-      }
-
-      const [videos, total] = await Promise.all([
-        prisma.video.findMany({
-          where,
-          orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
+          include: {
+            tags: true,
+            game: true,
+          },
           skip: (page - 1) * limit,
           take: limit,
-          include: {
-            game: {
-              select: {
-                id: true,
-                name: true,
-                icon: true,
-              },
-            },
-            categories: {
-              select: {
-                id: true,
-                name: true,
-                level: true,
-              },
-            },
-            // 注意：搜索结果中不包含 tags（前端不展示）
-          },
-        }),
-        prisma.video.count({ where }),
-      ]);
+        });
 
-      reply.send({
-        videos,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-        },
-      });
+        const total = await prisma.video.count({
+          where: {
+            ...where,
+            OR: [
+              { title: { contains: q } },
+              {
+                tags: {
+                  some: {
+                    name: { contains: q },
+                  },
+                },
+              },
+            ],
+          },
+        });
+
+        reply.send({
+          videos,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+          },
+        });
+      } else {
+        // 没有搜索词，返回所有已发布视频
+        const videos = await prisma.video.findMany({
+          where,
+          include: {
+            tags: true,
+            game: true,
+          },
+          skip: (page - 1) * limit,
+          take: limit,
+        });
+
+        const total = await prisma.video.count({ where });
+
+        reply.send({
+          videos,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+          },
+        });
+      }
     } catch (error) {
       server.log.error(error);
       reply.code(500).send({
@@ -164,47 +242,17 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
     }
   });
 
-  // 获取单个视频
-  server.get('/videos/:id', async (request, reply) => {
-    try {
-      const { id } = request.params as { id: string };
-      const videoId = parseInt(id);
-
-      const video = await prisma.video.findUnique({
-        where: { id: videoId },
-        include: {
-          game: true,
-          categories: true,
-        },
-      });
-
-      if (!video) {
-        return reply.code(404).send({
-          error: 'Not Found',
-          message: 'Video not found',
-        });
-      }
-
-      reply.send(video);
-    } catch (error) {
-      server.log.error(error);
-      reply.code(500).send({
-        error: 'Internal Server Error',
-        message: 'Failed to get video',
-      });
-    }
-  });
-
-  // 获取七牛云上传凭证（支持分类路径）
+  // 获取上传凭证
   server.post(
     '/videos/upload-token',
     { preHandler: [authenticate] },
     async (request, reply) => {
       try {
-        const { filename, gameId, categoryIds = [] } = request.body as {
+        const { filename, gameId, categoryIds = [], actionId } = request.body as {
           filename: string;
           gameId?: number;
           categoryIds?: number[];
+          actionId?: number;
         };
 
         if (!filename) {
@@ -212,6 +260,26 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
             error: 'Bad Request',
             message: 'Filename is required',
           });
+        }
+
+        // 如果提供了 actionId，自动获取分类信息
+        let finalCategoryIds = categoryIds;
+        if (actionId && !categoryIds.length) {
+          // 从动作→角色→分类 自动获取
+          const action = await prisma.action.findUnique({
+            where: { id: actionId },
+            include: {
+              character: {
+                select: {
+                  categoryId: true,
+                },
+              },
+            },
+          });
+          
+          if (action && action.character?.categoryId) {
+            finalCategoryIds = [action.character.categoryId];
+          }
         }
 
         // 获取分类信息（用于生成文件夹路径）
@@ -268,16 +336,52 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
     }
   );
 
-  // 创建视频记录（上传完成后调用，支持自动生成封面）
+  // ===== 获取封面图上传凭证 =====
+  server.post(
+    '/videos/cover-upload-token',
+    { preHandler: [authenticate] },
+    async (request, reply) => {
+      try {
+        const { coverKey } = request.body as { coverKey: string };
+
+        if (!coverKey) {
+          return reply.code(400).send({
+            error: 'Bad Request',
+            message: 'coverKey is required',
+          });
+        }
+
+        // 生成上传凭证
+        const token = getUploadToken(coverKey);
+
+        reply.send({
+          token,
+          key: coverKey,
+          url: getFileUrl(coverKey),
+        });
+      } catch (error) {
+        server.log.error(error);
+        reply.code(500).send({
+          error: 'Internal Server Error',
+          message: 'Failed to generate cover upload token',
+        });
+      }
+    }
+  );
+
+  // ===== 创建视频记录（上传完成后调用，支持自动生成封面） =====
   server.post(
     '/videos',
     { preHandler: [authenticate] },
     async (request, reply) => {
       try {
+        const body = request.body as any;
         const {
           title,
           description,
           gameId,
+          characterId,
+          actionId,
           qiniuKey,
           qiniuUrl,
           duration,
@@ -286,22 +390,13 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           categoryIds = [],
           tagIds = [],
           order = 0,
-          generateCover = true, // 是否自动生成封面
-        } = request.body as {
-          title: string;
-          description?: string;
-          gameId: number;
-          qiniuKey: string;
-          qiniuUrl: string;
-          duration?: number;
-          thumbnail?: string;
-          coverUrl?: string;
-          categoryIds?: number[];
-          tagIds?: number[];
-          order?: number;
-          generateCover?: boolean;
-        };
+          generateCover = true,
+        } = body;
 
+        server.log.info(`[Video Create] Request body:`, JSON.stringify(body, null, 2));
+        server.log.info(`[Video Create] title=${title}, gameId=${gameId}, characterId=${characterId}, actionId=${actionId}, qiniuKey=${qiniuKey}`);
+
+        // 必选参数验证
         if (!title || !gameId || !qiniuKey || !qiniuUrl) {
           return reply.code(400).send({
             error: 'Bad Request',
@@ -309,97 +404,164 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           });
         }
 
-        // 验证游戏
-        const game = await prisma.game.findUnique({
-          where: { id: gameId },
-        });
-
-        if (!game) {
-          return reply.code(404).send({
-            error: 'Not Found',
-            message: 'Game not found',
+        // ⭐ 游戏、角色、动作必选验证
+        if (!characterId) {
+          return reply.code(400).send({
+            error: 'Bad Request',
+            message: 'characterId is required. Please select a character.',
+          });
+        }
+        if (!actionId) {
+          return reply.code(400).send({
+            error: 'Bad Request',
+            message: 'actionId is required. Please select an action.',
           });
         }
 
-        // 如果需要自动生成封面，且没有提供 coverUrl
-        let finalCoverUrl = coverUrl;
-        if (generateCover && !coverUrl) {
-          try {
-            // 下载视频到临时目录
-            const tempDir = path.join(os.tmpdir(), 'ckanim-thumbnails');
-            const videoFilename = path.basename(qiniuKey);
-            const tempVideoPath = path.join(tempDir, videoFilename);
+        // 使用事务确保视频创建和关联的原子性
+        const video = await prisma.$transaction(async (tx) => {
+          // 1. 验证游戏
+          const game = await tx.game.findUnique({
+            where: { id: gameId },
+          });
 
-            // 确保目录存在
-            if (!fs.existsSync(tempDir)) {
-              fs.mkdirSync(tempDir, { recursive: true });
-            }
-
-            // 从七牛云下载视频（使用 curl）
-            const { execSync } = await import('child_process');
-            execSync(`curl -s -o "${tempVideoPath}" "${qiniuUrl}"`, {
-              stdio: 'pipe',
-            });
-
-            // 生成封面
-            const thumbnailPath = await generateThumbnail(tempVideoPath, tempDir);
-
-            // 上传封面到七牛云
-            const thumbnailResult = await uploadThumbnailToQiniu(
-              thumbnailPath,
-              qiniuKey
-            );
-
-            finalCoverUrl = thumbnailResult.url;
-
-            // 清理临时文件
-            cleanupTempFile(tempVideoPath);
-            cleanupTempFile(thumbnailPath);
-          } catch (err) {
-            server.log.error('Failed to generate thumbnail:', err);
-            // 封面生成失败不影响视频创建，继续
+          if (!game) {
+            throw new Error('Game not found');
           }
-        }
 
-        // 创建视频
-        const video = await prisma.video.create({
-          data: {
-            title,
-            description,
-            gameId,
-            qiniuKey,
-            qiniuUrl,
-            duration,
-            thumbnail,
-            coverUrl: finalCoverUrl,
-            order,
-            published: false,
-            categories: categoryIds.length
-              ? {
-                  connect: categoryIds.map((id) => ({ id })),
-                }
-              : undefined,
-            tags: tagIds.length
-              ? {
-                  connect: tagIds.map((id) => ({ id })),
-                }
-              : undefined,
-          },
-          include: {
-            categories: true,
-            tags: true,
-          },
+          // 2. 验证角色
+          const character = await tx.character.findUnique({
+            where: { id: characterId },
+          });
+
+          if (!character) {
+            throw new Error(`Character ${characterId} not found`);
+          }
+
+          // 验证角色属于这个游戏
+          if (character.gameId !== gameId) {
+            throw new Error(`Character ${characterId} does not belong to game ${gameId}`);
+          }
+
+          // 3. 验证动作
+          const action = await tx.action.findUnique({
+            where: { id: actionId },
+          });
+
+          if (!action) {
+            throw new Error(`Action ${actionId} not found`);
+          }
+
+          // 验证动作属于这个角色
+          if (action.characterId !== characterId) {
+            throw new Error(`Action ${actionId} does not belong to character ${characterId}`);
+          }
+
+          // 验证动作是否已经有视频（1 对 1 关系）
+          if (action.video) {
+            throw new Error(`Action ${action.name} already has a video. Each action can only have one video.`);
+          }
+
+          server.log.info(`[Video Create] Validated: game=${game.name}, character=${character.name}, action=${action.name}`);
+
+          // 4. 生成封面图（如果需要）
+          let finalCoverUrl = coverUrl;
+          if (generateCover && !coverUrl) {
+            try {
+              const tempDir = path.join(os.tmpdir(), 'ckanim-thumbnails');
+              const videoFilename = path.basename(qiniuKey);
+              const tempVideoPath = path.join(tempDir, videoFilename);
+
+              if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir, { recursive: true });
+              }
+
+              const { execSync } = await import('child_process');
+              execSync(`curl -s -o "${tempVideoPath}" "${qiniuUrl}"`, {
+                stdio: 'pipe',
+              });
+
+              const thumbnailPath = await generateThumbnail(tempVideoPath, tempDir);
+              const thumbnailResult = await uploadThumbnailToQiniu(thumbnailPath, qiniuKey);
+              finalCoverUrl = thumbnailResult.url;
+
+              cleanupTempFile(tempVideoPath);
+              cleanupTempFile(thumbnailPath);
+            } catch (err) {
+              server.log.error('Failed to generate thumbnail:', err);
+              // 封面生成失败不影响视频创建
+            }
+          }
+
+          // 5. 创建视频记录（关联到动作）
+          // 如果没有提供 categoryIds，但有 actionId，自动从动作→角色→分类获取
+          let finalCategoryIds = categoryIds;
+          if (categoryIds.length === 0 && actionId) {
+            const actionForCategory = await tx.action.findUnique({
+              where: { id: actionId },
+              include: {
+                character: {
+                  select: {
+                    categoryId: true,
+                  },
+                },
+              },
+            });
+            if (actionForCategory?.character?.categoryId) {
+              finalCategoryIds = [actionForCategory.character.categoryId];
+            }
+          }
+
+          const video = await tx.video.create({
+            data: {
+              title,
+              description,
+              gameId,
+              qiniuKey,
+              qiniuUrl,
+              duration,
+              thumbnail,
+              coverUrl: finalCoverUrl,
+              order,
+              published: true, // ⭐ 默认发布，前台可访问
+              actionId, // ⭐ 直接关联到动作
+              categories: finalCategoryIds.length > 0 ? {
+                connect: finalCategoryIds.map((id: number) => ({ id })),
+              } : undefined,
+              tags: tagIds.length > 0 ? {
+                connect: tagIds.map((id: number) => ({ id })),
+              } : undefined,
+            },
+            include: {
+              categories: true,
+              tags: true,
+              action: true,
+            },
+          });
+
+          server.log.info(`[Video Create] Video created: id=${video.id}, actionId=${actionId}`);
+
+          return video;
         });
+
+        server.log.info(`[Video Create] Completed successfully: id=${video.id}`);
 
         reply.code(201).send(video);
       } catch (error) {
-        server.log.error(error);
-        reply.code(500).send({
-          error: 'Internal Server Error',
-          message: 'Failed to create video',
-        });
+        server.log.error('[Video Create] Error:', error);
+        if (error.code === 'P2002') {
+          reply.code(409).send({
+            error: 'Conflict',
+            message: 'A video with this key already exists',
+          });
+        } else {
+          reply.code(500).send({
+            error: 'Internal Server Error',
+            message: error.message || 'Failed to create video',
+          });
+        }
       }
-    }
+    },
   );
 
   // 更新视频
@@ -430,46 +592,54 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           tagIds?: number[];
         };
 
-        // 检查视频是否存在
-        const existing = await prisma.video.findUnique({
+        const video = await prisma.video.findUnique({
           where: { id: videoId },
         });
 
-        if (!existing) {
+        if (!video) {
           return reply.code(404).send({
             error: 'Not Found',
             message: 'Video not found',
           });
         }
 
-        // 更新视频
-        const video = await prisma.video.update({
+        const updatedVideo = await prisma.video.update({
           where: { id: videoId },
           data: {
-            title,
-            description,
-            duration,
-            thumbnail,
-            order,
-            published,
-            categories: categoryIds
-              ? {
-                  set: categoryIds.map((id) => ({ id })),
-                }
-              : undefined,
-            tags: tagIds
-              ? {
-                  set: tagIds.map((id) => ({ id })),
-                }
-              : undefined,
-          },
-          include: {
-            categories: true,
-            tags: true,
+            ...(title !== undefined && { title }),
+            ...(description !== undefined && { description }),
+            ...(duration !== undefined && { duration }),
+            ...(thumbnail !== undefined && { thumbnail }),
+            ...(order !== undefined && { order }),
+            ...(published !== undefined && { published }),
           },
         });
 
-        reply.send(video);
+        // 更新分类关联
+        if (categoryIds !== undefined) {
+          await prisma.video.update({
+            where: { id: videoId },
+            data: {
+              categories: {
+                set: categoryIds.map((id) => ({ id })),
+              },
+            },
+          });
+        }
+
+        // 更新标签关联
+        if (tagIds !== undefined) {
+          await prisma.video.update({
+            where: { id: videoId },
+            data: {
+              tags: {
+                set: tagIds.map((id) => ({ id })),
+              },
+            },
+          });
+        }
+
+        reply.send(updatedVideo);
       } catch (error) {
         server.log.error(error);
         reply.code(500).send({
@@ -489,39 +659,34 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
         const { id } = request.params as { id: string };
         const videoId = parseInt(id);
 
-        // 检查视频是否存在
-        const existing = await prisma.video.findUnique({
+        const video = await prisma.video.findUnique({
           where: { id: videoId },
+          include: {
+            action: true,
+          },
         });
 
-        if (!existing) {
+        if (!video) {
           return reply.code(404).send({
             error: 'Not Found',
             message: 'Video not found',
           });
         }
 
-        // 删除七牛云文件（视频 + 封面）
-        try {
-          // 删除视频文件
-          await deleteFile(existing.qiniuKey);
-          server.log.info(`Deleted qiniu video: ${existing.qiniuKey}`);
-          
-          // 删除封面图（如果有）
-          if (existing.coverUrl) {
-            const coverKey = existing.qiniuKey.replace('.mp4', '-thumbnail.jpg');
-            try {
-              await deleteFile(coverKey);
-              server.log.info(`Deleted qiniu cover: ${coverKey}`);
-            } catch (coverErr) {
-              server.log.warn(`Failed to delete cover file: ${coverKey}`);
-            }
-          }
-        } catch (error) {
-          server.log.warn(`Failed to delete qiniu files: ${existing.qiniuKey}`);
+        // 删除七牛云上的视频文件
+        if (video.qiniuKey) {
+          await deleteFile(video.qiniuKey);
+          server.log.info(`Deleted qiniu video: ${video.qiniuKey}`);
         }
 
-        // 删除数据库记录
+        // 删除封面图
+        if (video.coverUrl) {
+          const coverKey = video.coverUrl.replace('https://video.jiangmeijixie.com/', '');
+          await deleteFile(coverKey);
+          server.log.info(`Deleted qiniu cover: ${coverKey}`);
+        }
+
+        // 删除视频记录（动作会级联删除）
         await prisma.video.delete({
           where: { id: videoId },
         });

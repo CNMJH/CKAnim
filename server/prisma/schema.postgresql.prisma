@@ -1,0 +1,193 @@
+// CKAnim 数据库 Schema - PostgreSQL 版本
+// 用于生产环境部署
+// 
+// 使用方法:
+// 1. 复制此文件覆盖 schema.prisma
+// 2. 修改 .env 中的 DATABASE_URL 为 PostgreSQL 连接字符串
+// 3. 运行：npx prisma migrate deploy
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// 管理员模型
+// ============================================
+model Admin {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins")
+}
+
+// ============================================
+// 游戏模型
+// ============================================
+model Game {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  iconUrl     String?
+  qiniuKey    String?
+  order       Int      @default(0)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联
+  categories GameCategory[]
+  characters Character[]
+  actions    Action[]
+  videos     Video[]
+
+  @@map("games")
+}
+
+// ============================================
+// 游戏分类模型（1-7 级）
+// ============================================
+model GameCategory {
+  id          Int      @id @default(autoincrement())
+  name        String
+  level       Int      @default(1) // 1-7 级
+  parentId    Int?
+  parent      GameCategory?     @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    GameCategory[]    @relation("CategoryHierarchy")
+  gameId      Int?
+  game        Game?    @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  order       Int      @default(0)
+  iconUrl     String?
+  qiniuKey    String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联
+  characters Character[]
+  videos     Video[] @relation("VideoCategories")
+
+  @@unique([gameId, name, level])
+  @@map("game_categories")
+}
+
+// ============================================
+// 角色模型
+// ============================================
+model Character {
+  id          Int      @id @default(autoincrement())
+  name        String
+  gameId      Int
+  game        Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  categoryId  Int?
+  category    GameCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  description String?
+  avatarUrl   String?
+  qiniuKey    String?
+  order       Int      @default(0)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联
+  actions Action[]
+
+  @@unique([gameId, name])
+  @@map("characters")
+}
+
+// ============================================
+// 动作模型（直接属于角色）
+// ============================================
+model Action {
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String?
+  description String?
+  order       Int      @default(0)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联到角色
+  characterId Int
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  // 关联到视频（1 对 1）
+  video       Video?
+
+  @@unique([characterId, name])
+  @@map("actions")
+}
+
+// ============================================
+// 视频模型
+// ============================================
+model Video {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  duration    Int?
+  thumbnail   String?
+  coverUrl    String?
+  order       Int      @default(0)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  qiniuKey String
+  qiniuUrl String
+
+  // 关联到游戏
+  gameId Int
+  game   Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  // 关联到分类（用于筛选）
+  categories GameCategory[] @relation("VideoCategories")
+
+  // 关联到标签（用于搜索）
+  tags VideoTag[] @relation("VideoTags")
+
+  // 关联到动作（1 对 1）
+  actionId Int?          @unique
+  action   Action? @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  @@index([gameId])
+  @@index([actionId])
+  @@map("videos")
+}
+
+// ============================================
+// 视频标签模型
+// ============================================
+model VideoTag {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联
+  videos Video[] @relation("VideoTags")
+
+  @@map("video_tags")
+}
+
+// ============================================
+// 网站设置模型
+// ============================================
+model SiteSettings {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String   // JSON 字符串
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("site_settings")
+}

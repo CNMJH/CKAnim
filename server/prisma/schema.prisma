@@ -1,5 +1,5 @@
-// 这是你的 Prisma schema 文件
-// 使用 SQLite 进行快速开发和测试
+// CKAnim 数据库 Schema
+// 层级关系：游戏 > 分类 > 角色 > 动作 > 视频
 
 generator client {
   provider = "prisma-client-js"
@@ -10,7 +10,7 @@ datasource db {
   url      = "file:./dev.db"
 }
 
-// 管理员表
+// ===== 管理员表 =====
 model Admin {
   id        Int      @id @default(autoincrement())
   username  String   @unique
@@ -23,44 +23,50 @@ model Admin {
   @@map("admins")
 }
 
-// 游戏表
+// ===== 游戏表（最父级）=====
 model Game {
   id          Int      @id @default(autoincrement())
   name        String   @unique
   description String?
-  icon        String?  // 本地图标路径（保留兼容）
-  iconUrl     String?  // 七牛云图标 URL（新增）
+  icon        String?
+  iconUrl     String?
   order       Int      @default(0)
   published   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  categories GameCategory[]
-  videos     Video[]
-  characters Character[]
+  // 子级关联
+  categories GameCategory[] // 游戏分类
+  videos     Video[] // 游戏视频
+  characters Character[] // 游戏角色
 
   @@map("games")
 }
 
-// 游戏分类表（支持 1-7 级分类）
+// ===== 游戏分类表（游戏的子级，用于角色分类）=====
 model GameCategory {
   id        Int      @id @default(autoincrement())
   name      String
-  icon      String?  // 本地图标路径（保留兼容）
-  iconUrl   String?  // 七牛云图标 URL（新增）
+  icon      String?
+  iconUrl   String?
   level     Int
   order     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  parentId  Int?
-  parent    GameCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children  GameCategory[] @relation("CategoryHierarchy")
+  // 自关联（支持多级分类）
+  parentId Int?
+  parent   GameCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children GameCategory[] @relation("CategoryHierarchy")
 
-  gameId  Int?
-  game    Game? @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  // 关联到游戏
+  gameId Int?
+  game   Game? @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
-  videos     Video[]     @relation("VideoCategories")
+  // 关联到视频（用于视频分类筛选）
+  videos Video[] @relation("VideoCategories")
+
+  // 关联到角色（角色分类）
   characters Character[]
 
   @@index([gameId])
@@ -68,52 +74,58 @@ model GameCategory {
   @@map("game_categories")
 }
 
-// 视频标签表（仅管理员后台使用，前台不展示）
+// ===== 视频标签表（独立表，用于视频搜索）=====
 model VideoTag {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  videos  Video[] @relation("VideoTags")
+  videos Video[] @relation("VideoTags")
 
   @@map("video_tags")
 }
 
-// 视频表
+// ===== 视频表（存储视频文件）=====
 model Video {
   id          Int      @id @default(autoincrement())
   title       String
   description String?
   duration    Int?
-  thumbnail   String?  // 本地缩略图路径（保留兼容）
-  coverUrl    String?  // 七牛云封面图 URL（新增）
+  thumbnail   String?
+  coverUrl    String?
   order       Int      @default(0)
   published   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  qiniuKey  String
-  qiniuUrl  String
+  qiniuKey String
+  qiniuUrl String
 
-  gameId  Int
-  game    Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  // 关联到游戏
+  gameId Int
+  game   Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
+  // 关联到分类（用于筛选）
   categories GameCategory[] @relation("VideoCategories")
-  tags       VideoTag[]     @relation("VideoTags")
-  
-  // 角色动作关联（新增）
-  characterActions CharacterAction[]
+
+  // 关联到标签（用于搜索）
+  tags VideoTag[] @relation("VideoTags")
+
+  // 关联到动作（视频属于动作，1 对 1 关系）
+  actionId Int?     @unique
+  action   Action? @relation(fields: [actionId], references: [id], onDelete: Cascade)
 
   @@index([gameId])
+  @@index([actionId])
   @@map("videos")
 }
 
-// 角色表（新增）
+// ===== 角色表（分类的子级，用户选择想看的角色）=====
 model Character {
   id          Int      @id @default(autoincrement())
   name        String
-  avatar      String?  // 角色头像 URL
+  avatar      String?
   description String?
   gameId      Int
   order       Int      @default(0)
@@ -121,12 +133,15 @@ model Character {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  game    Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  actions CharacterAction[]
-  
-  // 角色分类关联（关联到 GameCategory）
+  // 关联到游戏
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  // 关联到动作（动作直接属于角色）
+  actions Action[]
+
+  // 关联到分类（角色分类）
   categoryId Int?
-  category   GameCategory? @relation(fields: [categoryId], references: [id])
+  category   GameCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
   @@unique([gameId, name])
   @@index([gameId])
@@ -134,40 +149,35 @@ model Character {
   @@map("characters")
 }
 
-// 动作表（新增）
+// ===== 动作表（直接属于角色，1 对 1 视频关联）=====
 model Action {
   id          Int      @id @default(autoincrement())
   name        String
-  code        String   // 动作代码：attack/walk/skill 等
+  code        String // 动作代码：attack/walk/skill 等
   description String?
   order       Int      @default(0)
   published   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  characters CharacterAction[]
+  // 关联到角色（动作直接属于角色）
+  characterId Int
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
+  // 关联到视频（1 对 1 关系）
+  video Video?
+
+  @@index([characterId])
   @@map("actions")
 }
 
-// 角色 - 动作关联表（新增）
-model CharacterAction {
+// ===== 网站设置表（存储网站自定义配置）=====
+model SiteSettings {
   id          Int      @id @default(autoincrement())
-  characterId Int
-  actionId    Int
-  videoId     Int?     // 关联的视频 ID（可选）
-  videoUrl    String?  // 直接存储视频 URL（可选）
-  order       Int      @default(0)
-  published   Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  key         String   @unique // 设置键名
+  value       String   // 设置值（JSON 字符串）
+  description String?  // 设置描述
   updatedAt   DateTime @updatedAt
 
-  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
-  action    Action    @relation(fields: [actionId], references: [id], onDelete: Cascade)
-  video     Video?    @relation(fields: [videoId], references: [id])
-
-  @@unique([characterId, actionId])
-  @@index([characterId])
-  @@index([actionId])
-  @@map("character_actions")
+  @@map("site_settings")
 }

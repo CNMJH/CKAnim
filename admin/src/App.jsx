@@ -3,9 +3,9 @@ import { useAuthStore } from './store/auth'
 import Login from './pages/Login'
 import Games from './pages/Games'
 import Categories from './pages/Categories'
-import Videos from './pages/Videos'
 import Settings from './pages/Settings'
 import Characters from './pages/Characters'
+import Actions from './pages/Actions'
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -41,10 +41,10 @@ function App() {
         }
       />
       <Route
-        path="/videos"
+        path="/actions"
         element={
           <ProtectedRoute>
-            <Videos />
+            <Actions />
           </ProtectedRoute>
         }
       />

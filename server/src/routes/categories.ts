@@ -58,7 +58,7 @@ export const categoryRoutes: FastifyPluginAsync = async (server) => {
         },
       });
 
-      reply.send(categories);
+      reply.send({ categories });
     } catch (error) {
       server.log.error(error);
       reply.code(500).send({

@@ -13,6 +13,8 @@ import { publicVideoRoutes } from './routes/public-videos';
 import { publicCharacterRoutes } from './routes/public-characters';
 import { publicGameRoutes } from './routes/public-games';
 import { characterRoutes } from './routes/characters';
+import { actionRoutes } from './routes/actions';
+import { settingsRoutes } from './routes/settings';
 
 dotenv.config();
 
@@ -54,8 +56,10 @@ await server.register(categoryRoutes, { prefix: '/api/admin' });
 await server.register(videoRoutes, { prefix: '/api/admin' });
 await server.register(tagRoutes, { prefix: '/api/admin' });
 await server.register(characterRoutes, { prefix: '/api/admin' });
+await server.register(actionRoutes, { prefix: '/api/admin' });
+await server.register(settingsRoutes, { prefix: '/api' });
 
-writeFileSync('/tmp/server_startup.log', `Server started at ${new Date().toISOString()}\nRoutes: auth, games, categories, videos, tags\n`, { append: true });
+writeFileSync('/tmp/server_startup.log', `Server started at ${new Date().toISOString()}\nRoutes: auth, games, categories, videos, tags, actions\n`, { append: true });
 
 console.log('✅ All routes registered, including tags!');
 

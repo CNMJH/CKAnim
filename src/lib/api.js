@@ -4,6 +4,23 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: '/api',
   timeout: 10000,
+  // ⭐ 禁用缓存，确保每次请求都获取最新数据
+  headers: {
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
+  },
+});
+
+// ⭐ 添加请求拦截器，在 URL 后添加时间戳防止缓存
+api.interceptors.request.use(config => {
+  // GET 请求添加时间戳防止缓存
+  if (config.method === 'get') {
+    config.params = {
+      ...config.params,
+      _t: Date.now(), // 时间戳防止缓存
+    };
+  }
+  return config;
 });
 
 // 角色 API
@@ -64,5 +81,18 @@ export const videosAPI = {
   // 获取视频列表
   getAll: (params) => {
     return api.get('/videos', { params });
+  },
+};
+
+// 网站设置 API
+export const siteSettingsAPI = {
+  // 获取所有设置
+  getAll: () => {
+    return api.get('/settings');
+  },
+
+  // 获取单个设置
+  getOne: (key) => {
+    return api.get(`/settings/${key}`);
   },
 };

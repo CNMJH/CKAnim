@@ -14,7 +14,7 @@ export const tagRoutes: FastifyPluginAsync = async (server) => {
         orderBy: { name: 'asc' },
       });
 
-      reply.send(tags);
+      reply.send({ tags });
     } catch (error) {
       server.log.error(error);
       reply.code(500).send({

@@ -1,0 +1,62 @@
+# 依赖
+node_modules
+*/node_modules
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 构建输出
+dist
+build
+*/dist
+*/build
+
+# 日志
+logs
+*.log
+npm-debug.log*
+
+# 数据库
+*.db
+*.sqlite
+prisma/dev.db
+
+# Git
+.git
+.gitignore
+
+# 文档
+docs
+*.md
+README.md
+
+# 临时文件
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# 测试
+coverage
+*.test.js
+*.spec.js
+__tests__
+
+# Docker
+Dockerfile
+Dockerfile.*
+docker-compose.yml
+.dockerignore
+nginx.conf
+
+# 脚本
+*.sh
+ecosystem.config.js

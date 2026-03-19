@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
-import { authAPI } from '../lib/services'
+import { useState, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { authAPI, settingsAPI } from '../lib/services'
 import Layout from '../components/Layout'
 import { useAuthStore } from '../store/auth'
 import './Settings.css'
@@ -12,8 +12,111 @@ function Settings() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const { logout } = useAuthStore()
+  const queryClient = useQueryClient()
 
-  const mutation = useMutation({
+  // 网站设置状态
+  const [siteName, setSiteName] = useState('CKAnim')
+  const [siteNamePosition, setSiteNamePosition] = useState('header')
+  const [footerText, setFooterText] = useState('')
+  const [footerLinks, setFooterLinks] = useState('[]')
+  const [announcementText, setAnnouncementText] = useState('')
+  const [announcementEnabled, setAnnouncementEnabled] = useState(true)
+  const [announcementColor, setAnnouncementColor] = useState('#666')
+
+  // 获取设置
+  const { data: settingsData, isLoading: settingsLoading } = useQuery({
+    queryKey: ['siteSettings'],
+    queryFn: async () => {
+      const res = await settingsAPI.getAll()
+      return res.data.settings || {}
+    },
+  })
+
+  // 加载设置数据
+  useEffect(() => {
+    if (settingsData) {
+      if (settingsData.siteName?.value) {
+        setSiteName(settingsData.siteName.value)
+      }
+      if (settingsData.siteNamePosition?.value) {
+        setSiteNamePosition(settingsData.siteNamePosition.value)
+      }
+      if (settingsData.siteFooter?.value) {
+        try {
+          const footer = JSON.parse(settingsData.siteFooter.value)
+          setFooterText(footer.text || '')
+          setFooterLinks(JSON.stringify(footer.links || [], null, 2))
+        } catch (e) {
+          console.error('解析页脚失败:', e)
+        }
+      }
+      if (settingsData.siteAnnouncement?.value) {
+        try {
+          const announcement = JSON.parse(settingsData.siteAnnouncement.value)
+          setAnnouncementText(announcement.text || '')
+          setAnnouncementEnabled(announcement.enabled !== false)
+          setAnnouncementColor(announcement.color || '#666')
+        } catch (e) {
+          console.error('解析公告失败:', e)
+        }
+      }
+    }
+  }, [settingsData])
+
+  // 初始化默认设置
+  const initMutation = useMutation({
+    mutationFn: () => settingsAPI.init(),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['siteSettings'])
+      alert('默认设置已初始化！')
+    },
+    onError: (err) => {
+      alert('初始化失败：' + err.message)
+    },
+  })
+
+  // 保存设置
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      // 验证 JSON 格式
+      let links
+      try {
+        links = JSON.parse(footerLinks || '[]')
+      } catch (e) {
+        throw new Error('页脚链接格式错误，请输入有效的 JSON 数组')
+      }
+
+      const settings = [
+        { key: 'siteName', value: siteName, description: '网站名称' },
+        { key: 'siteNamePosition', value: siteNamePosition, description: '网站名称显示位置' },
+        {
+          key: 'siteFooter',
+          value: JSON.stringify({ text: footerText, links }),
+          description: '网站页脚信息',
+        },
+        {
+          key: 'siteAnnouncement',
+          value: JSON.stringify({
+            text: announcementText,
+            enabled: announcementEnabled,
+            color: announcementColor,
+          }),
+          description: '全站公告',
+        },
+      ]
+      await settingsAPI.batchUpdate(settings)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['siteSettings'])
+      alert('设置保存成功！')
+    },
+    onError: (err) => {
+      alert('保存失败：' + err.message)
+    },
+  })
+
+  // 修改密码
+  const passwordMutation = useMutation({
     mutationFn: async () => {
       if (newPassword !== confirmPassword) {
         throw new Error('两次输入的新密码不一致')
@@ -29,11 +132,7 @@ function Settings() {
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
-      
-      // 3 秒后退出登录
-      setTimeout(() => {
-        logout()
-      }, 3000)
+      setTimeout(() => logout(), 3000)
     },
     onError: (err) => {
       setError(err.message || '修改失败')
@@ -41,22 +140,122 @@ function Settings() {
     },
   })
 
-  const handleSubmit = (e) => {
+  const handlePasswordSubmit = (e) => {
     e.preventDefault()
     setError('')
     setSuccess('')
-    mutation.mutate()
+    passwordMutation.mutate()
   }
 
   return (
     <Layout>
       <div className="settings-page">
-        <h2>设置</h2>
+        <div className="settings-header">
+          <h2>⚙️ 设置</h2>
+          <button
+            className="btn-secondary"
+            onClick={() => initMutation.mutate()}
+            disabled={initMutation.isPending}
+          >
+            {initMutation.isPending ? '初始化中...' : '🔄 初始化默认设置'}
+          </button>
+        </div>
+
+        {/* 网站配置 */}
+        <div className="settings-section">
+          <h3>🌐 网站配置</h3>
+          
+          <div className="form-group">
+            <label>网站名称</label>
+            <input
+              type="text"
+              value={siteName}
+              onChange={(e) => setSiteName(e.target.value)}
+              placeholder="例如：CKAnim"
+            />
+            <small className="hint">显示在浏览器标题栏和导航栏</small>
+          </div>
+
+          <div className="form-group">
+            <label>网站名称显示位置</label>
+            <select
+              value={siteNamePosition}
+              onChange={(e) => setSiteNamePosition(e.target.value)}
+            >
+              <option value="header">仅页眉</option>
+              <option value="footer">仅页脚</option>
+              <option value="both">页眉和页脚</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>页脚文字</label>
+            <input
+              type="text"
+              value={footerText}
+              onChange={(e) => setFooterText(e.target.value)}
+              placeholder="© 2026 CKAnim. All rights reserved."
+            />
+            <small className="hint">显示在网站底部的版权信息</small>
+          </div>
+
+          <div className="form-group">
+            <label>页脚链接（JSON 数组）</label>
+            <textarea
+              value={footerLinks}
+              onChange={(e) => setFooterLinks(e.target.value)}
+              placeholder='[{"text": "关于我们", "url": "/about"}]'
+              rows={5}
+              style={{ fontFamily: 'monospace', fontSize: '13px' }}
+            />
+            <small className="hint">格式：[{`{"text": "链接文字", "url": "/链接地址"}`}]</small>
+          </div>
+
+          <div className="form-group">
+            <label>全站公告文字</label>
+            <input
+              type="text"
+              value={announcementText}
+              onChange={(e) => setAnnouncementText(e.target.value)}
+              placeholder="随机参考，每日一看"
+            />
+            <small className="hint">显示在首页搜索框下方的提醒文字</small>
+          </div>
+
+          <div className="form-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={announcementEnabled}
+                onChange={(e) => setAnnouncementEnabled(e.target.checked)}
+              />
+              启用公告
+            </label>
+          </div>
+
+          <div className="form-group">
+            <label>公告文字颜色</label>
+            <input
+              type="color"
+              value={announcementColor}
+              onChange={(e) => setAnnouncementColor(e.target.value)}
+              style={{ width: '100px', height: '40px', padding: '2px', cursor: 'pointer' }}
+            />
+          </div>
+
+          <button
+            className="btn-primary"
+            onClick={() => saveMutation.mutate()}
+            disabled={saveMutation.isPending}
+          >
+            {saveMutation.isPending ? '保存中...' : '💾 保存设置'}
+          </button>
+        </div>
 
         {/* 修改密码 */}
         <div className="settings-section">
-          <h3>修改密码</h3>
-          <form onSubmit={handleSubmit}>
+          <h3>🔐 修改密码</h3>
+          <form onSubmit={handlePasswordSubmit}>
             <div className="form-group">
               <label>当前密码</label>
               <input
@@ -95,16 +294,16 @@ function Settings() {
             <button 
               type="submit" 
               className="btn-primary"
-              disabled={mutation.isPending}
+              disabled={passwordMutation.isPending}
             >
-              {mutation.isPending ? '修改中...' : '修改密码'}
+              {passwordMutation.isPending ? '修改中...' : '修改密码'}
             </button>
           </form>
         </div>
 
         {/* 账户信息 */}
         <div className="settings-section">
-          <h3>账户信息</h3>
+          <h3>👤 账户信息</h3>
           <div className="info-row">
             <span className="label">用户名：</span>
             <span className="value">admin</span>
@@ -117,14 +316,14 @@ function Settings() {
 
         {/* 系统信息 */}
         <div className="settings-section">
-          <h3>系统信息</h3>
+          <h3>ℹ️ 系统信息</h3>
           <div className="info-row">
             <span className="label">版本：</span>
             <span className="value">v1.0.0</span>
           </div>
           <div className="info-row">
             <span className="label">最后更新：</span>
-            <span className="value">2026-03-17</span>
+            <span className="value">2026-03-19</span>
           </div>
         </div>
       </div>

@@ -88,6 +88,35 @@ export async function deleteFile(key: string) {
   });
 }
 
+// 批量删除文件
+export async function deleteMultipleFiles(keys: string[]) {
+  if (keys.length === 0) return;
+  
+  const bucketManager = new qiniu.rs.BucketManager(mac);
+  const operations = keys.map(key => ({
+    bucket,
+    key,
+  }));
+  
+  return new Promise<void>((resolve, reject) => {
+    bucketManager.batch(operations, (err, respBody, respInfo) => {
+      if (err) {
+        reject(err);
+      } else if (respInfo.statusCode === 200) {
+        // 检查每个操作的结果
+        const results = respBody as Array<{ code: number }>;
+        const failed = results.filter(r => r.code !== 200);
+        if (failed.length > 0) {
+          console.warn(`Batch delete: ${failed.length}/${keys.length} files failed`);
+        }
+        resolve();
+      } else {
+        reject(new Error(`Batch delete failed: ${respInfo.statusCode}`));
+      }
+    });
+  });
+}
+
 // 获取文件信息
 export async function getFileStat(key: string) {
   const bucketManager = new qiniu.rs.BucketManager(mac);
@@ -103,6 +132,13 @@ export async function getFileStat(key: string) {
       }
     });
   });
+}
+
+// 从 URL 提取文件 key
+export function extractKeyFromUrl(url: string): string {
+  if (!url || !domain) return '';
+  // 移除域名前缀
+  return url.replace(`${domain}/`, '');
 }
 
 // 生成下载凭证（私有空间）

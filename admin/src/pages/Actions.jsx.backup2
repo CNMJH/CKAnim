@@ -1,0 +1,465 @@
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { actionsAPI, charactersAPI, categoriesAPI, gamesAPI } from '../lib/services'
+import Layout from '../components/Layout'
+import './Actions.css'
+
+function Actions() {
+  const [showModal, setShowModal] = useState(false)
+  const [editingAction, setEditingAction] = useState(null)
+  
+  // 层级筛选状态
+  const [selectedGameId, setSelectedGameId] = useState('')
+  const [selectedCategoryId, setSelectedCategoryId] = useState('')
+  const [selectedCharacterId, setSelectedCharacterId] = useState('')
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    code: '',
+    description: '',
+    order: 0,
+    published: false,
+  })
+  const queryClient = useQueryClient()
+
+  // 获取游戏列表
+  const { data: gamesData = [] } = useQuery({
+    queryKey: ['games'],
+    queryFn: async () => {
+      const response = await gamesAPI.getAll()
+      return response.data.games || []
+    },
+  })
+
+  // 获取分类列表（按游戏）
+  const { data: categoriesData = [] } = useQuery({
+    queryKey: ['categories', selectedGameId],
+    queryFn: async () => {
+      if (!selectedGameId) return []
+      const response = await categoriesAPI.getByGame(Number(selectedGameId))
+      return response.data.categories || []
+    },
+    enabled: !!selectedGameId,
+  })
+
+  // 获取角色列表（按游戏）
+  const { data: charactersData = [] } = useQuery({
+    queryKey: ['characters', selectedGameId],
+    queryFn: async () => {
+      if (!selectedGameId) return []
+      const response = await charactersAPI.getByGame(Number(selectedGameId))
+      return response.data.characters || []
+    },
+    enabled: !!selectedGameId,
+  })
+
+  // 获取动作列表（支持按角色筛选）
+  const { data: actionsData = [], isLoading } = useQuery({
+    queryKey: ['actions', selectedCharacterId],
+    queryFn: async () => {
+      const params = {}
+      if (selectedCharacterId) params.characterId = selectedCharacterId
+      const response = await actionsAPI.getAll(params)
+      return response.data.actions || []
+    },
+  })
+
+  // 创建动作
+  const createMutation = useMutation({
+    mutationFn: async (data) => {
+      if (!selectedCharacterId) {
+        throw new Error('请选择角色')
+      }
+      await actionsAPI.create({ ...data, characterId: Number(selectedCharacterId) })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['actions'])
+      setShowModal(false)
+      resetForm()
+      alert('创建成功！')
+    },
+    onError: (error) => {
+      alert('创建失败：' + error.message)
+    },
+  })
+
+  // 更新动作
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }) => {
+      await actionsAPI.update(id, data)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['actions'])
+      setShowModal(false)
+      setEditingAction(null)
+      resetForm()
+      alert('更新成功！')
+    },
+    onError: (error) => {
+      alert('更新失败：' + error.message)
+    },
+  })
+
+  // 删除动作
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      if (confirm('确定要删除这个动作吗？')) {
+        await actionsAPI.delete(id)
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['actions'])
+      alert('删除成功！')
+    },
+    onError: (error) => {
+      alert('删除失败：' + error.message)
+    },
+  })
+
+  const resetForm = () => {
+    setFormData({ name: '', code: '', description: '', order: 0, published: false })
+  }
+
+  // 打开创建弹窗
+  const handleCreate = () => {
+    setEditingAction(null)
+    resetForm()
+    setShowModal(true)
+  }
+
+  // 打开编辑弹窗
+  const handleEdit = (action) => {
+    setEditingAction(action)
+    setFormData({
+      name: action.name,
+      code: action.code,
+      description: action.description || '',
+      order: action.order,
+      published: action.published,
+    })
+    setShowModal(true)
+  }
+
+  // 保存（创建或更新）
+  const handleSave = () => {
+    if (!formData.name || !formData.code) {
+      alert('名称和代码是必填项')
+      return
+    }
+
+    if (!selectedCharacterId) {
+      alert('请选择角色')
+      return
+    }
+
+    if (editingAction) {
+      updateMutation.mutate({ 
+        id: editingAction.id, 
+        data: { ...formData, characterId: parseInt(selectedCharacterId) } 
+      })
+    } else {
+      createMutation.mutate(formData)
+    }
+  }
+
+  // 切换发布状态
+  const togglePublish = useMutation({
+    mutationFn: async ({ id, published }) => {
+      await actionsAPI.update(id, { published })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['actions'])
+    },
+  })
+
+  // 游戏改变时重置下级筛选
+  const handleGameChange = (gameId) => {
+    setSelectedGameId(gameId ? String(gameId) : '')
+    setSelectedCategoryId('')
+    setSelectedCharacterId('')
+  }
+
+  // 分类改变时重置角色筛选
+  const handleCategoryChange = (categoryId) => {
+    setSelectedCategoryId(categoryId ? String(categoryId) : '')
+    setSelectedCharacterId('')
+  }
+
+  // 筛选后的角色列表
+  const filteredCharacters = charactersData?.filter(char => {
+    if (selectedCategoryId) {
+      return char.categoryId === Number(selectedCategoryId)
+    }
+    return true
+  }) || []
+
+  return (
+    <Layout>
+      <div className="actions-page">
+        <div className="page-header">
+          <h2>动作管理</h2>
+          <div className="header-actions">
+            {/* 层级筛选器：游戏 > 分类 > 角色 */}
+            <div className="filter-bar" style={{ marginBottom: '0', flex: 1 }}>
+              <select
+                value={selectedGameId}
+                onChange={(e) => handleGameChange(e.target.value)}
+                className="filter-select"
+              >
+                <option value="">选择游戏</option>
+                {gamesData?.map(game => (
+                  <option key={game.id} value={game.id}>
+                    {game.name}
+                  </option>
+                ))}
+              </select>
+
+              {selectedGameId && (
+                <select
+                  value={selectedCategoryId}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="">所有分类</option>
+                  {categoriesData?.map(cat => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {selectedGameId && (
+                <select
+                  value={selectedCharacterId}
+                  onChange={(e) => setSelectedCharacterId(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="">所有角色</option>
+                  {filteredCharacters.map(char => (
+                    <option key={char.id} value={char.id}>
+                      {char.name}
+                      {char.category ? `（${char.category.name}）` : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={handleCreate}
+              disabled={!selectedGameId}
+            >
+              ➕ 新建动作
+            </button>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="loading">加载中...</div>
+        ) : actionsData?.length > 0 ? (
+          <div className="actions-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>名称</th>
+                  <th>代码</th>
+                  <th>所属角色</th>
+                  <th>视频</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {actionsData.map(action => (
+                  <tr key={action.id}>
+                    <td>{action.id}</td>
+                    <td>{action.name}</td>
+                    <td><code className="action-code">{action.code}</code></td>
+                    <td>{action.character?.name || '-'}</td>
+                    <td>
+                      {action.video ? (
+                        <span className="has-video">✅ 有视频</span>
+                      ) : (
+                        <span className="no-video">❌ 无视频</span>
+                      )}
+                    </td>
+                    <td>
+                      <button
+                        className={`status-btn ${action.published ? 'published' : 'draft'}`}
+                        onClick={() => togglePublish.mutate({ id: action.id, published: !action.published })}
+                      >
+                        {action.published ? '已发布' : '未发布'}
+                      </button>
+                    </td>
+                    <td className="actions">
+                      <button
+                        className="btn-sm btn-secondary"
+                        onClick={() => handleEdit(action)}
+                      >
+                        编辑
+                      </button>
+                      <button
+                        className="btn-sm btn-danger"
+                        onClick={() => deleteMutation.mutate(action.id)}
+                      >
+                        删除
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="empty-state">
+            <p>暂无动作数据</p>
+            <p className="hint">
+              {selectedGameId 
+                ? '点击上方按钮创建第一个动作' 
+                : '请先选择游戏'}
+            </p>
+          </div>
+        )}
+
+        {/* 创建/编辑弹窗 */}
+        {showModal && (
+          <div className="modal-overlay" onClick={() => setShowModal(false)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <h3>{editingAction ? '编辑动作' : '新建动作'}</h3>
+              
+              {/* 层级选择：游戏 > 分类 > 角色 */}
+              <div className="form-group">
+                <label>选择游戏 *</label>
+                <select
+                  value={selectedGameId}
+                  onChange={(e) => handleGameChange(e.target.value)}
+                  className="form-control"
+                >
+                  <option value="">请选择游戏</option>
+                  {gamesData?.map(game => (
+                    <option key={game.id} value={game.id}>
+                      {game.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedGameId && (
+                <div className="form-group">
+                  <label>选择分类</label>
+                  <select
+                    value={selectedCategoryId}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
+                    className="form-control"
+                  >
+                    <option value="">不分类</option>
+                    {categoriesData?.map(cat => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {selectedGameId && (
+                <div className="form-group">
+                  <label>选择角色 *</label>
+                  <select
+                    value={selectedCharacterId}
+                    onChange={(e) => setSelectedCharacterId(e.target.value)}
+                    className="form-control"
+                  >
+                    <option value="">请选择角色</option>
+                    {filteredCharacters.map(char => (
+                      <option key={char.id} value={char.id}>
+                        {char.name}
+                        {char.category ? `（${char.category.name}）` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="form-group">
+                <label>名称 *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="如：攻击、走位、技能"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>代码 *</label>
+                <input
+                  type="text"
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  placeholder="如：attack、walk、skill"
+                />
+                <p className="hint">英文标识符，用于程序调用</p>
+              </div>
+
+              <div className="form-group">
+                <label>描述</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="动作描述（可选）"
+                  rows={3}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>排序</label>
+                <input
+                  type="number"
+                  value={formData.order}
+                  onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
+                  placeholder="数字越小越靠前"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={formData.published}
+                    onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
+                  />
+                  发布（发布的动作才会显示在前台）
+                </label>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowModal(false)}
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleSave}
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                >
+                  {createMutation.isPending || updateMutation.isPending ? '保存中...' : '保存'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </Layout>
+  )
+}
+
+export default Actions

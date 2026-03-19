@@ -16,37 +16,6 @@
   margin: 0;
 }
 
-.game-selector {
-  background: #fff;
-  padding: 20px 24px;
-  border-radius: 8px;
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.game-selector label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #555;
-}
-
-.game-selector select {
-  padding: 8px 16px;
-  border: 2px solid #e0e0e0;
-  border-radius: 6px;
-  font-size: 14px;
-  background: #fff;
-  cursor: pointer;
-  min-width: 200px;
-}
-
-.game-selector select:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
 /* 角色列表 */
 .characters-list {
   background: #fff;

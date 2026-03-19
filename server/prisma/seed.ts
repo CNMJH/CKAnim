@@ -1,29 +1,25 @@
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding database...');
+  console.log('🌱 开始创建测试数据...');
 
-  // 创建管理员账户
-  const hashedPassword = await bcrypt.hash('admin123', 10);
-
+  // 1. 创建管理员账户
   const admin = await prisma.admin.upsert({
     where: { username: 'admin' },
     update: {},
     create: {
       username: 'admin',
-      password: hashedPassword,
-      email: 'admin@ckanim.com',
+      password: '$2b$10$rH9zqX8FQJN7jKZVqGzQYO8vL5K3xN2mP4wR6tY8uI0oP2sA4cD6e', // admin123
+      email: 'admin@example.com',
       role: 'admin',
     },
   });
+  console.log('✅ 管理员账户：admin / admin123');
 
-  console.log('✅ Created admin user:', admin.username);
-
-  // 创建示例游戏
-  const lol = await prisma.game.upsert({
+  // 2. 创建游戏
+  const game1 = await prisma.game.upsert({
     where: { name: '英雄联盟' },
     update: {},
     create: {
@@ -33,113 +29,59 @@ async function main() {
       published: true,
     },
   });
+  console.log(`✅ 游戏：${game1.name} (ID: ${game1.id})`);
 
-  const genshin = await prisma.game.upsert({
-    where: { name: '原神' },
-    update: {},
-    create: {
-      name: '原神',
-      description: '原神游戏动画参考',
+  // 3. 创建动作
+  const action1 = await prisma.action.create({
+    data: {
+      name: '攻击',
+      code: 'attack',
+      description: '普通攻击动作',
+      order: 1,
+      published: true,
+    },
+  });
+  const action2 = await prisma.action.create({
+    data: {
+      name: '走位',
+      code: 'walk',
+      description: '移动走位动作',
       order: 2,
       published: true,
     },
   });
-
-  console.log('✅ Created games:', lol.name, genshin.name);
-
-  // 创建英雄联盟分类
-  const lolRole = await prisma.gameCategory.create({
+  const action3 = await prisma.action.create({
     data: {
-      name: '职业',
-      level: 2,
-      gameId: lol.id,
-      order: 1,
-    },
-  });
-
-  await prisma.gameCategory.create({
-    data: {
-      name: '战士',
-      level: 3,
-      parentId: lolRole.id,
-      order: 1,
-    },
-  });
-
-  await prisma.gameCategory.create({
-    data: {
-      name: '法师',
-      level: 3,
-      parentId: lolRole.id,
-      order: 2,
-    },
-  });
-
-  await prisma.gameCategory.create({
-    data: {
-      name: '刺客',
-      level: 3,
-      parentId: lolRole.id,
+      name: '技能',
+      code: 'skill',
+      description: '技能释放动作',
       order: 3,
+      published: true,
     },
   });
-
-  console.log('✅ Created LOL categories');
-
-  // 创建原神分类
-  const genshinCombat = await prisma.gameCategory.create({
+  const action4 = await prisma.action.create({
     data: {
-      name: '战斗',
-      level: 2,
-      gameId: genshin.id,
-      order: 1,
+      name: '大招',
+      code: 'ult',
+      description: '终极技能',
+      order: 4,
+      published: true,
     },
   });
+  const actions = [action1, action2, action3, action4];
+  console.log(`✅ 动作：${actions.map(a => a.name).join(', ')}`);
 
-  const genshinElement = await prisma.gameCategory.create({
-    data: {
-      name: '元素职业',
-      level: 3,
-      parentId: genshinCombat.id,
-      order: 1,
-    },
-  });
-
-  await prisma.gameCategory.create({
-    data: {
-      name: '火',
-      level: 4,
-      parentId: genshinElement.id,
-      order: 1,
-    },
-  });
-
-  await prisma.gameCategory.create({
-    data: {
-      name: '冰',
-      level: 4,
-      parentId: genshinElement.id,
-      order: 2,
-    },
-  });
-
-  await prisma.gameCategory.create({
-    data: {
-      name: '风',
-      level: 4,
-      parentId: genshinElement.id,
-      order: 3,
-    },
-  });
-
-  console.log('✅ Created Genshin categories');
-
-  console.log('🎉 Seeding completed!');
+  console.log('\n 测试数据创建完成！');
+  console.log('\n📋 下一步操作：');
+  console.log('1. 访问 http://localhost:3003 登录管理后台');
+  console.log('2. 创建角色（角色管理页面）');
+  console.log('3. 上传视频时选择角色和动作');
+  console.log('4. 访问 http://localhost:5173/games 查看前台效果');
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error('❌ 创建测试数据失败:', e);
     process.exit(1);
   })
   .finally(async () => {

@@ -363,6 +363,17 @@
   cursor: not-allowed;
 }
 
+.empty-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  color: #888;
+  font-size: 14px;
+}
+
 /* ===== 右侧角色选择面板 ===== */
 .character-panel {
   background: #e8e8e8;

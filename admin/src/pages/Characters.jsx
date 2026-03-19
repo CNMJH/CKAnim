@@ -6,6 +6,7 @@ import './Characters.css'
 
 function Characters() {
   const [selectedGame, setSelectedGame] = useState(null)
+  const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editingCharacter, setEditingCharacter] = useState(null)
   const [formData, setFormData] = useState({
@@ -20,35 +21,50 @@ function Characters() {
   const queryClient = useQueryClient()
 
   // 获取游戏列表
-  const { data: gamesData } = useQuery({
+  const { data: gamesData = [] } = useQuery({
     queryKey: ['games'],
     queryFn: async () => {
       const res = await gamesAPI.getAll()
-      return res.data.games
+      return res.data.games || []
     },
   })
 
   // 获取分类列表（按游戏）
-  const { data: categories } = useQuery({
+  const { data: categories = [] } = useQuery({
     queryKey: ['categories', selectedGame?.id],
     queryFn: async () => {
       if (!selectedGame) return []
       const res = await categoriesAPI.getByGame(selectedGame.id)
-      return res.data.categories
+      return res.data.categories || []
     },
     enabled: !!selectedGame,
   })
 
   // 获取角色列表
-  const { data: characters } = useQuery({
-    queryKey: ['characters', selectedGame?.id],
+  const { data: characters = [] } = useQuery({
+    queryKey: ['characters', selectedGame?.id, selectedCategoryId],
     queryFn: async () => {
       if (!selectedGame) return []
       const res = await charactersAPI.getByGame(selectedGame.id)
-      return res.data.characters
+      return res.data.characters || []
     },
     enabled: !!selectedGame,
   })
+
+  // 游戏改变时重置分类筛选
+  const handleGameChange = (gameId) => {
+    const game = gamesData?.find(g => g.id === parseInt(gameId))
+    setSelectedGame(game || null)
+    setSelectedCategoryId('')
+  }
+
+  // 筛选后的角色列表
+  const filteredCharacters = characters?.filter(char => {
+    if (selectedCategoryId) {
+      return char.categoryId === parseInt(selectedCategoryId)
+    }
+    return true
+  }) || []
 
   // 创建角色
   const createMutation = useMutation({
@@ -134,53 +150,71 @@ function Characters() {
         <button className="btn-primary" onClick={handleNew}>+ 新建角色</button>
       </div>
 
-      {/* 选择游戏 */}
-      <div className="game-selector">
-        <label>选择游戏：</label>
+      {/* 层级筛选器：游戏 > 分类 */}
+      <div className="filter-bar">
         <select
           value={selectedGame?.id || ''}
-          onChange={(e) => {
-            const game = gamesData?.find(g => g.id === parseInt(e.target.value))
-            setSelectedGame(game || null)
-          }}
+          onChange={(e) => handleGameChange(e.target.value)}
+          className="filter-select"
         >
           <option value="">请选择游戏</option>
           {gamesData?.map(game => (
             <option key={game.id} value={game.id}>{game.name}</option>
           ))}
         </select>
+
+        {selectedGame && (
+          <select
+            value={selectedCategoryId}
+            onChange={(e) => setSelectedCategoryId(e.target.value)}
+            className="filter-select"
+          >
+            <option value="">所有分类</option>
+            {categories?.map(cat => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* 角色列表 */}
-      {selectedGame && (
+      {!selectedGame ? (
+        <div className="empty-state">
+          <p>请先选择一个游戏</p>
+        </div>
+      ) : filteredCharacters?.length > 0 ? (
         <div className="characters-list">
-          {characters?.length > 0 ? (
-            characters.map(character => (
-              <div key={character.id} className="character-item">
-                <div className="character-info">
-                  {character.avatar ? (
-                    <img src={character.avatar} alt={character.name} className="character-avatar" />
-                  ) : (
-                    <div className="character-avatar-placeholder">{character.name.charAt(0)}</div>
-                  )}
-                  <div className="character-details">
-                    <div className="character-name">{character.name}</div>
-                    {character.category && <div className="character-role">分类：{character.category.name}</div>}
-                    {character.description && <div className="character-description">{character.description}</div>}
-                  </div>
-                </div>
-                <div className="character-actions">
-                  <span className={`status-badge ${character.published ? 'published' : 'draft'}`}>
-                    {character.published ? '已发布' : '未发布'}
-                  </span>
-                  <button className="btn-sm" onClick={() => handleEdit(character)}>编辑</button>
-                  <button className="btn-sm btn-danger" onClick={() => deleteMutation.mutate(character.id)}>删除</button>
+          {filteredCharacters.map(character => (
+            <div key={character.id} className="character-item">
+              <div className="character-info">
+                {character.avatar ? (
+                  <img src={character.avatar} alt={character.name} className="character-avatar" />
+                ) : (
+                  <div className="character-avatar-placeholder">{character.name.charAt(0)}</div>
+                )}
+                <div className="character-details">
+                  <div className="character-name">{character.name}</div>
+                  {character.category && <div className="character-role">分类：{character.category.name}</div>}
+                  {character.description && <div className="character-description">{character.description}</div>}
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="empty-state">暂无角色，点击右上角创建</div>
-          )}
+              <div className="character-actions">
+                <span className={`status-badge ${character.published ? 'published' : 'draft'}`}>
+                  {character.published ? '已发布' : '未发布'}
+                </span>
+                <button className="btn-sm" onClick={() => handleEdit(character)}>编辑</button>
+                <button className="btn-sm btn-danger" onClick={() => deleteMutation.mutate(character.id)}>删除</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="empty-state">
+          <p>
+            {selectedCategoryId 
+              ? `该分类下暂无角色` 
+              : '暂无角色，点击右上角创建'}
+          </p>
         </div>
       )}
 

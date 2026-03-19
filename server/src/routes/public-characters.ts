@@ -5,9 +5,9 @@ export const publicCharacterRoutes: FastifyPluginAsync = async (server) => {
   // 获取游戏的角色列表（公开 API）
   server.get('/characters', async (request, reply) => {
     try {
-      const { gameId, role, search } = request.query as {
+      const { gameId, categoryId, search } = request.query as {
         gameId?: string;
-        role?: string;
+        categoryId?: string;
         search?: string;
       };
 
@@ -17,10 +17,8 @@ export const publicCharacterRoutes: FastifyPluginAsync = async (server) => {
         where.gameId = parseInt(gameId);
       }
 
-      if (role) {
-        where.category = {
-          name: role,
-        };
+      if (categoryId) {
+        where.categoryId = parseInt(categoryId);
       }
 
       if (search) {
@@ -41,6 +39,21 @@ export const publicCharacterRoutes: FastifyPluginAsync = async (server) => {
               id: true,
               name: true,
               level: true,
+            },
+          },
+          actions: {
+            where: { published: true },
+            include: {
+              video: { // ⭐ 1 对 1 关系
+                where: { published: true },
+                select: {
+                  id: true,
+                  qiniuUrl: true,
+                  coverUrl: true,
+                  duration: true,
+                  title: true,
+                },
+              },
             },
           },
         },
@@ -75,15 +88,8 @@ export const publicCharacterRoutes: FastifyPluginAsync = async (server) => {
           actions: {
             where: { published: true },
             include: {
-              action: {
-                select: {
-                  id: true,
-                  name: true,
-                  code: true,
-                  description: true,
-                },
-              },
-              video: {
+              video: { // ⭐ 1 对 1 关系
+                where: { published: true },
                 select: {
                   id: true,
                   qiniuUrl: true,
@@ -93,7 +99,6 @@ export const publicCharacterRoutes: FastifyPluginAsync = async (server) => {
                 },
               },
             },
-            orderBy: { order: 'asc' },
           },
         },
       });
@@ -121,14 +126,19 @@ export const publicCharacterRoutes: FastifyPluginAsync = async (server) => {
       const { id } = request.params as { id: string };
       const characterId = parseInt(id);
 
+      // ⭐ 设置响应头禁止缓存
+      reply.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      reply.header('Pragma', 'no-cache');
+      reply.header('Expires', '0');
+
       const character = await prisma.character.findUnique({
         where: { id: characterId },
         include: {
           actions: {
             where: { published: true },
             include: {
-              action: true,
-              video: {
+              video: { // ⭐ 1 对 1 关系
+                where: { published: true },
                 select: {
                   id: true,
                   qiniuUrl: true,
@@ -153,15 +163,13 @@ export const publicCharacterRoutes: FastifyPluginAsync = async (server) => {
       reply.send({
         characterId: character.id,
         characterName: character.name,
-        actions: character.actions.map((ca: any) => ({
-          id: ca.id,
-          actionId: ca.actionId,
-          name: ca.action.name,
-          code: ca.action.code,
-          description: ca.action.description,
-          video: ca.video,
-          videoUrl: ca.videoUrl,
-          order: ca.order,
+        actions: character.actions.map((action: any) => ({
+          id: action.id,
+          name: action.name,
+          code: action.code,
+          description: action.description,
+          order: action.order,
+          video: action.video, // ⭐ 1 对 1 关系
         })),
       });
     } catch (error) {
@@ -176,8 +184,23 @@ export const publicCharacterRoutes: FastifyPluginAsync = async (server) => {
   // 获取动作列表（公开 API）
   server.get('/actions', async (request, reply) => {
     try {
+      const { characterId } = request.query as { characterId?: string };
+
+      const where: any = { published: true };
+      if (characterId) {
+        where.characterId = parseInt(characterId);
+      }
+
       const actions = await prisma.action.findMany({
-        where: { published: true },
+        where,
+        include: {
+          character: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
         orderBy: { order: 'asc' },
       });
 
@@ -207,25 +230,30 @@ export const publicCharacterRoutes: FastifyPluginAsync = async (server) => {
         select: { 
           category: {
             select: {
+              id: true,
               name: true,
+              level: true,
             },
           },
         },
       });
 
-      // 提取不重复的分类名称
-      const roleNames = [...new Set(
-        characters
-          .map(c => c.category?.name)
-          .filter(Boolean)
-      )].sort();
+      // 提取不重复的分类
+      const categories = characters
+        .filter(c => c.category !== null)
+        .map(c => c.category!);
 
-      reply.send({ roles: roleNames });
+      // 去重
+      const uniqueCategories = categories.filter(
+        (cat, index, self) => index === self.findIndex(c => c.id === cat.id)
+      );
+
+      reply.send({ categories: uniqueCategories });
     } catch (error) {
       server.log.error(error);
       reply.code(500).send({
         error: 'Internal Server Error',
-        message: 'Failed to fetch character roles',
+        message: 'Failed to fetch character categories',
       });
     }
   });

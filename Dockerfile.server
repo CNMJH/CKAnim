@@ -1,0 +1,28 @@
+# 后端 API Docker 镜像
+FROM node:18-alpine
+
+WORKDIR /app
+
+# 安装构建工具（Prisma 需要）
+RUN apk add --no-cache openssl
+
+# 复制 package.json
+COPY package.json package-lock.json* ./
+
+# 安装依赖
+RUN npm ci --only=production
+
+# 复制源代码
+COPY . .
+
+# 生成 Prisma 客户端
+RUN npx prisma generate
+
+# 构建 TypeScript
+RUN npm run build
+
+# 暴露端口
+EXPOSE 3002
+
+# 启动命令
+CMD ["node", "dist/index.js"]

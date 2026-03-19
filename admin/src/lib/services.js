@@ -32,8 +32,10 @@ export const categoriesAPI = {
 export const videosAPI = {
   getAll: (params) => api.get('/admin/videos', { params }),
   getOne: (id) => api.get(`/admin/videos/${id}`),
-  getUploadToken: (filename, gameId, categoryIds = []) =>
-    api.post('/admin/videos/upload-token', { filename, gameId, categoryIds }),
+  getUploadToken: (filename, gameId, categoryIds = [], actionId) =>
+    api.post('/admin/videos/upload-token', { filename, gameId, categoryIds, actionId }),
+  getCoverUploadToken: (coverKey) =>
+    api.post('/admin/videos/cover-upload-token', { coverKey }),
   create: (data) => api.post('/admin/videos', data),
   update: (id, data) => api.put(`/admin/videos/${id}`, data),
   delete: (id) => api.delete(`/admin/videos/${id}`),
@@ -47,8 +49,26 @@ export const tagsAPI = {
 }
 
 export const charactersAPI = {
+  getAll: () => api.get('/admin/characters'),
   getByGame: (gameId) => api.get(`/admin/characters?gameId=${gameId}`),
+  getById: (id) => api.get(`/admin/characters/${id}`),
   create: (data) => api.post('/admin/characters', data),
   update: (id, data) => api.put(`/admin/characters/${id}`, data),
   delete: (id) => api.delete(`/admin/characters/${id}`),
+}
+
+export const actionsAPI = {
+  getAll: (params) => api.get('/admin/actions', { params }),
+  getById: (id) => api.get(`/admin/actions/${id}`),
+  create: (data) => api.post('/admin/actions', data),
+  update: (id, data) => api.put(`/admin/actions/${id}`, data),
+  delete: (id) => api.delete(`/admin/actions/${id}`),
+}
+
+export const settingsAPI = {
+  getAll: () => api.get('/settings'),
+  getOne: (key) => api.get(`/settings/${key}`),
+  update: (key, data) => api.put(`/settings/${key}`, data),
+  batchUpdate: (settings) => api.post('/settings/batch', { settings }),
+  init: () => api.post('/settings/init'),
 }

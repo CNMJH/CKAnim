@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: ckanim-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ckanim
+      POSTGRES_PASSWORD: ckanim_password_change_me
+      POSTGRES_DB: ckanim
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ckanim"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 后端 API
+  server:
+    build:
+      context: ./server
+      dockerfile: ../Dockerfile.server
+    container_name: ckanim-server
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      DATABASE_URL: postgresql://ckanim:ckanim_password_change_me@postgres:5432/ckanim?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 7d
+      QINIU_ACCESS_KEY: ${QINIU_ACCESS_KEY}
+      QINIU_SECRET_KEY: ${QINIU_SECRET_KEY}
+      QINIU_BUCKET: ${QINIU_BUCKET}
+      QINIU_DOMAIN: ${QINIU_DOMAIN}
+      QINIU_PREFIX: ${QINIU_PREFIX}
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./server/logs:/app/logs
+
+  # 前台网站
+  front:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ckanim-front
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+
+  # 管理后台
+  admin:
+    build:
+      context: ./admin
+      dockerfile: ../Dockerfile.admin
+    container_name: ckanim-admin
+    restart: always
+    ports:
+      - "3003:80"
+    depends_on:
+      - server
+
+volumes:
+  postgres_data:

@@ -11,11 +11,11 @@ function Games() {
   const iconInputRef = useRef(null)
   const queryClient = useQueryClient()
 
-  const { data: games, isLoading } = useQuery({
+  const { data: games = [], isLoading } = useQuery({
     queryKey: ['games'],
     queryFn: async () => {
       const response = await gamesAPI.getAll()
-      return response.data
+      return response.data.games || []
     },
   })
 

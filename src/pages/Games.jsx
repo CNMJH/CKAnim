@@ -77,42 +77,8 @@ function Games() {
     loadGames();
   }, []);
 
-  // 加载动作列表
-  useEffect(() => {
-    const loadActions = async () => {
-      try {
-        setActionsLoading(true);
-        const response = await actionsAPI.getAll();
-        setActions(response.data.actions || []);
-      } catch (error) {
-        console.error('Failed to load actions:', error);
-        // 使用默认动作列表
-        setActions([
-          { id: 1, name: '攻击', code: 'attack' },
-          { id: 2, name: '走位', code: 'walk' },
-          { id: 3, name: '技能', code: 'skill' },
-          { id: 4, name: '普攻', code: 'basic' },
-          { id: 5, name: '连招', code: 'combo' },
-          { id: 6, name: '闪避', code: 'dodge' },
-          { id: 7, name: '格挡', code: 'block' },
-          { id: 8, name: '嘲讽', code: 'taunt' },
-          { id: 9, name: '治疗', code: 'heal' },
-          { id: 10, name: '爆发', code: 'burst' },
-          { id: 11, name: '控制', code: 'control' },
-          { id: 12, name: '位移', code: 'dash' },
-          { id: 13, name: '隐身', code: 'stealth' },
-          { id: 14, name: '变身', code: 'transform' },
-          { id: 15, name: '大招', code: 'ultimate' },
-          { id: 16, name: '被动', code: 'passive' },
-          { id: 17, name: '回城', code: 'recall' },
-          { id: 18, name: '表情', code: 'emote' },
-        ]);
-      } finally {
-        setActionsLoading(false);
-      }
-    };
-    loadActions();
-  }, []);
+  // 不需要加载所有动作列表，每个角色有自己的动作
+  // 动作列表从 characterActions 动态获取
 
   // 加载角色列表（当选择游戏时）
   useEffect(() => {
@@ -155,11 +121,15 @@ function Games() {
 
     const loadCharacterActions = async () => {
       try {
+        setActionsLoading(true);
         const response = await charactersAPI.getActions(selectedCharacter.id);
+        // API 返回：{ characterId, characterName, actions: [...] }
         setCharacterActions(response.data.actions || []);
       } catch (error) {
         console.error('Failed to load character actions:', error);
         setCharacterActions([]);
+      } finally {
+        setActionsLoading(false);
       }
     };
     loadCharacterActions();
@@ -169,23 +139,11 @@ function Games() {
   const getCurrentVideoUrl = useCallback(() => {
     if (!selectedCharacter || selectedAction === null) return null;
     
-    // 从角色动作列表中查找
-    const charAction = characterActions.find(ca => {
-      // selectedAction 可能是动作 ID 或索引
-      if (typeof selectedAction === 'number') {
-        return ca.actionId === selectedAction || ca.id === selectedAction;
-      }
-      return false;
-    });
+    // 从角色动作列表中查找（selectedAction 现在是 action id）
+    const charAction = characterActions.find(ca => ca.id === selectedAction);
     
-    if (charAction) {
-      // 优先使用关联的视频 URL
-      if (charAction.video?.qiniuUrl) {
-        return charAction.video.qiniuUrl;
-      }
-      if (charAction.videoUrl) {
-        return charAction.videoUrl;
-      }
+    if (charAction && charAction.video?.qiniuUrl) {
+      return charAction.video.qiniuUrl;
     }
     
     return null;
@@ -398,8 +356,7 @@ function Games() {
                   {/* 视频信息 */}
                   <div className="video-info-text">
                     {selectedCharacter.name} - {
-                      actions.find(a => a.id === selectedAction)?.name || 
-                      actions.find(a => a.code === selectedAction)?.name ||
+                      characterActions.find(ca => ca.id === selectedAction)?.name ||
                       '选择动作'
                     }
                   </div>
@@ -419,18 +376,30 @@ function Games() {
           <div className="action-section">
             {actionsLoading ? (
               <div className="loading">加载动作列表...</div>
+            ) : selectedCharacter ? (
+              characterActions.length > 0 ? (
+                <div className="action-grid">
+                  {characterActions
+                    .filter(charAction => charAction.video) // ⭐ 只显示有视频的动作
+                    .map((charAction) => (
+                      <button
+                        key={charAction.id}
+                        className={`action-btn ${selectedAction === charAction.id ? 'selected' : ''}`}
+                        onClick={() => handleActionSelect(charAction.id)}
+                      >
+                        {charAction.name}
+                      </button>
+                    ))}
+                </div>
+              ) : (
+                <div className="empty-actions">
+                  该角色暂无动作
+                  <p>请联系管理员上传视频</p>
+                </div>
+              )
             ) : (
-              <div className="action-grid">
-                {actions.map((action) => (
-                  <button
-                    key={action.id}
-                    className={`action-btn ${selectedAction === action.id ? 'selected' : ''}`}
-                    onClick={() => handleActionSelect(action.id)}
-                    disabled={!selectedCharacter}
-                  >
-                    {action.name}
-                  </button>
-                ))}
+              <div className="empty-actions">
+                请先选择角色
               </div>
             )}
           </div>

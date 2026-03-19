@@ -17,32 +17,32 @@ function Categories() {
   const queryClient = useQueryClient()
 
   // 获取游戏列表
-  const { data: games } = useQuery({
+  const { data: games = [] } = useQuery({
     queryKey: ['games'],
     queryFn: async () => {
       const response = await gamesAPI.getAll()
-      return response.data
+      return response.data.games || []
     },
   })
 
   // 获取分类树
-  const { data: categories, isLoading } = useQuery({
+  const { data: categories = [], isLoading } = useQuery({
     queryKey: ['categories', selectedGame?.id],
     queryFn: async () => {
       if (!selectedGame) return []
       const response = await categoriesAPI.getByGame(selectedGame.id)
-      return response.data
+      return response.data.categories || []
     },
     enabled: !!selectedGame,
   })
 
   // 获取所有分类（用于父分类选择）
-  const { data: allCategories } = useQuery({
+  const { data: allCategories = [] } = useQuery({
     queryKey: ['all-categories', selectedGame?.id],
     queryFn: async () => {
       if (!selectedGame) return []
       const response = await categoriesAPI.getByGame(selectedGame.id)
-      return response.data
+      return response.data.categories || []
     },
     enabled: !!selectedGame && showModal && !editingCategory,
   })

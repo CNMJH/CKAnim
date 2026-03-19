@@ -13,7 +13,7 @@ function Layout({ children }) {
     { path: '/', label: '游戏管理', icon: '🎮' },
     { path: '/categories', label: '分类管理', icon: '📁' },
     { path: '/characters', label: '角色管理', icon: '👤' },
-    { path: '/videos', label: '视频管理', icon: '🎬' },
+    { path: '/actions', label: '动作管理', icon: '🎯' },
     { path: '/settings', label: '设置', icon: '⚙️' },
   ]
 
