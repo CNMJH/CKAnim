@@ -118,12 +118,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
                 level: true,
               },
             },
-            VideoTags: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
+
           },
         }),
         prisma.video.count({ where }),
