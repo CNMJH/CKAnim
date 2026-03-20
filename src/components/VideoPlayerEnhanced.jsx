@@ -478,7 +478,8 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       };
       
       // 真实擦除：只删除被橡皮擦碰到的路径点，不是整笔删除
-      const newDrawings = drawings.map(drawing => {
+      // 使用 drawingsRef.current 获取最新数据，避免闭包问题
+      const newDrawings = drawingsRef.current.map(drawing => {
         // 只处理当前帧的单帧绘画，或所有常驻绘画
         const isInCurrentFrame = drawing.type === 'single' && drawing.frameIndex === currentFrame;
         const isPermanent = drawing.type === 'permanent';
@@ -511,10 +512,9 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         return newPaths.length > 0 ? { ...drawing, paths: newPaths } : null;
       }).filter(d => d !== null); // 过滤掉被完全擦除的绘画
       
-      if (newDrawings.length !== drawings.length) {
-        setDrawings(newDrawings);
-        addToHistory(newDrawings);
-      }
+      // 更新状态
+      setDrawings(newDrawings);
+      addToHistory(newDrawings);
       
       // 清除橡皮擦预览并重新渲染
       setCurrentPath([]);
