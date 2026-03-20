@@ -26,6 +26,9 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
   const [showColorPicker, setShowColorPicker] = useState(false); // 颜色选择器显示
   const [showSpeedMenu, setShowSpeedMenu] = useState(false); // 倍速菜单显示
   const [showVolumeMenu, setShowVolumeMenu] = useState(false); // 音量菜单显示
+  const [showEraserMenu, setShowEraserMenu] = useState(false); // 橡皮擦菜单显示
+  const [eraserSize, setEraserSize] = useState(20); // 橡皮擦大小
+  const [eraserShape, setEraserShape] = useState('circle'); // circle (圆形), square (正方形)
   
   // 文本编辑状态
   const [isEditingText, setIsEditingText] = useState(false);
@@ -374,15 +377,11 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     setLastPos(pos);
     setCurrentPath([pos]); // 开始新路径
     
-    // 橡皮擦工具 - 擦除最近的笔画
+    // 橡皮擦工具 - 记录擦除路径（不立即删除）
     if (currentTool === 'eraser') {
-      if (drawings.length > 0) {
-        // 删除最后一个绘画
-        const newDrawings = drawings.slice(0, -1);
-        setDrawings(newDrawings);
-        addToHistory(newDrawings);
-      }
-      setIsDrawing(false);
+      setIsDrawing(true);
+      setLastPos(pos);
+      setCurrentPath([pos]); // 开始记录擦除路径
       return;
     }
     
@@ -408,7 +407,46 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     // 保存路径点
     setCurrentPath(prev => [...prev, pos]);
     
-    // 实时绘制（在 Canvas 上直接画）
+    // 橡皮擦工具 - 显示预览
+    if (currentTool === 'eraser') {
+      // 重绘当前帧（清除上一帧的预览）
+      const video = videoRef.current;
+      const currentFrame = getCurrentFrame(video.currentTime);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // 渲染当前帧的绘画
+      const permanentDrawings = drawingsRef.current.filter(d => d.type === 'permanent');
+      permanentDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
+      const frameDrawings = drawingsRef.current.filter(d => 
+        d.type === 'single' && d.frameIndex === currentFrame
+      );
+      frameDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
+      
+      // 绘制橡皮擦预览（半透明）
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.strokeStyle = 'rgba(200, 200, 200, 0.8)';
+      ctx.lineWidth = 2;
+      
+      if (eraserShape === 'circle') {
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, eraserSize / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        const half = eraserSize / 2;
+        ctx.fillRect(pos.x - half, pos.y - half, eraserSize, eraserSize);
+        ctx.strokeRect(pos.x - half, pos.y - half, eraserSize, eraserSize);
+      }
+      
+      setLastPos(pos);
+      return;
+    }
+    
+    // 画笔工具 - 实时绘制
     ctx.strokeStyle = brushColor;
     ctx.lineWidth = brushSize;
     ctx.lineCap = 'round';
@@ -426,7 +464,81 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     if (!isDrawing) return;
     setIsDrawing(false);
     
-    // 保存完整路径数据
+    // 橡皮擦工具 - 擦除路径范围内的绘画
+    if (currentTool === 'eraser' && currentPath.length > 0) {
+      const video = videoRef.current;
+      const currentFrame = getCurrentFrame(video.currentTime);
+      
+      // 计算擦除路径的边界框
+      const eraserBounds = {
+        minX: Math.min(...currentPath.map(p => p.x)) - eraserSize / 2,
+        maxX: Math.max(...currentPath.map(p => p.x)) + eraserSize / 2,
+        minY: Math.min(...currentPath.map(p => p.y)) - eraserSize / 2,
+        maxY: Math.max(...currentPath.map(p => p.y)) + eraserSize / 2,
+      };
+      
+      // 过滤掉被擦除的绘画
+      const newDrawings = drawings.filter(drawing => {
+        // 只擦除当前帧的单帧绘画，或所有常驻绘画
+        const isInCurrentFrame = drawing.type === 'single' && drawing.frameIndex === currentFrame;
+        const isPermanent = drawing.type === 'permanent';
+        
+        if (!isInCurrentFrame && !isPermanent) return true; // 保留其他帧的绘画
+        
+        // 检查绘画路径是否与擦除路径相交
+        const isErased = drawing.paths.some(path => {
+          return path.points.some(point => {
+            // 圆形擦除：检查点到擦除路径的距离
+            if (eraserShape === 'circle') {
+              return currentPath.some(eraserPoint => {
+                const dx = point.x - eraserPoint.x;
+                const dy = point.y - eraserPoint.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < eraserSize / 2;
+              });
+            }
+            // 正方形擦除：检查点是否在擦除路径的矩形范围内
+            else {
+              return currentPath.some(eraserPoint => {
+                return Math.abs(point.x - eraserPoint.x) < eraserSize / 2 &&
+                       Math.abs(point.y - eraserPoint.y) < eraserSize / 2;
+              });
+            }
+          });
+        });
+        
+        return !isErased; // 保留未被擦除的绘画
+      });
+      
+      if (newDrawings.length !== drawings.length) {
+        setDrawings(newDrawings);
+        addToHistory(newDrawings);
+        
+        // 立即渲染
+        setTimeout(() => {
+          const canvas = canvasRef.current;
+          const ctx = canvas?.getContext('2d');
+          if (canvas && ctx && showDrawing) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const permanentDrawings = newDrawings.filter(d => d.type === 'permanent');
+            permanentDrawings.forEach(drawing => {
+              renderDrawing(ctx, drawing);
+            });
+            const frameDrawings = newDrawings.filter(d => 
+              d.type === 'single' && d.frameIndex === currentFrame
+            );
+            frameDrawings.forEach(drawing => {
+              renderDrawing(ctx, drawing);
+            });
+          }
+        }, 50);
+      }
+      
+      setCurrentPath([]);
+      return;
+    }
+    
+    // 保存完整路径数据（画笔和文本）
     if (currentPath.length > 0) {
       const video = videoRef.current;
       const currentFrame = getCurrentFrame(video.currentTime); // 与渲染循环一致
@@ -1125,6 +1237,63 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
             </div>
           )}
           
+          {/* 橡皮擦菜单 */}
+          {showEraserMenu && (
+            <div className="volume-menu-container" style={{ width: '120px' }}>
+              <div className="volume-menu-item">
+                <span style={{ fontSize: '12px', color: '#aaa', marginBottom: '8px', display: 'block' }}>
+                  大小：{eraserSize}px
+                </span>
+                <input
+                  type="range"
+                  className="volume-slider"
+                  min="10"
+                  max="100"
+                  value={eraserSize}
+                  onChange={(e) => setEraserSize(Number(e.target.value))}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div className="volume-menu-item" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '8px', paddingTop: '8px' }}>
+                <span style={{ fontSize: '12px', color: '#aaa', marginBottom: '8px', display: 'block' }}>
+                  形状
+                </span>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => setEraserShape('circle')}
+                    style={{
+                      flex: 1,
+                      padding: '6px',
+                      borderRadius: '4px',
+                      border: eraserShape === 'circle' ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.2)',
+                      backgroundColor: eraserShape === 'circle' ? 'rgba(59,130,246,0.2)' : 'transparent',
+                      color: 'white',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    圆形
+                  </button>
+                  <button
+                    onClick={() => setEraserShape('square')}
+                    style={{
+                      flex: 1,
+                      padding: '6px',
+                      borderRadius: '4px',
+                      border: eraserShape === 'square' ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.2)',
+                      backgroundColor: eraserShape === 'square' ? 'rgba(59,130,246,0.2)' : 'transparent',
+                      color: 'white',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    方形
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <button 
             className="control-btn icon-btn color-btn"
             onClick={() => setShowColorPicker(!showColorPicker)}
@@ -1142,6 +1311,63 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
                 onChange={(e) => setBrushColor(e.target.value)}
               />
               <span className="color-value">{brushColor}</span>
+            </div>
+          )}
+          
+          {/* 橡皮擦菜单 */}
+          {showEraserMenu && (
+            <div className="volume-menu-container" style={{ width: '120px' }}>
+              <div className="volume-menu-item">
+                <span style={{ fontSize: '12px', color: '#aaa', marginBottom: '8px', display: 'block' }}>
+                  大小：{eraserSize}px
+                </span>
+                <input
+                  type="range"
+                  className="volume-slider"
+                  min="10"
+                  max="100"
+                  value={eraserSize}
+                  onChange={(e) => setEraserSize(Number(e.target.value))}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div className="volume-menu-item" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '8px', paddingTop: '8px' }}>
+                <span style={{ fontSize: '12px', color: '#aaa', marginBottom: '8px', display: 'block' }}>
+                  形状
+                </span>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => setEraserShape('circle')}
+                    style={{
+                      flex: 1,
+                      padding: '6px',
+                      borderRadius: '4px',
+                      border: eraserShape === 'circle' ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.2)',
+                      backgroundColor: eraserShape === 'circle' ? 'rgba(59,130,246,0.2)' : 'transparent',
+                      color: 'white',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    圆形
+                  </button>
+                  <button
+                    onClick={() => setEraserShape('square')}
+                    style={{
+                      flex: 1,
+                      padding: '6px',
+                      borderRadius: '4px',
+                      border: eraserShape === 'square' ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.2)',
+                      backgroundColor: eraserShape === 'square' ? 'rgba(59,130,246,0.2)' : 'transparent',
+                      color: 'white',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    方形
+                  </button>
+                </div>
+              </div>
             </div>
           )}
           
@@ -1168,8 +1394,11 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
           
           <button 
             className={`control-btn icon-btn ${currentTool === 'eraser' ? 'active' : ''}`}
-            onClick={() => setCurrentTool('eraser')}
-            title="橡皮擦 - 点击擦除最后一笔"
+            onClick={() => {
+              setCurrentTool('eraser');
+              setShowEraserMenu(!showEraserMenu);
+            }}
+            title="橡皮擦 - 擦除绘画"
           >
             <svg viewBox="0 0 24 24" width="20" height="20">
               <path fill="white" d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 0 1-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l8.48-8.48-6.37-6.37L4.22 15.58z"/>
