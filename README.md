@@ -1,116 +1,135 @@
 # CKAnim - 游戏动画参考网站
 
-一个专业的游戏动画参考平台，提供各类游戏角色的动作视频参考。
+一个专业的游戏动画参考平台，提供各类游戏角色的动作视频参考，支持画板标注功能。
+
+![Status](https://img.shields.io/badge/status-stable-green)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
+## 🌐 在线访问
+
+- **前台网站**: https://video.jiangmeijixie.com
+- **管理后台**: https://video.jiangmeijixie.com/admin
 
 ## 🚀 快速开始
 
+### 开发环境
+
 ```bash
+# 克隆项目
+git clone https://github.com/CNMJH/CKAnim.git
 cd CKAnim
+
+# 安装依赖
 npm install
-npm run dev
+
+# 启动所有服务（后端 + 前台 + 后台）
+./restart-all-services.sh
+
+# 访问
+# 前台：http://localhost:5173
+# 后台：http://localhost:3003
+# API:  http://localhost:3002
 ```
 
-访问：http://localhost:5173
+### 生产环境
+
+详见 [部署指南](docs/DEPLOYMENT.md)
+
+```bash
+# 使用 Docker Compose
+docker-compose up -d
+
+# 或使用 PM2
+pm2 start ecosystem.config.js
+```
 
 ## 📦 技术栈
 
-- **React 18** - 前端框架
+### 前台网站
+- **React 18.2** - 前端框架
 - **React Router 6** - 路由管理
-- **Vite 5** - 构建工具
+- **Vite 5.4** - 构建工具
 
-## 🎯 功能特性
+### 管理后台
+- **React 18.2** - 前端框架
+- **React Query 5** - 数据获取
+- **Vite 5.1** - 构建工具
 
-### 首页
-- 📺 轮播图展示（推荐内容/公告）
-- 🎬 视频网格布局
-- 🔄 换一批功能
-- ▶️ 鼠标悬停预览
+### 后端 API
+- **Fastify 4.26** - Node.js 框架
+- **Prisma 5.22** - ORM
+- **SQLite** - 数据库（开发环境）
+- **TypeScript** - 类型安全
 
-### 游戏参考
-- 📚 游戏分类（按字母 A-Z）
-- 👤 角色选择（按职业分类）
-- 🎭 动作分类（攻击/走位/技能等）
-- 🎮 三级联动选择系统
+### 存储服务
+- **七牛云** - 视频/图片存储（华南区域）
 
-### 搜索功能
-- 🔍 关键词搜索
-- 📊 排序（相关性/播放量/最新）
-- 📋 搜索结果网格
+## 🎯 核心功能
+
+### 前台网站
+
+#### 🎮 游戏动画参考
+- **游戏选择** - 按字母 A-Z 分类
+- **角色选择** - 按职业/分类筛选
+- **动作选择** - 攻击/走位/技能等分类
+- **三级联动** - 游戏→角色→动作
+
+#### 🎨 增强版视频播放器
+- **画板功能** - 在视频上标注、绘画
+- **画笔工具** - 单帧/全程两种模式
+- **橡皮擦工具** - 圆形/方形，大小可调
+- **文本工具** - 添加文字标注，支持旋转
+- **逐帧控制** - 30fps 精确到帧
+- **截图保存** - 合并视频帧 + 绘画导出 PNG
+- **撤销/重做** - 完整历史记录
+
+#### 🔍 搜索功能
+- 关键词搜索
+- 排序（相关性/播放量/最新）
+- 结果网格展示
+
+### 管理后台
+
+#### 📊 内容管理
+- **游戏管理** - 添加/编辑游戏
+- **分类管理** - 管理角色分类
+- **角色管理** - 添加角色，上传头像
+- **动作管理** - 批量上传视频，卡片视图
+
+#### ⚙️ 系统设置
+- **网站设置** - 自定义网站名称、页脚
+- **全站公告** - 首页提醒文字
+- **数据同步** - 后台、数据库、七牛云三者同步
 
 ## 📁 项目结构
 
 ```
 CKAnim/
-├── src/
-│   ├── components/          # 可复用组件
-│   │   ├── Header.jsx       # 顶部导航
-│   │   ├── VideoCard.jsx    # 视频卡片
-│   │   └── *.css
-│   ├── pages/               # 页面组件
-│   │   ├── Home.jsx         # 首页
-│   │   ├── Games.jsx        # 游戏参考
-│   │   ├── Search.jsx       # 搜索结果
-│   │   └── *.css
-│   ├── data/                # 模拟数据
-│   │   └── mockData.js
-│   ├── App.jsx              # 主应用
-│   └── main.jsx             # 入口
-├── index.html
-├── package.json
-└── vite.config.js
-```
-
-## 🎨 页面说明
-
-### 1. 首页 (`/`)
-- 轮播图展示推荐内容
-- 视频网格展示
-- 右侧"换一批"按钮
-
-### 2. 游戏参考 (`/games`)
-- 左侧：游戏列表（按字母分类）
-- 中间：视频播放器 + 动作选择
-- 右侧：角色选择面板（按职业筛选）
-
-### 3. 搜索结果 (`/search?q=关键词`)
-- 搜索关键词展示
-- 排序选项切换
-- 视频结果网格
-
-## 📊 数据结构
-
-### 游戏数据
-```js
-{
-  id: 'albion',
-  name: '阿尔比恩',
-  letter: 'A',
-  cover: '封面图 URL'
-}
-```
-
-### 角色数据
-```js
-{
-  id: 'sword',
-  name: '剑圣',
-  role: '战士',
-  cover: '封面图 URL'
-}
-```
-
-### 视频数据
-```js
-{
-  id: 1,
-  title: '三连击教学',
-  game: 'lol',
-  character: 'yasuo',
-  type: 'attack',
-  thumbnail: '缩略图 URL',
-  duration: '05:32',
-  views: 12340
-}
+├── src/                    # 前台源码
+│   ├── components/         # 可复用组件
+│   │   ├── VideoPlayerEnhanced.jsx  # 增强播放器
+│   │   └── ...
+│   ├── pages/              # 页面组件
+│   │   ├── Games.jsx       # 游戏参考页
+│   │   └── ...
+│   └── ...
+├── admin/                  # 管理后台源码
+│   ├── src/
+│   │   ├── pages/          # 管理页面
+│   │   └── ...
+│   └── ...
+├── server/                 # 后端 API
+│   ├── src/
+│   │   ├── routes/         # API 路由
+│   │   └── ...
+│   └── ...
+├── docs/                   # 文档
+│   ├── DEPLOYMENT.md       # 部署指南
+│   ├── video-player-enhancement-design.md
+│   ├── video-player-user-guide.md
+│   └── ...
+├── restart-all-services.sh # 一键重启脚本
+└── ecosystem.config.js     # PM2 配置
 ```
 
 ## 🔧 开发命令
@@ -125,20 +144,121 @@ npm run dev
 # 构建生产版本
 npm run build
 
-# 预览生产版本
-npm run preview
+# 重启所有服务
+./restart-all-services.sh
+
+# 查看服务状态
+pm2 status
 ```
 
-## 📝 下一步计划
+## 📚 核心文档
 
-- [ ] 接入真实视频数据
-- [ ] 视频播放功能
-- [ ] 用户登录/收藏
-- [ ] 视频上传功能
-- [ ] 评论系统
-- [ ] 响应式优化
+| 文档 | 说明 |
+|------|------|
+| [部署指南](docs/DEPLOYMENT.md) | 生产环境部署完整步骤 |
+| [播放器设计](docs/video-player-enhancement-design.md) | 增强版播放器技术设计 |
+| [用户指南](docs/video-player-user-guide.md) | 画板功能使用说明 |
+| [数据同步](docs/data-sync-mechanism.md) | 三者数据同步机制 |
+| [后台指南](docs/admin-guide.md) | 管理后台使用说明 |
+| [批量上传](docs/batch-upload-guide.md) | 批量上传视频指南 |
+
+## 🎨 画板功能
+
+### 画笔工具
+- **单帧模式** - 只在当前帧显示（红色徽章）
+- **全程模式** - 类似水印，全程显示
+- **颜色选择** - 自定义颜色
+- **粗细调节** - 1-50px 滑条
+
+### 橡皮擦工具
+- **形状选择** - 圆形/方形（SVG 图标）
+- **大小调节** - 10-100px 滑条
+- **实时擦除** - 擦到哪擦到哪
+- **路径分段** - 擦除中间保留两端
+
+### 文本工具
+- **点击输入** - 画布上直接输入
+- **旋转角度** - 0-360° 自由旋转
+- **编辑已有** - 点击已有文本修改
+
+### 快捷键
+- `Space` - 播放/暂停
+- `←` / `→` - 上一帧/下一帧
+- `B` - 切换画笔
+- `E` - 切换橡皮擦
+- `T` - 切换文本
+- `Ctrl+Z` - 撤销
+- `Ctrl+Y` - 重做
+- `S` - 保存截图
+
+## 📊 数据结构
+
+### 内容层级
+```
+游戏 (Game)
+  └── 分类 (GameCategory)
+      └── 角色 (Character)
+          └── 动作 (Action) = 视频 (Video)
+```
+
+### 绘画数据
+```javascript
+{
+  id: 1234567890,
+  type: 'single' | 'permanent',  // 单帧/全程
+  frameIndex: 30,                // 帧索引
+  tool: 'brush' | 'text',
+  color: '#FF0000',
+  size: 5,
+  paths: [{ points: [{x, y}, ...] }],
+  text: '标注文字',               // 文本工具
+  position: { x, y },
+  rotation: 45                    // 旋转角度
+}
+```
+
+## 🐛 已知问题
+
+暂无已知问题。
+
+## 📝 更新日志
+
+### 2026-03-20
+- ✅ 橡皮擦实时擦除功能
+- ✅ 橡皮擦路径分段算法
+- ✅ 橡皮擦预览圈圈显示
+- ✅ 画笔粗细滑条化
+- ✅ 文本工具增强（点击输入、旋转）
+- ✅ 所有按钮图标 SVG 化
+- ✅ 倍速功能（6 档循环）
+- ✅ 音量控制功能
+- ✅ 角色头像上传功能
+
+### 2026-03-19
+- ✅ 增强版视频播放器上线
+- ✅ 画板功能（画笔、橡皮擦、文本）
+- ✅ 逐帧控制（30fps）
+- ✅ 截图保存（PNG 格式）
+- ✅ 撤销/重做功能
+- ✅ 浏览器缓存修复（三层缓存）
+
+### 2026-03-18
+- ✅ 动作 - 视频 1 对 1 关系
+- ✅ 层级筛选系统（游戏→角色→动作）
+- ✅ 批量上传功能
+- ✅ 七牛云存储集成
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+## 📄 许可证
+
+MIT License
 
 ---
 
 **创建时间**: 2026-03-16  
-**GitHub**: https://github.com/CNMJH/CKAnim
+**最后更新**: 2026-03-20  
+**GitHub**: https://github.com/CNMJH/CKAnim  
+**作者**: 阿米大王
