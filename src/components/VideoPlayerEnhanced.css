@@ -168,6 +168,18 @@
   background: #ff0000;
 }
 
+/* 徽章圆点 - 单帧画笔标记 */
+.control-btn.icon-btn .badge-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  background: #ff4444;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(255, 68, 68, 0.6);
+}
+
 /* 颜色按钮 */
 .control-btn.color-btn {
   width: 40px;
