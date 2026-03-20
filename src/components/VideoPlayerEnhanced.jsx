@@ -21,6 +21,13 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
   const [showBrushSizeSlider, setShowBrushSizeSlider] = useState(false); // 画笔粗细滑条显示
   const [showColorPicker, setShowColorPicker] = useState(false); // 颜色选择器显示
   
+  // 文本编辑状态
+  const [isEditingText, setIsEditingText] = useState(false);
+  const [editingText, setEditingText] = useState('');
+  const [editingPos, setEditingPos] = useState({ x: 0, y: 0 });
+  const [textRotation, setTextRotation] = useState(0); // 文字旋转角度
+  const [selectedDrawing, setSelectedDrawing] = useState(null); // 当前选中的绘画（用于编辑）
+  
   // Canvas 相关
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -187,9 +194,23 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
         ctx.stroke();
       });
     } else if (drawing.tool === 'text' && drawing.text) {
-      ctx.font = `${drawing.size * 3}px Arial`;
+      ctx.save(); // 保存当前状态
+      
+      // 移动到文字位置
+      ctx.translate(drawing.position.x, drawing.position.y);
+      
+      // 旋转
+      if (drawing.rotation) {
+        ctx.rotate((drawing.rotation * Math.PI) / 180);
+      }
+      
+      // 绘制文字
+      ctx.font = `bold ${drawing.size * 3}px Arial`;
       ctx.fillStyle = drawing.color;
-      ctx.fillText(drawing.text, drawing.position.x, drawing.position.y);
+      ctx.textBaseline = 'top';
+      ctx.fillText(drawing.text, 0, 0);
+      
+      ctx.restore(); // 恢复状态
     }
   };
   
@@ -247,6 +268,30 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     if (!isDrawingBoardOpen) return;
     
     const pos = getCanvasCoordinates(e);
+    
+    // 检测是否点击了已有文本（用于编辑）
+    if (currentTool === 'text' && !isEditingText) {
+      const clickedText = drawings.find(d => {
+        if (d.tool !== 'text' || !d.text) return false;
+        
+        // 简单的碰撞检测（假设文字宽度约为字符数 * 字号）
+        const textWidth = d.text.length * d.size * 2;
+        const textHeight = d.size * 3;
+        
+        return pos.x >= d.position.x && 
+               pos.x <= d.position.x + textWidth &&
+               pos.y >= d.position.y && 
+               pos.y <= d.position.y + textHeight;
+      });
+      
+      if (clickedText) {
+        // 编辑已有文本
+        editExistingText(clickedText);
+        setIsDrawing(false);
+        return;
+      }
+    }
+    
     setIsDrawing(true);
     setLastPos(pos);
     setCurrentPath([pos]); // 开始新路径
@@ -263,27 +308,15 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
       return;
     }
     
-    // 如果是文本工具
+    // 文本工具 - 显示输入框（新文本）
     if (currentTool === 'text') {
-      const text = prompt('请输入文字:');
-      if (text) {
-        const newDrawing = {
-          id: Date.now(),
-          type: brushType,
-          frameIndex: Math.floor(videoRef.current.currentTime * 30),
-          tool: 'text',
-          color: brushColor,
-          size: brushSize,
-          text: text,
-          position: pos,
-          timestamp: Date.now()
-        };
-        
-        const newDrawings = [...drawings, newDrawing];
-        setDrawings(newDrawings);
-        addToHistory(newDrawings);
-      }
+      setIsEditingText(true);
+      setEditingPos(pos);
+      setEditingText('');
+      setTextRotation(0);
+      setSelectedDrawing(null);
       setIsDrawing(false);
+      return;
     }
   };
   
@@ -342,6 +375,80 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     newHistory.push([...newDrawings]); // 深拷贝
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
+  };
+  
+  // 文本编辑功能
+  const confirmText = () => {
+    if (!editingText.trim()) {
+      setIsEditingText(false);
+      return;
+    }
+    
+    if (selectedDrawing) {
+      // 更新已有文本
+      updateExistingText();
+    } else {
+      // 创建新文本
+      const newDrawing = {
+        id: Date.now(),
+        type: brushType,
+        frameIndex: Math.floor(videoRef.current.currentTime * 30),
+        tool: 'text',
+        color: brushColor,
+        size: brushSize,
+        text: editingText,
+        position: editingPos,
+        rotation: textRotation,
+        timestamp: Date.now()
+      };
+      
+      const newDrawings = [...drawings, newDrawing];
+      setDrawings(newDrawings);
+      addToHistory(newDrawings);
+      setIsEditingText(false);
+    }
+  };
+  
+  const cancelText = () => {
+    setIsEditingText(false);
+    setEditingText('');
+  };
+  
+  // 编辑已有文本
+  const editExistingText = (drawing) => {
+    if (drawing.tool !== 'text') return;
+    
+    setCurrentTool('text');
+    setIsEditingText(true);
+    setEditingText(drawing.text);
+    setEditingPos(drawing.position);
+    setTextRotation(drawing.rotation || 0);
+    setSelectedDrawing(drawing);
+  };
+  
+  // 更新已有文本
+  const updateExistingText = () => {
+    if (!selectedDrawing || !editingText.trim()) {
+      setIsEditingText(false);
+      return;
+    }
+    
+    const updatedDrawing = {
+      ...selectedDrawing,
+      text: editingText,
+      color: brushColor,
+      size: brushSize,
+      rotation: textRotation,
+      position: editingPos
+    };
+    
+    const newDrawings = drawings.map(d => 
+      d.id === selectedDrawing.id ? updatedDrawing : d
+    );
+    setDrawings(newDrawings);
+    addToHistory(newDrawings);
+    setIsEditingText(false);
+    setSelectedDrawing(null);
   };
   
   const undo = () => {
@@ -526,6 +633,54 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
           onMouseLeave={stopDrawing}
           style={{ display: showDrawing ? 'block' : 'none' }}
         />
+        
+        {/* 文本编辑输入框 */}
+        {isEditingText && (
+          <div
+            className="text-editor-overlay"
+            style={{
+              left: editingPos.x,
+              top: editingPos.y,
+            }}
+          >
+            <textarea
+              className="text-editor-input"
+              value={editingText}
+              onChange={(e) => setEditingText(e.target.value)}
+              placeholder="输入文字..."
+              autoFocus
+              style={{
+                color: brushColor,
+                fontSize: `${brushSize * 3}px`,
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                  confirmText();
+                } else if (e.key === 'Escape') {
+                  cancelText();
+                }
+              }}
+            />
+            <div className="text-editor-controls">
+              <button className="text-editor-btn" onClick={confirmText} title="确认 (Ctrl+Enter)">
+                ✓
+              </button>
+              <button className="text-editor-btn cancel" onClick={cancelText} title="取消 (Esc)">
+                ✕
+              </button>
+              <input
+                type="range"
+                className="text-rotation-slider"
+                min="0"
+                max="360"
+                value={textRotation}
+                onChange={(e) => setTextRotation(Number(e.target.value))}
+                title="旋转角度"
+              />
+              <span className="text-rotation-value">{textRotation}°</span>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* 第一层控制栏 - 始终显示 */}

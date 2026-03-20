@@ -341,6 +341,103 @@
   cursor: not-allowed;
 }
 
+/* 文本编辑覆盖层 */
+.text-editor-overlay {
+  position: absolute;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #007AFF;
+  border-radius: 8px;
+  padding: 8px;
+  min-width: 200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.text-editor-input {
+  width: 100%;
+  min-height: 60px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  padding: 8px;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  resize: both;
+  overflow: auto;
+  outline: none;
+  margin-bottom: 8px;
+}
+
+.text-editor-input:focus {
+  border-color: #007AFF;
+}
+
+.text-editor-input::placeholder {
+  color: #999;
+}
+
+.text-editor-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.text-editor-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: #007AFF;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.text-editor-btn:hover {
+  background: #1A8AFF;
+}
+
+.text-editor-btn.cancel {
+  background: #dc3545;
+}
+
+.text-editor-btn.cancel:hover {
+  background: #ff4d5a;
+}
+
+.text-rotation-slider {
+  width: 60px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.text-rotation-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #007AFF;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.text-rotation-value {
+  color: #fff;
+  font-size: 11px;
+  font-family: 'Courier New', monospace;
+  min-width: 30px;
+}
+
 /* 工具提示 */
 .control-btn[title]:hover::after {
   content: attr(title);
