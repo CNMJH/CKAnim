@@ -786,13 +786,21 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
             const canvas = canvasRef.current;
             const ctx = canvas?.getContext('2d');
             if (!canvas || !ctx) return;
+            
+            // 使用 Math.round 与 stopDrawing 和渲染循环保持一致
+            const currentFrame = Math.round(video.currentTime * 30);
+            
+            // 更新 lastFrameRef，防止 requestAnimationFrame 循环重复渲染
+            lastFrameRef.current = currentFrame;
+            
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (showDrawing) {
-              const currentFrame = Math.floor(video.currentTime * 30);
+              // 渲染全程绘画
               const permanentDrawings = drawings.filter(d => d.type === 'permanent');
               permanentDrawings.forEach(drawing => {
                 renderDrawing(ctx, drawing);
               });
+              // 渲染当前帧的单帧绘画
               const frameDrawings = drawings.filter(d => 
                 d.type === 'single' && d.frameIndex === currentFrame
               );
@@ -812,13 +820,21 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
             const canvas = canvasRef.current;
             const ctx = canvas?.getContext('2d');
             if (!canvas || !ctx) return;
+            
+            // 使用 Math.round 与 stopDrawing 和渲染循环保持一致
+            const currentFrame = Math.round(video2.currentTime * 30);
+            
+            // 更新 lastFrameRef，防止 requestAnimationFrame 循环重复渲染
+            lastFrameRef.current = currentFrame;
+            
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (showDrawing) {
-              const currentFrame = Math.floor(video2.currentTime * 30);
+              // 渲染全程绘画
               const permanentDrawings = drawings.filter(d => d.type === 'permanent');
               permanentDrawings.forEach(drawing => {
                 renderDrawing(ctx, drawing);
               });
+              // 渲染当前帧的单帧绘画
               const frameDrawings = drawings.filter(d => 
                 d.type === 'single' && d.frameIndex === currentFrame
               );
