@@ -760,7 +760,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
               fontSize: `${Math.max(12, Math.min(40, brushSize))}px`,
             }}
           >
-            ●
+            <span>●</span>
           </button>
           
           {/* 画笔粗细滑条 */}
