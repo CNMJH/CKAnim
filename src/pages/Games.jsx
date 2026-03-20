@@ -28,6 +28,7 @@ function Games() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentVideoUrl, setCurrentVideoUrl] = useState(null);
+  const [autoPlayVideo, setAutoPlayVideo] = useState(false); // 控制自动播放
   const videoRef = useRef(null);
 
   // 获取中文字符首字母（简化版）
@@ -262,10 +263,8 @@ function Games() {
 
   const handleActionSelect = (actionId) => {
     setSelectedAction(actionId);
-    // 自动播放视频
-    setTimeout(() => {
-      playVideo();
-    }, 100);
+    // 设置自动播放标志
+    setAutoPlayVideo(true);
   };
 
   return (
@@ -320,6 +319,7 @@ function Games() {
             <VideoPlayerEnhanced
               videoUrl={getCurrentVideoUrl()}
               videoTitle={`${selectedCharacter.name} - ${characterActions.find(ca => ca.id === selectedAction)?.name || '未命名'}`}
+              autoPlay={autoPlayVideo}
             />
           ) : (
             <div className="video-player video-placeholder empty">

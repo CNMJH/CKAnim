@@ -4,7 +4,7 @@ import './VideoPlayerEnhanced.css';
 // 假设视频 30fps
 const FRAME_DURATION = 1 / 30;
 
-function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
+function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
   // 基础播放状态
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -98,6 +98,30 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
   }, [videoUrl]);
+  
+  // 自动播放视频
+  useEffect(() => {
+    const video = videoRef.current;
+    if (autoPlay && video && videoUrl) {
+      video.play().catch(err => {
+        console.log('自动播放失败:', err);
+      });
+      setIsPlaying(true);
+    }
+  }, [autoPlay, videoUrl]);
+  
+  // 视频播放结束后重置 autoPlay
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    const handleEnded = () => {
+      // 循环播放时不重置 autoPlay
+    };
+    
+    video.addEventListener('ended', handleEnded);
+    return () => video.removeEventListener('ended', handleEnded);
+  }, []);
   
   // 渲染单个绘画
   const renderDrawing = (ctx, drawing) => {
@@ -538,19 +562,26 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
       tempCanvas.toBlob((blob) => {
         if (!blob) return;
         
-        // 创建隐藏的 a 标签并触发下载
-        const link = document.createElement('a');
-        link.download = `frame_with_drawing_${Date.now()}.png`;
-        link.href = URL.createObjectURL(blob);
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        
-        // 清理
-        setTimeout(() => {
-          document.body.removeChild(link);
-          URL.revokeObjectURL(link.href);
-        }, 100);
+        try {
+          // 方法 1: 使用 a 标签下载（最佳实践）
+          const link = document.createElement('a');
+          link.download = `frame_with_drawing_${Date.now()}.png`;
+          link.href = URL.createObjectURL(blob);
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          
+          // 触发下载
+          link.click();
+          
+          // 清理
+          setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+          }, 100);
+          
+        } catch (error) {
+          console.error('保存失败:', error);
+        }
       }, 'image/png');
       
     } catch (error) {
