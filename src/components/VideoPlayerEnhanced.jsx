@@ -426,7 +426,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         renderDrawing(ctx, drawing);
       });
       
-      // 绘制橡皮擦预览（半透明）
+      // 绘制橡皮擦预览（半透明）- 跟随 eraserShape 设置
       ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.strokeStyle = 'rgba(200, 200, 200, 0.8)';
       ctx.lineWidth = 2;
@@ -442,7 +442,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         ctx.strokeRect(pos.x - half, pos.y - half, eraserSize, eraserSize);
       }
       
-      setLastPos(pos);
+      // 不设置 lastPos，避免影响其他工具
       return;
     }
     
@@ -477,64 +477,64 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         maxY: Math.max(...currentPath.map(p => p.y)) + eraserSize / 2,
       };
       
-      // 过滤掉被擦除的绘画
-      const newDrawings = drawings.filter(drawing => {
-        // 只擦除当前帧的单帧绘画，或所有常驻绘画
+      // 真实擦除：只删除被橡皮擦碰到的路径点，不是整笔删除
+      const newDrawings = drawings.map(drawing => {
+        // 只处理当前帧的单帧绘画，或所有常驻绘画
         const isInCurrentFrame = drawing.type === 'single' && drawing.frameIndex === currentFrame;
         const isPermanent = drawing.type === 'permanent';
         
-        if (!isInCurrentFrame && !isPermanent) return true; // 保留其他帧的绘画
+        if (!isInCurrentFrame && !isPermanent) return drawing; // 保留其他帧的绘画
         
-        // 检查绘画路径是否与擦除路径相交
-        const isErased = drawing.paths.some(path => {
-          return path.points.some(point => {
-            // 圆形擦除：检查点到擦除路径的距离
-            if (eraserShape === 'circle') {
-              return currentPath.some(eraserPoint => {
+        // 深度复制 paths 数组，过滤掉被擦除的点
+        const newPaths = drawing.paths.map(path => ({
+          ...path,
+          points: path.points.filter(point => {
+            // 检查这个点是否被橡皮擦碰到
+            const isErased = currentPath.some(eraserPoint => {
+              if (eraserShape === 'circle') {
+                // 圆形擦除：检查点到擦除路径的距离
                 const dx = point.x - eraserPoint.x;
                 const dy = point.y - eraserPoint.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 return distance < eraserSize / 2;
-              });
-            }
-            // 正方形擦除：检查点是否在擦除路径的矩形范围内
-            else {
-              return currentPath.some(eraserPoint => {
+              } else {
+                // 方形擦除：检查点是否在擦除路径的矩形范围内
                 return Math.abs(point.x - eraserPoint.x) < eraserSize / 2 &&
                        Math.abs(point.y - eraserPoint.y) < eraserSize / 2;
-              });
-            }
-          });
-        });
+              }
+            });
+            return !isErased; // 保留未被擦除的点
+          })
+        })).filter(path => path.points.length > 0); // 删除空路径
         
-        return !isErased; // 保留未被擦除的绘画
-      });
+        // 返回新的 drawing 对象（如果 paths 为空，则删除整个 drawing）
+        return newPaths.length > 0 ? { ...drawing, paths: newPaths } : null;
+      }).filter(d => d !== null); // 过滤掉被完全擦除的绘画
       
       if (newDrawings.length !== drawings.length) {
         setDrawings(newDrawings);
         addToHistory(newDrawings);
-        
-        // 立即渲染
-        setTimeout(() => {
-          const canvas = canvasRef.current;
-          const ctx = canvas?.getContext('2d');
-          if (canvas && ctx && showDrawing) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const permanentDrawings = newDrawings.filter(d => d.type === 'permanent');
-            permanentDrawings.forEach(drawing => {
-              renderDrawing(ctx, drawing);
-            });
-            const frameDrawings = newDrawings.filter(d => 
-              d.type === 'single' && d.frameIndex === currentFrame
-            );
-            frameDrawings.forEach(drawing => {
-              renderDrawing(ctx, drawing);
-            });
-          }
-        }, 50);
       }
       
+      // 清除橡皮擦预览并重新渲染
       setCurrentPath([]);
+      setTimeout(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (canvas && ctx && showDrawing) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          const permanentDrawings = newDrawings.filter(d => d.type === 'permanent');
+          permanentDrawings.forEach(drawing => {
+            renderDrawing(ctx, drawing);
+          });
+          const frameDrawings = newDrawings.filter(d => 
+            d.type === 'single' && d.frameIndex === currentFrame
+          );
+          frameDrawings.forEach(drawing => {
+            renderDrawing(ctx, drawing);
+          });
+        }
+      }, 50);
       return;
     }
     
