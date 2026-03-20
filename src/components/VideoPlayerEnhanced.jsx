@@ -110,69 +110,6 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     });
   }, [drawings, showDrawing, renderDrawing]);
   
-  // 监听帧变化，重新渲染
-  const [lastFrame, setLastFrame] = useState(-1);
-  
-  useEffect(() => {
-    const currentFrame = Math.floor(currentTime * 30);
-    if (currentFrame !== lastFrame) {
-      setLastFrame(currentFrame);
-      // 直接使用 renderCurrentFrameDrawings，确保使用最新的 drawings
-      const canvas = canvasRef.current;
-      const ctx = canvas?.getContext('2d');
-      if (!canvas || !ctx) return;
-      
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      if (!showDrawing) return;
-      
-      // 渲染全程绘画（所有帧都显示）
-      const permanentDrawings = drawings.filter(d => d.type === 'permanent');
-      permanentDrawings.forEach(drawing => {
-        renderDrawing(ctx, drawing);
-      });
-      
-      // 渲染当前帧的单帧绘画
-      const frameDrawings = drawings.filter(d => 
-        d.type === 'single' && d.frameIndex === currentFrame
-      );
-      frameDrawings.forEach(drawing => {
-        renderDrawing(ctx, drawing);
-      });
-    }
-  }, [currentTime, lastFrame, drawings, showDrawing, renderDrawing]);
-  
-  // 监听 drawings 变化（撤销/重做时），重新渲染 Canvas
-  useEffect(() => {
-    if (canvasRef.current && videoRef.current) {
-      const currentTime = videoRef.current.currentTime;
-      const currentFrame = Math.floor(currentTime * 30);
-      setLastFrame(currentFrame);
-      
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      if (!showDrawing) return;
-      
-      // 渲染全程绘画
-      const permanentDrawings = drawings.filter(d => d.type === 'permanent');
-      permanentDrawings.forEach(drawing => {
-        renderDrawing(ctx, drawing);
-      });
-      
-      // 渲染当前帧的单帧绘画
-      const frameDrawings = drawings.filter(d => 
-        d.type === 'single' && d.frameIndex === currentFrame
-      );
-      frameDrawings.forEach(drawing => {
-        renderDrawing(ctx, drawing);
-      });
-    }
-  }, [drawings, showDrawing, renderDrawing]);
-  
   // 渲染单个绘画
   const renderDrawing = (ctx, drawing) => {
     if (drawing.tool === 'brush') {
@@ -213,6 +150,69 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
       ctx.restore(); // 恢复状态
     }
   };
+  
+  // 监听帧变化，重新渲染
+  const [lastFrame, setLastFrame] = useState(-1);
+  
+  useEffect(() => {
+    const currentFrame = Math.floor(currentTime * 30);
+    if (currentFrame !== lastFrame) {
+      setLastFrame(currentFrame);
+      // 直接使用 renderCurrentFrameDrawings，确保使用最新的 drawings
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext('2d');
+      if (!canvas || !ctx) return;
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (!showDrawing) return;
+      
+      // 渲染全程绘画（所有帧都显示）
+      const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+      permanentDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
+      
+      // 渲染当前帧的单帧绘画
+      const frameDrawings = drawings.filter(d => 
+        d.type === 'single' && d.frameIndex === currentFrame
+      );
+      frameDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
+    }
+  }, [currentTime, lastFrame, drawings, showDrawing]);
+  
+  // 监听 drawings 变化（撤销/重做时），重新渲染 Canvas
+  useEffect(() => {
+    if (canvasRef.current && videoRef.current) {
+      const currentTime = videoRef.current.currentTime;
+      const currentFrame = Math.floor(currentTime * 30);
+      setLastFrame(currentFrame);
+      
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (!showDrawing) return;
+      
+      // 渲染全程绘画
+      const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+      permanentDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
+      
+      // 渲染当前帧的单帧绘画
+      const frameDrawings = drawings.filter(d => 
+        d.type === 'single' && d.frameIndex === currentFrame
+      );
+      frameDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
+    }
+  }, [drawings, showDrawing]);
   
   // 播放控制
   const togglePlay = () => {
