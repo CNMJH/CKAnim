@@ -497,38 +497,56 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     tempCanvas.height = video.videoHeight || 562.5;
     const ctx = tempCanvas.getContext('2d');
     
-    // 1. 绘制当前视频帧
-    ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
-    
-    // 2. 绘制所有绘画内容
-    const currentFrame = Math.floor(video.currentTime * 30);
-    
-    // 绘制全程绘画
-    const permanentDrawings = drawings.filter(d => d.type === 'permanent');
-    permanentDrawings.forEach(drawing => {
-      renderDrawingToCanvas(ctx, drawing);
-    });
-    
-    // 绘制当前帧的单帧绘画
-    const frameDrawings = drawings.filter(d => 
-      d.type === 'single' && d.frameIndex === currentFrame
-    );
-    frameDrawings.forEach(drawing => {
-      renderDrawingToCanvas(ctx, drawing);
-    });
-    
-    // 3. 保存为 PNG 图片
-    tempCanvas.toBlob((blob) => {
-      const link = document.createElement('a');
-      link.download = `frame_with_drawing_${Date.now()}.png`;
-      link.href = URL.createObjectURL(blob);
-      link.click();
+    try {
+      // 1. 绘制当前视频帧
+      ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
       
-      // 清理 URL
-      setTimeout(() => {
-        URL.revokeObjectURL(link.href);
-      }, 100);
-    }, 'image/png');
+      // 2. 绘制所有绘画内容
+      const currentFrame = Math.floor(video.currentTime * 30);
+      
+      // 绘制全程绘画
+      const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+      permanentDrawings.forEach(drawing => {
+        renderDrawingToCanvas(ctx, drawing);
+      });
+      
+      // 绘制当前帧的单帧绘画
+      const frameDrawings = drawings.filter(d => 
+        d.type === 'single' && d.frameIndex === currentFrame
+      );
+      frameDrawings.forEach(drawing => {
+        renderDrawingToCanvas(ctx, drawing);
+      });
+      
+      // 3. 保存为 PNG 图片
+      tempCanvas.toBlob((blob) => {
+        if (!blob) {
+          alert('保存失败：无法生成图片');
+          return;
+        }
+        
+        const link = document.createElement('a');
+        link.download = `frame_with_drawing_${Date.now()}.png`;
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        
+        // 清理 URL
+        setTimeout(() => {
+          URL.revokeObjectURL(link.href);
+        }, 100);
+        
+        console.log('✅ 图片已保存');
+      }, 'image/png');
+      
+    } catch (error) {
+      console.error('保存失败:', error);
+      
+      if (error.message.includes('tainted') || error.message.includes('SecurityError')) {
+        alert('⚠️ 视频跨域限制，无法保存带视频帧的图片。\n\n建议：\n1. 使用截图工具截图\n2. 或仅保存绘画数据（JSON）');
+      } else {
+        alert('保存失败：' + error.message);
+      }
+    }
   };
   
   // 渲染绘画到 Canvas（用于保存）
@@ -621,6 +639,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
           className="video-element"
           loop
           playsInline
+          crossOrigin="anonymous"
           onClick={togglePlay}
         />
         <canvas
@@ -737,6 +756,9 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
             className={`control-btn icon-btn ${showBrushSizeSlider ? 'active' : ''}`}
             onClick={() => setShowBrushSizeSlider(!showBrushSizeSlider)}
             title="画笔粗细设置"
+            style={{
+              fontSize: `${Math.max(12, Math.min(40, brushSize))}px`,
+            }}
           >
             ●
           </button>
