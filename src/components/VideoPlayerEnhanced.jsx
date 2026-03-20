@@ -283,6 +283,33 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     if (!video) return;
     
     video.currentTime = Math.max(0, video.currentTime - FRAME_DURATION);
+    
+    // 手动触发当前帧绘画渲染
+    setTimeout(() => {
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext('2d');
+      if (!canvas || !ctx) return;
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (!showDrawing) return;
+      
+      const currentFrame = Math.floor(video.currentTime * 30);
+      
+      // 渲染全程绘画
+      const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+      permanentDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
+      
+      // 渲染当前帧的单帧绘画
+      const frameDrawings = drawings.filter(d => 
+        d.type === 'single' && d.frameIndex === currentFrame
+      );
+      frameDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
+    }, 50);
   };
   
   const nextFrame = () => {
@@ -290,6 +317,33 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     if (!video) return;
     
     video.currentTime = Math.min(duration, video.currentTime + FRAME_DURATION);
+    
+    // 手动触发当前帧绘画渲染
+    setTimeout(() => {
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext('2d');
+      if (!canvas || !ctx) return;
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (!showDrawing) return;
+      
+      const currentFrame = Math.floor(video.currentTime * 30);
+      
+      // 渲染全程绘画
+      const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+      permanentDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
+      
+      // 渲染当前帧的单帧绘画
+      const frameDrawings = drawings.filter(d => 
+        d.type === 'single' && d.frameIndex === currentFrame
+      );
+      frameDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
+    }, 50);
   };
   
   // Canvas 绘画事件
