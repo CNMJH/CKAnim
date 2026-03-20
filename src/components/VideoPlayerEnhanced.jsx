@@ -83,33 +83,6 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     };
   }, [videoUrl]);
   
-  // 渲染当前帧的绘画
-  const renderCurrentFrameDrawings = useCallback((time) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return;
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    if (!showDrawing) return;
-    
-    const currentFrame = Math.floor(time * 30); // 30fps
-    
-    // 渲染全程绘画（所有帧都显示）
-    const permanentDrawings = drawings.filter(d => d.type === 'permanent');
-    permanentDrawings.forEach(drawing => {
-      renderDrawing(ctx, drawing);
-    });
-    
-    // 渲染当前帧的单帧绘画
-    const frameDrawings = drawings.filter(d => 
-      d.type === 'single' && d.frameIndex === currentFrame
-    );
-    frameDrawings.forEach(drawing => {
-      renderDrawing(ctx, drawing);
-    });
-  }, [drawings, showDrawing, renderDrawing]);
-  
   // 渲染单个绘画
   const renderDrawing = (ctx, drawing) => {
     if (drawing.tool === 'brush') {
@@ -150,6 +123,34 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
       ctx.restore(); // 恢复状态
     }
   };
+
+    // 渲染当前帧的绘画
+  const renderCurrentFrameDrawings = useCallback((time) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (!showDrawing) return;
+    
+    const currentFrame = Math.floor(time * 30); // 30fps
+    
+    // 渲染全程绘画（所有帧都显示）
+    const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+    permanentDrawings.forEach(drawing => {
+      renderDrawing(ctx, drawing);
+    });
+    
+    // 渲染当前帧的单帧绘画
+    const frameDrawings = drawings.filter(d => 
+      d.type === 'single' && d.frameIndex === currentFrame
+    );
+    frameDrawings.forEach(drawing => {
+      renderDrawing(ctx, drawing);
+    });
+  }, [drawings, showDrawing,]);
+  
   
   // 监听帧变化，重新渲染
   const [lastFrame, setLastFrame] = useState(-1);
