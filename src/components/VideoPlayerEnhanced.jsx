@@ -502,10 +502,13 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     
     // 保存完整路径数据
     if (currentPath.length > 0) {
+      const video = videoRef.current;
+      const currentFrame = Math.round(video.currentTime * 30); // 与渲染循环一致
+      
       const newDrawing = {
         id: Date.now(),
         type: brushType,
-        frameIndex: Math.floor(videoRef.current.currentTime * 30),
+        frameIndex: currentFrame,
         tool: 'brush',
         color: brushColor,
         size: brushSize,
@@ -516,6 +519,29 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       const newDrawings = [...drawings, newDrawing];
       setDrawings(newDrawings);
       addToHistory(newDrawings);
+      
+      // 立即渲染当前帧（解决绘画后不立即显示的问题）
+      setTimeout(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (canvas && ctx && showDrawing) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          // 渲染全程绘画
+          const permanentDrawings = newDrawings.filter(d => d.type === 'permanent');
+          permanentDrawings.forEach(drawing => {
+            renderDrawing(ctx, drawing);
+          });
+          
+          // 渲染当前帧的单帧绘画
+          const frameDrawings = newDrawings.filter(d => 
+            d.type === 'single' && d.frameIndex === currentFrame
+          );
+          frameDrawings.forEach(drawing => {
+            renderDrawing(ctx, drawing);
+          });
+        }
+      }, 50);
     }
     
     setCurrentPath([]); // 清空当前路径
@@ -541,10 +567,13 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       updateExistingText();
     } else {
       // 创建新文本
+      const video = videoRef.current;
+      const currentFrame = Math.round(video.currentTime * 30); // 与渲染循环一致
+      
       const newDrawing = {
         id: Date.now(),
         type: brushType,
-        frameIndex: Math.floor(videoRef.current.currentTime * 30),
+        frameIndex: currentFrame,
         tool: 'text',
         color: brushColor,
         size: brushSize,
