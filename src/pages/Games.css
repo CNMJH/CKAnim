@@ -431,10 +431,11 @@
 
 .character-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(4, 1fr);  /* ⭐ 一行 4 个按钮 */
+  gap: 14px;  /* ⭐ 增加间距，给红圈留空间 */
   max-height: calc(100vh - 400px);
   overflow-y: auto;
+  padding: 4px;  /* ⭐ 容器内边距，防止边缘裁剪 */
 }
 
 .character-item {
