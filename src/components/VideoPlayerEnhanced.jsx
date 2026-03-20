@@ -37,6 +37,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
   // Canvas 相关
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const lastFrameRef = useRef(-1);  // 用于 requestAnimationFrame 帧追踪
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPos, setLastPos] = useState(null);
   const [currentPath, setCurrentPath] = useState([]); // 当前正在画的路径
@@ -69,30 +70,77 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       setVolume(1);
     };
     
-    const handleTimeUpdate = () => {
-      setCurrentTime(video.currentTime);
-      setProgress((video.currentTime / video.duration) * 100);
-      
-      // 根据当前时间渲染对应帧的绘画
-      if (canvasRef.current) {
-        renderCurrentFrameDrawings(video.currentTime);
-      }
-    };
-    
+
     const handleEnded = () => {
       setIsPlaying(false);
     };
     
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
-    video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('ended', handleEnded);
     
     return () => {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('ended', handleEnded);
     };
   }, [videoUrl]);
+  
+  // 使用 requestAnimationFrame 渲染绘画（解决 timeupdate 频率不足导致的丢帧问题）
+  useEffect(() => {
+    let animationFrameId;
+    
+    const renderLoop = () => {
+      const video = videoRef.current;
+      if (!video || video.paused || video.ended) {
+        animationFrameId = requestAnimationFrame(renderLoop);
+        return;
+      }
+      
+      // 计算当前帧（30fps 视频）
+      const currentFrame = Math.round(video.currentTime * 30);
+      
+      // 只在帧变化时重新渲染
+      if (currentFrame !== lastFrameRef.current) {
+        lastFrameRef.current = currentFrame;
+        
+        // 更新 React 状态（用于进度条等 UI）
+        setCurrentTime(video.currentTime);
+        setProgress((video.currentTime / video.duration) * 100);
+        
+        // 渲染当前帧的绘画
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (canvas && ctx && showDrawing) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          // 渲染全程绘画（所有帧都显示）
+          const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+          permanentDrawings.forEach(drawing => {
+            renderDrawing(ctx, drawing);
+          });
+          
+          // 渲染当前帧的单帧绘画
+          const frameDrawings = drawings.filter(d => 
+            d.type === 'single' && d.frameIndex === currentFrame
+          );
+          frameDrawings.forEach(drawing => {
+            renderDrawing(ctx, drawing);
+          });
+        }
+      }
+      
+      animationFrameId = requestAnimationFrame(renderLoop);
+    };
+    
+    // 启动渲染循环
+    renderLoop();
+    
+    // 清理函数
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [drawings, showDrawing]);
   
   // 切换视频时清空画板
   useEffect(() => {
