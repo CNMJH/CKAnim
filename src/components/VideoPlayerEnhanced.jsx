@@ -56,6 +56,8 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
       setDuration(video.duration);
       setCurrentTime(0);
       setProgress(0);
+      // 初始化播放速度为 1.0
+      video.playbackRate = 1.0;
     };
     
     const handleTimeUpdate = () => {
@@ -635,6 +637,27 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
   
+  // 切换播放速度
+  const togglePlaybackRate = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    const rates = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+    const currentIndex = rates.indexOf(video.playbackRate);
+    const nextIndex = (currentIndex + 1) % rates.length;
+    video.playbackRate = rates[nextIndex];
+  };
+  
+  // 获取当前速度显示文本
+  const getPlaybackRateText = () => {
+    const video = videoRef.current;
+    if (!video) return '倍速';
+    
+    const rate = video.playbackRate;
+    if (rate === 1.0) return '倍速';
+    return `${rate}x`;
+  };
+  
   return (
     <div className="video-player-enhanced">
       {/* 视频区域 */}
@@ -732,8 +755,12 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
         >
           画板
         </button>
-        <button className="control-btn text-btn">
-          倍速
+        <button 
+          className="control-btn text-btn"
+          onClick={togglePlaybackRate}
+          title="切换播放速度"
+        >
+          {getPlaybackRateText()}
         </button>
       </div>
       
