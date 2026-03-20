@@ -681,7 +681,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
-          style={{ display: showDrawing ? 'block' : 'none' }}
+          style={{ display: isDrawingBoardOpen && showDrawing ? 'block' : 'none' }}
         />
         
         {/* 文本编辑输入框 */}
