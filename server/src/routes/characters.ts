@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { prisma } from '../lib/db.js';
 import { authenticate } from '../middleware/auth.js';
+import { getUploadToken, generateIconKey, getFileUrl, extractKeyFromUrl } from '../lib/qiniu.js';
 
 export const characterRoutes: FastifyPluginAsync = async (server) => {
   // ===== 管理员路由（需要认证） =====
@@ -250,6 +251,48 @@ export const characterRoutes: FastifyPluginAsync = async (server) => {
         reply.code(500).send({
           error: 'Internal Server Error',
           message: 'Failed to delete character',
+        });
+      }
+    }
+  );
+
+  // 获取头像上传凭证
+  server.post(
+    '/characters/avatar-token',
+    { preHandler: [authenticate] },
+    async (request, reply) => {
+      try {
+        const { filename, characterId } = request.body as {
+          filename: string;
+          characterId?: number;
+        };
+
+        if (!filename) {
+          return reply.code(400).send({
+            error: 'Bad Request',
+            message: 'Filename is required',
+          });
+        }
+
+        // 生成图标 key
+        const key = generateIconKey(filename, 'character', characterId);
+
+        // 获取上传凭证
+        const token = getUploadToken(key);
+
+        // 生成访问 URL
+        const url = getFileUrl(key);
+
+        reply.send({
+          token,
+          key,
+          url,
+        });
+      } catch (error) {
+        server.log.error(error);
+        reply.code(500).send({
+          error: 'Internal Server Error',
+          message: 'Failed to get upload token',
         });
       }
     }

@@ -55,6 +55,7 @@ export const charactersAPI = {
   create: (data) => api.post('/admin/characters', data),
   update: (id, data) => api.put(`/admin/characters/${id}`, data),
   delete: (id) => api.delete(`/admin/characters/${id}`),
+  getAvatarToken: (filename, characterId) => api.post('/admin/characters/avatar-token', { filename, characterId }),
 }
 
 export const actionsAPI = {

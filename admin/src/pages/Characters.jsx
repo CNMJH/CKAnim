@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { gamesAPI, charactersAPI } from '../lib/services'
+import { gamesAPI, charactersAPI, categoriesAPI } from '../lib/services'
 import Layout from '../components/Layout'
 import './Characters.css'
 
@@ -9,6 +9,7 @@ function Characters() {
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editingCharacter, setEditingCharacter] = useState(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     categoryId: '',
@@ -120,6 +121,40 @@ function Characters() {
       updateMutation.mutate({ id: editingCharacter.id, data: formData })
     } else {
       createMutation.mutate(formData)
+    }
+  }
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    setUploadingAvatar(true)
+    try {
+      // 1. 获取上传凭证
+      const { data: { token, key, url } } = await charactersAPI.getAvatarToken(file.name, editingCharacter?.id)
+
+      // 2. 上传到七牛云
+      const formData = new FormData()
+      formData.append('token', token)
+      formData.append('key', key)
+      formData.append('file', file)
+
+      const response = await fetch('https://up-z2.qiniup.com/', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('上传失败')
+      }
+
+      // 3. 更新表单中的 avatar URL
+      setFormData(prev => ({ ...prev, avatar: url }))
+    } catch (error) {
+      console.error('头像上传失败:', error)
+      alert('头像上传失败，请重试')
+    } finally {
+      setUploadingAvatar(false)
     }
   }
 
@@ -254,13 +289,31 @@ function Characters() {
               </div>
 
               <div className="form-group">
-                <label>头像 URL</label>
-                <input
-                  type="text"
-                  value={formData.avatar}
-                  onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
-                  placeholder="七牛云图片地址"
-                />
+                <label>角色头像</label>
+                {formData.avatar && (
+                  <div className="avatar-preview">
+                    <img src={formData.avatar} alt="头像预览" style={{ maxWidth: '100px', maxHeight: '100px', borderRadius: '8px', marginBottom: '8px' }} />
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <label className="btn-secondary" style={{ cursor: 'pointer', display: 'inline-block' }}>
+                    {uploadingAvatar ? '上传中...' : '上传本地图片'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      disabled={uploadingAvatar}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.avatar}
+                    onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
+                    placeholder="或输入七牛云图片地址"
+                    style={{ flex: 1 }}
+                  />
+                </div>
               </div>
 
               <div className="form-group">
