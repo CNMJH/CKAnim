@@ -101,7 +101,9 @@ function Games() {
         ]);
         
         setCharacters(charactersResponse.data.characters || []);
-        setCharacterRoles(rolesResponse.data.roles || []);
+        // ⭐ 后端返回 categories 数组，提取分类名称
+        const categories = rolesResponse.data.categories || [];
+        setCharacterRoles(categories.map(c => c.name));
       } catch (error) {
         console.error('Failed to load characters:', error);
         setCharacters([]);
