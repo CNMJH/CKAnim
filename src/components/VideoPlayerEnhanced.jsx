@@ -509,8 +509,11 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         maxY: Math.max(...currentPath.map(p => p.y)) + eraserSize / 2,
       };
       
-      // 真实擦除：只删除被橡皮擦碰到的路径点，不是整笔删除
+      // 真实擦除：路径分段算法
+      // 当橡皮擦擦过路径时，将路径分成多段，移除被擦除的部分
       // 使用 drawingsRef.current 获取最新数据，避免闭包问题
+      const eraserRadius = eraserSize / 2;
+      
       const newDrawings = drawingsRef.current.map(drawing => {
         // 只处理当前帧的单帧绘画，或所有常驻绘画
         const isInCurrentFrame = drawing.type === 'single' && drawing.frameIndex === currentFrame;
@@ -518,32 +521,58 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         
         if (!isInCurrentFrame && !isPermanent) return drawing; // 保留其他帧的绘画
         
-        // 深度复制 paths 数组，过滤掉被擦除的点
-        const newPaths = drawing.paths.map(path => ({
-          ...path,
-          points: path.points.filter(point => {
-            // 检查这个点是否被橡皮擦碰到（考虑 Canvas 缩放）
-            const canvas = canvasRef.current;
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
+        // 获取 Canvas 缩放比例
+        const canvas = canvasRef.current;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        
+        // 对每个路径进行分段处理
+        const newPaths = [];
+        
+        drawing.paths.forEach(path => {
+          const points = path.points;
+          const segments = []; // 存储分段后的路径
+          let currentSegment = []; // 当前正在构建的路径段
+          
+          for (let i = 0; i < points.length; i++) {
+            const point = points[i];
             
+            // 检查这个点是否被橡皮擦碰到（考虑 Canvas 缩放）
             const isErased = currentPath.some(eraserPoint => {
               if (eraserShape === 'circle') {
                 // 圆形擦除：检查点到擦除路径的距离
                 const dx = point.x - eraserPoint.x;
                 const dy = point.y - eraserPoint.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                return distance < (eraserSize * scaleX) / 2;
+                return distance < (eraserRadius * scaleX);
               } else {
                 // 方形擦除：检查点是否在擦除路径的矩形范围内
-                return Math.abs(point.x - eraserPoint.x) < (eraserSize * scaleX) / 2 &&
-                       Math.abs(point.y - eraserPoint.y) < (eraserSize * scaleY) / 2;
+                return Math.abs(point.x - eraserPoint.x) < (eraserRadius * scaleX) &&
+                       Math.abs(point.y - eraserPoint.y) < (eraserRadius * scaleY);
               }
             });
-            return !isErased; // 保留未被擦除的点
-          })
-        })).filter(path => path.points.length > 0); // 删除空路径
+            
+            if (isErased) {
+              // 遇到被擦除的点，保存当前段（如果有）
+              if (currentSegment.length > 1) {
+                segments.push({ points: currentSegment });
+              }
+              currentSegment = []; // 开始新的一段
+            } else {
+              // 未被擦除，加入当前段
+              currentSegment.push(point);
+            }
+          }
+          
+          // 保存最后一段（如果有）
+          if (currentSegment.length > 1) {
+            segments.push({ points: currentSegment });
+          }
+          
+          // 将分段添加到新路径
+          newPaths.push(...segments);
+        });
         
         // 返回新的 drawing 对象（如果 paths 为空，则删除整个 drawing）
         return newPaths.length > 0 ? { ...drawing, paths: newPaths } : null;
