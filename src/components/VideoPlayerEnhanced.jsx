@@ -11,6 +11,10 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
   
+  // 音量控制
+  const [volume, setVolume] = useState(1); // 音量 0-1
+  const [isMuted, setIsMuted] = useState(false); // 是否静音
+  
   // 画板状态
   const [isDrawingBoardOpen, setIsDrawingBoardOpen] = useState(false);
   const [currentTool, setCurrentTool] = useState('brush'); // brush, eraser, text
@@ -58,6 +62,9 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       setProgress(0);
       // 初始化播放速度为 1.0
       video.playbackRate = 1.0;
+      // 初始化音量为 100%
+      video.volume = 1;
+      setVolume(1);
     };
     
     const handleTimeUpdate = () => {
@@ -587,21 +594,25 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     
     // 创建临时 canvas 合并视频帧和绘画
     const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = video.videoWidth || 1000;
-    tempCanvas.height = video.videoHeight || 562.5;
+    tempCanvas.width = video.videoWidth || 1920;
+    tempCanvas.height = video.videoHeight || 1080;
     const ctx = tempCanvas.getContext('2d');
+    
+    // 计算缩放比例（从 Canvas 分辨率到视频分辨率）
+    const scaleX = tempCanvas.width / canvas.width;   // 例如：1920 / 1000 = 1.92
+    const scaleY = tempCanvas.height / canvas.height; // 例如：1080 / 562.5 = 1.92
     
     try {
       // 1. 绘制当前视频帧
       ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
       
-      // 2. 绘制所有绘画内容
+      // 2. 绘制所有绘画内容（坐标缩放）
       const currentFrame = Math.floor(video.currentTime * 30);
       
       // 绘制全程绘画
       const permanentDrawings = drawings.filter(d => d.type === 'permanent');
       permanentDrawings.forEach(drawing => {
-        renderDrawingToCanvas(ctx, drawing);
+        renderDrawingToCanvas(ctx, drawing, scaleX, scaleY);
       });
       
       // 绘制当前帧的单帧绘画
@@ -609,7 +620,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         d.type === 'single' && d.frameIndex === currentFrame
       );
       frameDrawings.forEach(drawing => {
-        renderDrawingToCanvas(ctx, drawing);
+        renderDrawingToCanvas(ctx, drawing, scaleX, scaleY);
       });
       
       // 3. 保存为 PNG 图片 - 自动下载到浏览器默认路径
@@ -644,10 +655,10 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
   };
   
   // 渲染绘画到 Canvas（用于保存）
-  const renderDrawingToCanvas = (ctx, drawing) => {
+  const renderDrawingToCanvas = (ctx, drawing, scaleX = 1, scaleY = 1) => {
     if (drawing.tool === 'brush') {
       ctx.strokeStyle = drawing.color;
-      ctx.lineWidth = drawing.size;
+      ctx.lineWidth = drawing.size * scaleX;  // 线宽也缩放
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       
@@ -655,18 +666,28 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         if (!path.points || path.points.length < 2) return;
         
         ctx.beginPath();
-        ctx.moveTo(path.points[0].x, path.points[0].y);
+        ctx.moveTo(
+          path.points[0].x * scaleX,  // X 坐标缩放
+          path.points[0].y * scaleY   // Y 坐标缩放
+        );
         
         for (let i = 1; i < path.points.length; i++) {
-          ctx.lineTo(path.points[i].x, path.points[i].y);
+          ctx.lineTo(
+            path.points[i].x * scaleX,
+            path.points[i].y * scaleY
+          );
         }
         
         ctx.stroke();
       });
     } else if (drawing.tool === 'text' && drawing.text) {
-      ctx.font = `${drawing.size * 3}px Arial`;
+      ctx.font = `${drawing.size * 3 * scaleX}px Arial`;
       ctx.fillStyle = drawing.color;
-      ctx.fillText(drawing.text, drawing.position.x, drawing.position.y);
+      ctx.fillText(
+        drawing.text,
+        drawing.position.x * scaleX,
+        drawing.position.y * scaleY
+      );
     }
   };
   
@@ -741,6 +762,38 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     const rate = video.playbackRate;
     if (rate === 1.0) return '倍速';
     return `${rate}x`;
+  };
+  
+  // 切换静音
+  const toggleMute = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    video.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
+  
+  // 调节音量
+  const handleVolumeChange = (e) => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    const newVolume = Number(e.target.value);
+    video.volume = newVolume;
+    setVolume(newVolume);
+    
+    // 如果音量 > 0 且当前是静音，取消静音
+    if (newVolume > 0 && isMuted) {
+      video.muted = false;
+      setIsMuted(false);
+    }
+  };
+  
+  // 获取音量图标
+  const getVolumeIcon = () => {
+    if (isMuted || volume === 0) return '🔇';
+    if (volume < 0.5) return '🔈';
+    return '🔊';
   };
   
   return (
@@ -847,6 +900,26 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         >
           {getPlaybackRateText()}
         </button>
+        
+        {/* 音量控制 */}
+        <button 
+          className="control-btn icon-btn"
+          onClick={toggleMute}
+          title={isMuted ? '取消静音' : '静音'}
+          style={{ width: '40px', padding: 0 }}
+        >
+          {getVolumeIcon()}
+        </button>
+        <input
+          type="range"
+          className="volume-slider"
+          min="0"
+          max="1"
+          step="0.01"
+          value={volume}
+          onChange={handleVolumeChange}
+          title="音量"
+        />
       </div>
       
       {/* 第二层控制栏 - 画板开启后显示 */}
