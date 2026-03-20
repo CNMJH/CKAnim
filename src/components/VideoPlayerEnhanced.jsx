@@ -426,20 +426,26 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         renderDrawing(ctx, drawing);
       });
       
-      // 绘制橡皮擦预览（半透明）- 跟随 eraserShape 设置
+      // 绘制橡皮擦预览（半透明）- 跟随 eraserShape 设置，考虑 Canvas 缩放
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      
       ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.strokeStyle = 'rgba(200, 200, 200, 0.8)';
       ctx.lineWidth = 2;
       
       if (eraserShape === 'circle') {
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, eraserSize / 2, 0, Math.PI * 2);
+        ctx.arc(pos.x, pos.y, (eraserSize * scaleX) / 2, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
       } else {
-        const half = eraserSize / 2;
-        ctx.fillRect(pos.x - half, pos.y - half, eraserSize, eraserSize);
-        ctx.strokeRect(pos.x - half, pos.y - half, eraserSize, eraserSize);
+        const halfX = (eraserSize * scaleX) / 2;
+        const halfY = (eraserSize * scaleY) / 2;
+        ctx.fillRect(pos.x - halfX, pos.y - halfY, eraserSize * scaleX, eraserSize * scaleY);
+        ctx.strokeRect(pos.x - halfX, pos.y - halfY, eraserSize * scaleX, eraserSize * scaleY);
       }
       
       // 不设置 lastPos，避免影响其他工具
@@ -490,18 +496,23 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         const newPaths = drawing.paths.map(path => ({
           ...path,
           points: path.points.filter(point => {
-            // 检查这个点是否被橡皮擦碰到
+            // 检查这个点是否被橡皮擦碰到（考虑 Canvas 缩放）
+            const canvas = canvasRef.current;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
             const isErased = currentPath.some(eraserPoint => {
               if (eraserShape === 'circle') {
                 // 圆形擦除：检查点到擦除路径的距离
                 const dx = point.x - eraserPoint.x;
                 const dy = point.y - eraserPoint.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                return distance < eraserSize / 2;
+                return distance < (eraserSize * scaleX) / 2;
               } else {
                 // 方形擦除：检查点是否在擦除路径的矩形范围内
-                return Math.abs(point.x - eraserPoint.x) < eraserSize / 2 &&
-                       Math.abs(point.y - eraserPoint.y) < eraserSize / 2;
+                return Math.abs(point.x - eraserPoint.x) < (eraserSize * scaleX) / 2 &&
+                       Math.abs(point.y - eraserPoint.y) < (eraserSize * scaleY) / 2;
               }
             });
             return !isErased; // 保留未被擦除的点
