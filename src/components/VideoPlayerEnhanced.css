@@ -174,12 +174,13 @@
 /* 徽章圆点 - 单帧画笔标记 */
 .control-btn.icon-btn .badge-dot {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 4px;
+  right: 4px;
   width: 6px;
   height: 6px;
   background: #ff4444;
   border-radius: 50%;
+  z-index: 10;
 }
 
 /* 颜色按钮 */
