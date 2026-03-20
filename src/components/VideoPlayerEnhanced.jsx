@@ -745,11 +745,13 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
             className={`control-btn icon-btn ${showBrushSizeSlider ? 'active' : ''}`}
             onClick={() => setShowBrushSizeSlider(!showBrushSizeSlider)}
             title="画笔粗细设置"
-            style={{
-              fontSize: `${Math.max(12, Math.min(40, brushSize))}px`,
-            }}
           >
-            <span>●</span>
+            <svg viewBox="0 0 24 24" width="24" height="24" style={{
+              transform: `scale(${Math.max(0.3, Math.min(1, brushSize / 50))})`,
+              transition: 'transform 0.2s',
+            }}>
+              <circle cx="12" cy="12" r="10" fill="white" />
+            </svg>
           </button>
           
           {/* 画笔粗细滑条 */}

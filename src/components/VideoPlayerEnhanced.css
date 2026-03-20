@@ -159,12 +159,8 @@
   position: relative;
 }
 
-.control-btn.icon-btn span {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  line-height: 1;
+.control-btn.icon-btn svg {
+  display: block;
 }
 
 /* 颜色按钮 */
