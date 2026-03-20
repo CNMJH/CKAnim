@@ -425,15 +425,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     
-    // 保存路径点 - 添加插值，形成连续路径
-    setCurrentPath(prev => {
-      if (prev.length === 0) return [pos];
-      const lastPos = prev[prev.length - 1];
-      const interpolated = interpolatePoints(lastPos, pos, 3); // 每 3px 一个点
-      return [...prev, ...interpolated];
-    });
-    
-    // 橡皮擦工具 - 显示预览
+    // 橡皮擦工具 - 先显示预览（在 setCurrentPath 之前，避免触发重新渲染）
     if (currentTool === 'eraser') {
       // 重绘当前帧（清除上一帧的预览）
       const video = videoRef.current;
@@ -453,7 +445,6 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       });
       
       // 绘制橡皮擦预览（半透明）- 跟随 eraserShape 设置，考虑 Canvas 缩放
-      const canvas = canvasRef.current;
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
@@ -474,9 +465,24 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         ctx.strokeRect(pos.x - halfX, pos.y - halfY, eraserSize * scaleX, eraserSize * scaleY);
       }
       
-      // 不设置 lastPos，避免影响其他工具
+      // 记录擦除路径（带插值）- 在绘制预览之后
+      setCurrentPath(prev => {
+        if (prev.length === 0) return [pos];
+        const lastPos = prev[prev.length - 1];
+        const interpolated = interpolatePoints(lastPos, pos, 3);
+        return [...prev, ...interpolated];
+      });
+      
       return;
     }
+    
+    // 其他工具 - 保存路径点（带插值），然后实时绘制
+    setCurrentPath(prev => {
+      if (prev.length === 0) return [pos];
+      const lastPos = prev[prev.length - 1];
+      const interpolated = interpolatePoints(lastPos, pos, 3);
+      return [...prev, ...interpolated];
+    });
     
     // 画笔工具 - 实时绘制
     ctx.strokeStyle = brushColor;
