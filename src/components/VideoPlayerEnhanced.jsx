@@ -404,8 +404,13 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     
-    // 保存路径点
-    setCurrentPath(prev => [...prev, pos]);
+    // 保存路径点 - 添加插值，形成连续路径
+    setCurrentPath(prev => {
+      if (prev.length === 0) return [pos];
+      const lastPos = prev[prev.length - 1];
+      const interpolated = interpolatePoints(lastPos, pos, 3); // 每 3px 一个点
+      return [...prev, ...interpolated];
+    });
     
     // 橡皮擦工具 - 显示预览
     if (currentTool === 'eraser') {
