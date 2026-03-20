@@ -413,8 +413,8 @@ QINIU_DOMAIN="你的七牛云域名"
 QINIU_PREFIX="ckanim/"
 QINIU_ZONE="zone_z0"
 
-# 数据库配置
-DATABASE_URL="file:./server/prisma/dev.db"
+# 数据库配置（使用绝对路径，避免路径混淆）
+DATABASE_URL="file:/var/www/ckanim/server/prisma/dev.db"
 
 # 服务器配置
 PORT=3002

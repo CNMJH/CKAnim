@@ -90,7 +90,7 @@ QINIU_PREFIX="ckanim/"
 QINIU_ZONE="$QINIU_ZONE"
 
 # 数据库配置 (SQLite)
-DATABASE_URL="file:./server/prisma/dev.db"
+DATABASE_URL="file:/var/www/ckanim/server/prisma/dev.db"
 
 # 服务器配置
 PORT=3002
