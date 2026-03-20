@@ -139,25 +139,27 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         setCurrentTime(video.currentTime);
         setProgress((video.currentTime / video.duration) * 100);
         
-        // 渲染当前帧的绘画
-        const canvas = canvasRef.current;
-        const ctx = canvas?.getContext('2d');
-        if (canvas && ctx && showDrawing) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          
-          // 渲染全程绘画（所有帧都显示）
-          const permanentDrawings = drawingsRef.current.filter(d => d.type === 'permanent');
-          permanentDrawings.forEach(drawing => {
-            renderDrawing(ctx, drawing);
-          });
-          
-          // 渲染当前帧的单帧绘画
-          const frameDrawings = drawingsRef.current.filter(d => 
-            d.type === 'single' && d.frameIndex === currentFrame
-          );
-          frameDrawings.forEach(drawing => {
-            renderDrawing(ctx, drawing);
-          });
+        // 渲染当前帧的绘画（橡皮擦工具使用时跳过，避免覆盖预览）
+        if (currentTool !== 'eraser' || !isDrawing) {
+          const canvas = canvasRef.current;
+          const ctx = canvas?.getContext('2d');
+          if (canvas && ctx && showDrawing) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 渲染全程绘画（所有帧都显示）
+            const permanentDrawings = drawingsRef.current.filter(d => d.type === 'permanent');
+            permanentDrawings.forEach(drawing => {
+              renderDrawing(ctx, drawing);
+            });
+            
+            // 渲染当前帧的单帧绘画
+            const frameDrawings = drawingsRef.current.filter(d => 
+              d.type === 'single' && d.frameIndex === currentFrame
+            );
+            frameDrawings.forEach(drawing => {
+              renderDrawing(ctx, drawing);
+            });
+          }
         }
       }
       
