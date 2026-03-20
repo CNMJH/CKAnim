@@ -83,6 +83,20 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
     };
   }, [videoUrl]);
   
+  // 切换视频时清空画板
+  useEffect(() => {
+    setDrawings([]);
+    setHistory([]);
+    setHistoryIndex(-1);
+    
+    // 清空 Canvas
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }, [videoUrl]);
+  
   // 渲染单个绘画
   const renderDrawing = (ctx, drawing) => {
     if (drawing.tool === 'brush') {
