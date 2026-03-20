@@ -355,8 +355,6 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
   
   // Canvas 绘画事件
   const getCanvasCoordinates = (e) => {
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
@@ -425,15 +423,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     
-    // 保存路径点 - 添加插值，形成连续路径
-    setCurrentPath(prev => {
-      if (prev.length === 0) return [pos];
-      const lastPos = prev[prev.length - 1];
-      const interpolated = interpolatePoints(lastPos, pos, 3); // 每 3px 一个点
-      return [...prev, ...interpolated];
-    });
-    
-    // 橡皮擦工具 - 显示预览
+    // 橡皮擦工具 - 先显示预览（在 setCurrentPath 之前，避免触发重新渲染）
     if (currentTool === 'eraser') {
       // 重绘当前帧（清除上一帧的预览）
       const video = videoRef.current;
@@ -453,7 +443,6 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       });
       
       // 绘制橡皮擦预览（半透明）- 跟随 eraserShape 设置，考虑 Canvas 缩放
-      const canvas = canvasRef.current;
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
@@ -474,135 +463,26 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         ctx.strokeRect(pos.x - halfX, pos.y - halfY, eraserSize * scaleX, eraserSize * scaleY);
       }
       
-      // 不设置 lastPos，避免影响其他工具
+      // 记录擦除路径（带插值）
+      setCurrentPath(prev => {
+        if (prev.length === 0) return [pos];
+        const lastPos = prev[prev.length - 1];
+        const interpolated = interpolatePoints(lastPos, pos, 3);
+        return [...prev, ...interpolated];
+      });
+      
       return;
     }
     
-    // 画笔工具 - 实时绘制
-    ctx.strokeStyle = brushColor;
-    ctx.lineWidth = brushSize;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    
-    ctx.beginPath();
-    ctx.moveTo(lastPos.x, lastPos.y);
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
-    
-    setLastPos(pos);
-  };
-  
-  const stopDrawing = () => {
-    if (!isDrawing) return;
-    setIsDrawing(false);
-    
-    // 橡皮擦工具 - 擦除路径范围内的绘画
-    if (currentTool === 'eraser' && currentPath.length > 0) {
-      const video = videoRef.current;
-      const currentFrame = getCurrentFrame(video.currentTime);
-      
-      // 计算擦除路径的边界框
-      const eraserBounds = {
-        minX: Math.min(...currentPath.map(p => p.x)) - eraserSize / 2,
-        maxX: Math.max(...currentPath.map(p => p.x)) + eraserSize / 2,
-        minY: Math.min(...currentPath.map(p => p.y)) - eraserSize / 2,
-        maxY: Math.max(...currentPath.map(p => p.y)) + eraserSize / 2,
-      };
-      
-      // 真实擦除：路径分段算法
-      // 当橡皮擦擦过路径时，将路径分成多段，移除被擦除的部分
-      // 使用 drawingsRef.current 获取最新数据，避免闭包问题
-      const eraserRadius = eraserSize / 2;
-      
-      const newDrawings = drawingsRef.current.map(drawing => {
-        // 只处理当前帧的单帧绘画，或所有常驻绘画
-        const isInCurrentFrame = drawing.type === 'single' && drawing.frameIndex === currentFrame;
-        const isPermanent = drawing.type === 'permanent';
-        
-        if (!isInCurrentFrame && !isPermanent) return drawing; // 保留其他帧的绘画
-        
-        // 获取 Canvas 缩放比例
-        const canvas = canvasRef.current;
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        
-        // 对每个路径进行分段处理
-        const newPaths = [];
-        
-        drawing.paths.forEach(path => {
-          const points = path.points;
-          const segments = []; // 存储分段后的路径
-          let currentSegment = []; // 当前正在构建的路径段
-          
-          for (let i = 0; i < points.length; i++) {
-            const point = points[i];
-            
-            // 检查这个点是否被橡皮擦碰到（考虑 Canvas 缩放）
-            const isErased = currentPath.some(eraserPoint => {
-              if (eraserShape === 'circle') {
-                // 圆形擦除：检查点到擦除路径的距离
-                const dx = point.x - eraserPoint.x;
-                const dy = point.y - eraserPoint.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                return distance < (eraserRadius * scaleX);
-              } else {
-                // 方形擦除：检查点是否在擦除路径的矩形范围内
-                return Math.abs(point.x - eraserPoint.x) < (eraserRadius * scaleX) &&
-                       Math.abs(point.y - eraserPoint.y) < (eraserRadius * scaleY);
-              }
-            });
-            
-            if (isErased) {
-              // 遇到被擦除的点，保存当前段（如果有）
-              if (currentSegment.length > 1) {
-                segments.push({ points: currentSegment });
-              }
-              currentSegment = []; // 开始新的一段
-            } else {
-              // 未被擦除，加入当前段
-              currentSegment.push(point);
-            }
-          }
-          
-          // 保存最后一段（如果有）
-          if (currentSegment.length > 1) {
-            segments.push({ points: currentSegment });
-          }
-          
-          // 将分段添加到新路径
-          newPaths.push(...segments);
-        });
-        
-        // 返回新的 drawing 对象（如果 paths 为空，则删除整个 drawing）
-        return newPaths.length > 0 ? { ...drawing, paths: newPaths } : null;
-      }).filter(d => d !== null); // 过滤掉被完全擦除的绘画
-      
-      // 更新状态
-      setDrawings(newDrawings);
-      addToHistory(newDrawings);
-      
-      // 清除橡皮擦预览并重新渲染
-      setCurrentPath([]);
-      setTimeout(() => {
-        const canvas = canvasRef.current;
-        const ctx = canvas?.getContext('2d');
-        if (canvas && ctx && showDrawing) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          const permanentDrawings = newDrawings.filter(d => d.type === 'permanent');
-          permanentDrawings.forEach(drawing => {
-            renderDrawing(ctx, drawing);
-          });
-          const frameDrawings = newDrawings.filter(d => 
-            d.type === 'single' && d.frameIndex === currentFrame
-          );
-          frameDrawings.forEach(drawing => {
-            renderDrawing(ctx, drawing);
-          });
-        }
-      }, 50);
-      return;
-    }
+    // 其他工具 - 保存路径点（带插值）
+    setCurrentPath(prev => {
+      if (prev.length === 0) return [pos];
+      const lastPos = prev[prev.length - 1];
+      const interpolated = interpolatePoints(lastPos, pos, 3);
+      return [...prev, ...interpolated];
+    });
+
+
     
     // 保存完整路径数据（画笔和文本）
     if (currentPath.length > 0) {
