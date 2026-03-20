@@ -156,6 +156,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  line-height: 1; /* 确保字符垂直居中 */
 }
 
 /* 颜色按钮 */
