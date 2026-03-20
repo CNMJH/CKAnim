@@ -53,6 +53,11 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   
+  // 同步 drawingsRef，确保所有渲染逻辑使用最新的 drawings
+  useEffect(() => {
+    drawingsRef.current = drawings;
+  }, [drawings]);
+  
   // 获取当前绘画状态描述
   const getHistoryStatus = () => {
     if (history.length === 0) return '无历史记录';
