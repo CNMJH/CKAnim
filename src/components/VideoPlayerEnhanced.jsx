@@ -518,12 +518,9 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
         renderDrawingToCanvas(ctx, drawing);
       });
       
-      // 3. 保存为 PNG 图片
+      // 3. 保存为 PNG 图片 - 自动下载到浏览器默认路径
       tempCanvas.toBlob((blob) => {
-        if (!blob) {
-          alert('保存失败：无法生成图片');
-          return;
-        }
+        if (!blob) return;
         
         const link = document.createElement('a');
         link.download = `frame_with_drawing_${Date.now()}.png`;
@@ -534,18 +531,10 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
         setTimeout(() => {
           URL.revokeObjectURL(link.href);
         }, 100);
-        
-        console.log('✅ 图片已保存');
       }, 'image/png');
       
     } catch (error) {
       console.error('保存失败:', error);
-      
-      if (error.message.includes('tainted') || error.message.includes('SecurityError')) {
-        alert('⚠️ 视频跨域限制，无法保存带视频帧的图片。\n\n建议：\n1. 使用截图工具截图\n2. 或仅保存绘画数据（JSON）');
-      } else {
-        alert('保存失败：' + error.message);
-      }
     }
   };
   
