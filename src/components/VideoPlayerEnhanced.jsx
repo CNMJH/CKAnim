@@ -61,6 +61,25 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     drawingsRef.current = drawings;
   }, [drawings]);
   
+  // 在两点之间插值，生成连续路径（用于橡皮擦）
+  const interpolatePoints = (p1, p2, distance = 3) => {
+    const points = [];
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    
+    if (dist <= distance) return [p2];
+    
+    const steps = Math.floor(dist / distance);
+    for (let i = 1; i <= steps; i++) {
+      points.push({
+        x: p1.x + (dx * i / steps),
+        y: p1.y + (dy * i / steps)
+      });
+    }
+    return points;
+  };
+  
   // 获取当前绘画状态描述
   const getHistoryStatus = () => {
     if (history.length === 0) return '无历史记录';
