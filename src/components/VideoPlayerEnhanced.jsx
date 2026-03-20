@@ -1237,63 +1237,6 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
             </div>
           )}
           
-          {/* 橡皮擦菜单 */}
-          {showEraserMenu && (
-            <div className="volume-menu-container" style={{ width: '120px' }}>
-              <div className="volume-menu-item">
-                <span style={{ fontSize: '12px', color: '#aaa', marginBottom: '8px', display: 'block' }}>
-                  大小：{eraserSize}px
-                </span>
-                <input
-                  type="range"
-                  className="volume-slider"
-                  min="10"
-                  max="100"
-                  value={eraserSize}
-                  onChange={(e) => setEraserSize(Number(e.target.value))}
-                  style={{ width: '100%' }}
-                />
-              </div>
-              <div className="volume-menu-item" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '8px', paddingTop: '8px' }}>
-                <span style={{ fontSize: '12px', color: '#aaa', marginBottom: '8px', display: 'block' }}>
-                  形状
-                </span>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    onClick={() => setEraserShape('circle')}
-                    style={{
-                      flex: 1,
-                      padding: '6px',
-                      borderRadius: '4px',
-                      border: eraserShape === 'circle' ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.2)',
-                      backgroundColor: eraserShape === 'circle' ? 'rgba(59,130,246,0.2)' : 'transparent',
-                      color: 'white',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    圆形
-                  </button>
-                  <button
-                    onClick={() => setEraserShape('square')}
-                    style={{
-                      flex: 1,
-                      padding: '6px',
-                      borderRadius: '4px',
-                      border: eraserShape === 'square' ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.2)',
-                      backgroundColor: eraserShape === 'square' ? 'rgba(59,130,246,0.2)' : 'transparent',
-                      color: 'white',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    方形
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-          
           <button 
             className="control-btn icon-btn color-btn"
             onClick={() => setShowColorPicker(!showColorPicker)}
@@ -1311,63 +1254,6 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
                 onChange={(e) => setBrushColor(e.target.value)}
               />
               <span className="color-value">{brushColor}</span>
-            </div>
-          )}
-          
-          {/* 橡皮擦菜单 */}
-          {showEraserMenu && (
-            <div className="volume-menu-container" style={{ width: '120px' }}>
-              <div className="volume-menu-item">
-                <span style={{ fontSize: '12px', color: '#aaa', marginBottom: '8px', display: 'block' }}>
-                  大小：{eraserSize}px
-                </span>
-                <input
-                  type="range"
-                  className="volume-slider"
-                  min="10"
-                  max="100"
-                  value={eraserSize}
-                  onChange={(e) => setEraserSize(Number(e.target.value))}
-                  style={{ width: '100%' }}
-                />
-              </div>
-              <div className="volume-menu-item" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '8px', paddingTop: '8px' }}>
-                <span style={{ fontSize: '12px', color: '#aaa', marginBottom: '8px', display: 'block' }}>
-                  形状
-                </span>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    onClick={() => setEraserShape('circle')}
-                    style={{
-                      flex: 1,
-                      padding: '6px',
-                      borderRadius: '4px',
-                      border: eraserShape === 'circle' ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.2)',
-                      backgroundColor: eraserShape === 'circle' ? 'rgba(59,130,246,0.2)' : 'transparent',
-                      color: 'white',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    圆形
-                  </button>
-                  <button
-                    onClick={() => setEraserShape('square')}
-                    style={{
-                      flex: 1,
-                      padding: '6px',
-                      borderRadius: '4px',
-                      border: eraserShape === 'square' ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.2)',
-                      backgroundColor: eraserShape === 'square' ? 'rgba(59,130,246,0.2)' : 'transparent',
-                      color: 'white',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    方形
-                  </button>
-                </div>
-              </div>
             </div>
           )}
           
@@ -1392,18 +1278,35 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
             <span className="badge-dot"></span>
           </button>
           
-          <button 
-            className={`control-btn icon-btn ${currentTool === 'eraser' ? 'active' : ''}`}
-            onClick={() => {
-              setCurrentTool('eraser');
-              setShowEraserMenu(!showEraserMenu);
-            }}
-            title="橡皮擦 - 擦除绘画"
-          >
-            <svg viewBox="0 0 24 24" width="20" height="20">
-              <path fill="white" d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 0 1-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l8.48-8.48-6.37-6.37L4.22 15.58z"/>
-            </svg>
-          </button>
+          <div className="speed-volume-wrapper">
+            <button 
+              className={`control-btn icon-btn ${currentTool === 'eraser' ? 'active' : ''}`}
+              onClick={() => {
+                setCurrentTool('eraser');
+                setShowEraserMenu(!showEraserMenu);
+              }}
+              title="橡皮擦 - 擦除绘画"
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20">
+                <path fill="white" d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 0 1-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l8.48-8.48-6.37-6.37L4.22 15.58z"/>
+              </svg>
+            </button>
+            {showEraserMenu && (
+              <div className="speed-volume-menu" style={{ minWidth: '140px', padding: '12px 16px' }}>
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '8px', display: 'block' }}>大小：{eraserSize}px</div>
+                  <input type="range" min="10" max="100" value={eraserSize} onChange={(e) => setEraserSize(Number(e.target.value))} style={{ width: '100%', cursor: 'pointer' }} />
+                </div>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '12px' }}>
+                  <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '8px', display: 'block' }}>形状</div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => setEraserShape('circle')} style={{ flex: 1, padding: '8px 12px', borderRadius: '4px', border: eraserShape === 'circle' ? '2px solid #00A1D6' : '1px solid rgba(255,255,255,0.2)', backgroundColor: eraserShape === 'circle' ? 'rgba(0,161,214,0.2)' : 'transparent', color: eraserShape === 'circle' ? '#00A1D6' : 'white', fontSize: '13px', cursor: 'pointer' }}>圆形</button>
+                    <button onClick={() => setEraserShape('square')} style={{ flex: 1, padding: '8px 12px', borderRadius: '4px', border: eraserShape === 'square' ? '2px solid #00A1D6' : '1px solid rgba(255,255,255,0.2)', backgroundColor: eraserShape === 'square' ? 'rgba(0,161,214,0.2)' : 'transparent', color: eraserShape === 'square' ? '#00A1D6' : 'white', fontSize: '13px', cursor: 'pointer' }}>方形</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           
           <button 
             className={`control-btn icon-btn ${currentTool === 'text' ? 'active' : ''}`}
