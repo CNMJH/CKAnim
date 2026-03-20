@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# CKAnim 一键部署脚本 - 生产环境版本 v2
+# CKAnim 一键部署脚本 - 生产环境版本 v3
 # 使用方法：curl -sSL https://raw.githubusercontent.com/CNMJH/CKAnim/main/deploy.sh | bash
 
 echo "=========================================="
-echo "  CKAnim 一键部署脚本 v2"
+echo "  CKAnim 一键部署脚本 v3"
 echo "  服务器：39.102.115.79"
 echo "=========================================="
 echo ""
@@ -18,20 +18,20 @@ NC='\033[0m' # No Color
 # 询问用户输入七牛云配置
 echo -e "${YELLOW}请先准备七牛云配置（如果没有，可以按回车跳过，稍后手动配置）${NC}"
 echo ""
+echo "获取方式："
+echo "  1. AccessKey/SecretKey：七牛云控制台 → 密钥管理"
+echo "  2. 储存空间名称：七牛云控制台 → 对象存储 → 你的储存空间"
+echo "  3. 域名：储存空间 → 域名管理（要带 https://）"
+echo ""
 read -p "七牛云 AccessKey: " QINIU_ACCESS_KEY
 read -p "七牛云 SecretKey: " QINIU_SECRET_KEY
-read -p "七牛云储存空间名称: " QINIU_BUCKET
-read -p "七牛云域名 (如 xxx.bkt.clouddn.com): " QINIU_DOMAIN
-echo ""
-echo -e "${YELLOW}七牛云区域选择:${NC}"
-echo "  1) 华东/华北 (zone_z0) - 推荐，离北京近"
-echo "  2) 华南 (zone_z2)"
-read -p "请选择 (1 或 2，默认 1): " QINIU_ZONE_CHOICE
+read -p "七牛云储存空间名称（如 zhuque-guangdong）: " QINIU_BUCKET
+read -p "七牛云域名（如 https://video.jiangmeijixie.com）: " QINIU_DOMAIN
+read -p "七牛云路径前缀（如 参考网站 2026/，可选）: " QINIU_PREFIX
 
-if [ "$QINIU_ZONE_CHOICE" = "2" ]; then
-    QINIU_ZONE="zone_z2"
-else
-    QINIU_ZONE="zone_z0"
+# 如果用户没有输入前缀，使用默认值
+if [ -z "$QINIU_PREFIX" ]; then
+    QINIU_PREFIX="ckanim/"
 fi
 
 echo ""
@@ -77,36 +77,24 @@ echo -e "${GREEN}✓${NC} 代码下载完成"
 # 7. 创建配置文件
 echo "[7/12] 创建配置文件..."
 cat > .env.production << EOF
-# JWT 配置
+# JWT 配置（⚠️ 生产环境必须修改！）
 JWT_SECRET="$JWT_SECRET"
 JWT_EXPIRES_IN="7d"
 
-# 七牛云配置
+# 七牛云配置（⚠️ 必须修改成你的！）
 QINIU_ACCESS_KEY="$QINIU_ACCESS_KEY"
 QINIU_SECRET_KEY="$QINIU_SECRET_KEY"
 QINIU_BUCKET="$QINIU_BUCKET"
 QINIU_DOMAIN="$QINIU_DOMAIN"
-QINIU_PREFIX="ckanim/"
-QINIU_ZONE="$QINIU_ZONE"
+QINIU_PREFIX="$QINIU_PREFIX"
 
-# 数据库配置 (SQLite)
+# 数据库配置（SQLite）
+# 说明：使用绝对路径，避免在不同目录执行时出错
 DATABASE_URL="file:/var/www/ckanim/server/prisma/dev.db"
 
 # 服务器配置
 PORT=3002
 NODE_ENV=production
-
-# 前台配置
-FRONTEND_PORT=5173
-FRONTEND_HOST=0.0.0.0
-
-# 后台配置
-ADMIN_PORT=3003
-ADMIN_HOST=0.0.0.0
-
-# 后端配置
-SERVER_PORT=3002
-SERVER_HOST=0.0.0.0
 EOF
 echo -e "${GREEN}✓${NC} 配置文件创建完成"
 
@@ -189,5 +177,10 @@ echo ""
 echo -e "${YELLOW}⚠️  如果管理员账号无法登录，请执行：${NC}"
 echo "   cd /var/www/ckanim/server"
 echo "   npx tsx src/scripts/create-admin.ts"
+echo ""
+echo -e "${YELLOW}⚠️  配置说明：${NC}"
+echo "   配置文件：/var/www/ckanim/.env.production"
+echo "   七牛云配置必须正确，否则无法上传视频"
+echo "   QINIU_DOMAIN 要带 https://（如 https://video.jiangmeijixie.com）"
 echo ""
 echo "=========================================="
