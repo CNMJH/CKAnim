@@ -510,3 +510,111 @@
   z-index: 1000;
   pointer-events: none;
 }
+
+
+/* B 站风格的倍速和音量卡片 */
+.speed-volume-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.speed-volume-menu {
+  position: absolute;
+  bottom: 50px;
+  right: 0;
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 8px;
+  padding: 8px 0;
+  min-width: 120px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  animation: menuSlideUp 0.2s ease-out;
+}
+
+@keyframes menuSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.speed-option {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.2s;
+}
+
+.speed-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.speed-option.active {
+  color: #00A1D6;
+  font-weight: bold;
+}
+
+/* 音量菜单 */
+.volume-menu {
+  min-width: 60px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.volume-slider-vertical {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 4px;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  writing-mode: bt-lr; /* IE */
+  -webkit-appearance: slider-vertical; /* WebKit */
+}
+
+.volume-slider-vertical::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.volume-slider-vertical::-webkit-slider-thumb:hover {
+  background: #00A1D6;
+}
+
+.mute-button {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.mute-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+

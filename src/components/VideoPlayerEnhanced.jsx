@@ -24,6 +24,8 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
   const [showDrawing, setShowDrawing] = useState(true);
   const [showBrushSizeSlider, setShowBrushSizeSlider] = useState(false); // 画笔粗细滑条显示
   const [showColorPicker, setShowColorPicker] = useState(false); // 颜色选择器显示
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false); // 倍速菜单显示
+  const [showVolumeMenu, setShowVolumeMenu] = useState(false); // 音量菜单显示
   
   // 文本编辑状态
   const [isEditingText, setIsEditingText] = useState(false);
@@ -699,11 +701,55 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       switch(e.key) {
         case 'ArrowLeft':
           e.preventDefault();
-          previousFrame();
+          // 直接修改 video.currentTime 并立即渲染（和按钮逻辑完全一致）
+          const video = videoRef.current;
+          if (!video) return;
+          video.currentTime = Math.max(0, video.currentTime - FRAME_DURATION);
+          setTimeout(() => {
+            const canvas = canvasRef.current;
+            const ctx = canvas?.getContext('2d');
+            if (!canvas || !ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (showDrawing) {
+              const currentFrame = Math.floor(video.currentTime * 30);
+              const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+              permanentDrawings.forEach(drawing => {
+                renderDrawing(ctx, drawing);
+              });
+              const frameDrawings = drawings.filter(d => 
+                d.type === 'single' && d.frameIndex === currentFrame
+              );
+              frameDrawings.forEach(drawing => {
+                renderDrawing(ctx, drawing);
+              });
+            }
+          }, 50);
           break;
         case 'ArrowRight':
           e.preventDefault();
-          nextFrame();
+          // 直接修改 video.currentTime 并立即渲染（和按钮逻辑完全一致）
+          const video2 = videoRef.current;
+          if (!video2) return;
+          video2.currentTime = Math.min(duration, video2.currentTime + FRAME_DURATION);
+          setTimeout(() => {
+            const canvas = canvasRef.current;
+            const ctx = canvas?.getContext('2d');
+            if (!canvas || !ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (showDrawing) {
+              const currentFrame = Math.floor(video2.currentTime * 30);
+              const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+              permanentDrawings.forEach(drawing => {
+                renderDrawing(ctx, drawing);
+              });
+              const frameDrawings = drawings.filter(d => 
+                d.type === 'single' && d.frameIndex === currentFrame
+              );
+              frameDrawings.forEach(drawing => {
+                renderDrawing(ctx, drawing);
+              });
+            }
+          }, 50);
           break;
         case 's':
         case 'S':
@@ -799,9 +845,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
   return (
     <div className="video-player-enhanced">
       {/* 视频区域 */}
-      <div className="video-container">
-        <div className="version-tag">[播放器 v1.0]</div>
-        <video
+      <div className="video-container">        <video
           ref={videoRef}
           src={videoUrl}
           className="video-element"
@@ -893,33 +937,76 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         >
           画板
         </button>
-        <button 
-          className="control-btn text-btn"
-          onClick={togglePlaybackRate}
-          title="切换播放速度"
-        >
-          {getPlaybackRateText()}
-        </button>
+        {/* 倍速按钮 - B 站风格 */}
+        <div className="speed-volume-wrapper">
+          <button 
+            className={`control-btn text-btn ${showSpeedMenu ? 'active' : ''}`}
+            onClick={() => setShowSpeedMenu(!showSpeedMenu)}
+            title="播放速度"
+          >
+            {getPlaybackRateText()}
+          </button>
+          {showSpeedMenu && (
+            <div className="speed-volume-menu">
+              {[0.5, 0.75, 1.0, 1.25, 1.5, 2.0].map(rate => (
+                <button
+                  key={rate}
+                  className={`speed-option ${videoRef.current?.playbackRate === rate ? 'active' : ''}`}
+                  onClick={() => {
+                    if (videoRef.current) {
+                      videoRef.current.playbackRate = rate;
+                      setShowSpeedMenu(false);
+                    }
+                  }}
+                >
+                  {rate}x
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         
-        {/* 音量控制 */}
-        <button 
-          className="control-btn icon-btn"
-          onClick={toggleMute}
-          title={isMuted ? '取消静音' : '静音'}
-          style={{ width: '40px', padding: 0 }}
-        >
-          {getVolumeIcon()}
-        </button>
-        <input
-          type="range"
-          className="volume-slider"
-          min="0"
-          max="1"
-          step="0.01"
-          value={volume}
-          onChange={handleVolumeChange}
-          title="音量"
-        />
+        {/* 音量按钮 - B 站风格 */}
+        <div className="speed-volume-wrapper">
+          <button 
+            className={`control-btn icon-btn ${showVolumeMenu ? 'active' : ''}`}
+            onClick={() => setShowVolumeMenu(!showVolumeMenu)}
+            title="音量"
+            style={{ width: '40px', padding: 0 }}
+          >
+            {getVolumeIcon()}
+          </button>
+          {showVolumeMenu && (
+            <div className="speed-volume-menu volume-menu">
+              <input
+                type="range"
+                className="volume-slider-vertical"
+                min="0"
+                max="1"
+                step="0.01"
+                value={isMuted ? 0 : volume}
+                onChange={(e) => {
+                  const newVolume = parseFloat(e.target.value);
+                  setVolume(newVolume);
+                  if (videoRef.current) {
+                    videoRef.current.volume = newVolume;
+                    if (newVolume > 0 && isMuted) {
+                      setIsMuted(false);
+                    }
+                  }
+                }}
+              />
+              <button
+                className="mute-button"
+                onClick={() => {
+                  toggleMute();
+                }}
+              >
+                {isMuted || volume === 0 ? '🔇 取消静音' : '🔇 静音'}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       
       {/* 第二层控制栏 - 画板开启后显示 */}
