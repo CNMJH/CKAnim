@@ -615,13 +615,13 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       const currentFrame = getCurrentFrame(video.currentTime);
       
       // 绘制全程绘画
-      const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+      const permanentDrawings = drawingsRef.current.filter(d => d.type === 'permanent');
       permanentDrawings.forEach(drawing => {
         renderDrawingToCanvas(ctx, drawing, scaleX, scaleY);
       });
       
       // 绘制当前帧的单帧绘画
-      const frameDrawings = drawings.filter(d => 
+      const frameDrawings = drawingsRef.current.filter(d => 
         d.type === 'single' && d.frameIndex === currentFrame
       );
       frameDrawings.forEach(drawing => {
@@ -722,12 +722,12 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (showDrawing) {
               // 渲染全程绘画
-              const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+              const permanentDrawings = drawingsRef.current.filter(d => d.type === 'permanent');
               permanentDrawings.forEach(drawing => {
                 renderDrawing(ctx, drawing);
               });
               // 渲染当前帧的单帧绘画
-              const frameDrawings = drawings.filter(d => 
+              const frameDrawings = drawingsRef.current.filter(d => 
                 d.type === 'single' && d.frameIndex === currentFrame
               );
               frameDrawings.forEach(drawing => {
@@ -756,12 +756,12 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (showDrawing) {
               // 渲染全程绘画
-              const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+              const permanentDrawings = drawingsRef.current.filter(d => d.type === 'permanent');
               permanentDrawings.forEach(drawing => {
                 renderDrawing(ctx, drawing);
               });
               // 渲染当前帧的单帧绘画
-              const frameDrawings = drawings.filter(d => 
+              const frameDrawings = drawingsRef.current.filter(d => 
                 d.type === 'single' && d.frameIndex === currentFrame
               );
               frameDrawings.forEach(drawing => {
