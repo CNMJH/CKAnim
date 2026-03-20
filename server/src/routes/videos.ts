@@ -118,7 +118,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
                 level: true,
               },
             },
-            tags: {
+            VideoTags: {
               select: {
                 id: true,
                 name: true,
@@ -168,7 +168,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
             OR: [
               { title: { contains: q } },
               {
-                tags: {
+                VideoTags: {
                   some: {
                     name: { contains: q },
                   },
@@ -177,7 +177,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
             ],
           },
           include: {
-            tags: true,
+            VideoTags: true,
             game: true,
           },
           skip: (page - 1) * limit,
@@ -190,7 +190,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
             OR: [
               { title: { contains: q } },
               {
-                tags: {
+                VideoTags: {
                   some: {
                     name: { contains: q },
                   },
@@ -214,7 +214,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
         const videos = await prisma.video.findMany({
           where,
           include: {
-            tags: true,
+            VideoTags: true,
             game: true,
           },
           skip: (page - 1) * limit,
@@ -528,13 +528,13 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
               categories: finalCategoryIds.length > 0 ? {
                 connect: finalCategoryIds.map((id: number) => ({ id })),
               } : undefined,
-              tags: tagIds.length > 0 ? {
+              VideoTags: tagIds.length > 0 ? {
                 connect: tagIds.map((id: number) => ({ id })),
               } : undefined,
             },
             include: {
               categories: true,
-              tags: true,
+              VideoTags: true,
               action: true,
             },
           });
@@ -632,7 +632,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           await prisma.video.update({
             where: { id: videoId },
             data: {
-              tags: {
+              VideoTags: {
                 set: tagIds.map((id) => ({ id })),
               },
             },
