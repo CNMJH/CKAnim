@@ -124,6 +124,12 @@ pm2 -v
 
 **成功的标志**：显示版本号如 `5.3.0`
 
+### 3.6 安装 nano 编辑器
+
+```bash
+yum install -y nano
+```
+
 ---
 
 ## 4. 下载网站代码
@@ -165,58 +171,99 @@ openssl rand -base64 32
 
 **⚠️ 重要**：复制这个字符串，后面要用！
 
-### 5.2 创建配置文件
+### 5.2 编辑配置文件
 
 ```bash
-nano .env.production
+nano ecosystem.config.js
 ```
 
-**成功的标志**：打开一个空白编辑界面
+**成功的标志**：打开配置文件编辑界面
 
-### 5.3 输入配置内容
+### 5.3 修改配置内容
 
-**把以下内容复制粘贴进去**：
+**找到并修改以下内容**（按 `Ctrl + W` 搜索关键词）：
 
-```
-# JWT 配置
-JWT_SECRET="粘贴你刚才生成的随机字符串"
-JWT_EXPIRES_IN="7d"
+#### 第 1 处：JWT_SECRET
 
-# 七牛云配置（⚠️ 必须修改成你的！）
-QINIU_ACCESS_KEY="你的 AccessKey"
-QINIU_SECRET_KEY="你的 SecretKey"
-QINIU_BUCKET="你的储存空间名称"
-QINIU_DOMAIN="https://你的七牛云域名"
-QINIU_PREFIX="参考网站 2026/"
-
-# 数据库配置（SQLite）
-DATABASE_URL="file:/var/www/ckanim/server/prisma/dev.db"
-
-# 服务器配置
-PORT=3002
-NODE_ENV=production
+**找到**：
+```javascript
+JWT_SECRET: '替换成你生成的随机字符串',
 ```
 
-### 5.4 修改七牛云配置
-
-**⚠️ 必须修改以下内容**：
-
-```
-JWT_SECRET="粘贴你刚才生成的随机字符串"
-QINIU_ACCESS_KEY="你的 AccessKey"
-QINIU_SECRET_KEY="你的 SecretKey"
-QINIU_BUCKET="你的储存空间名称"
-QINIU_DOMAIN="https://你的七牛云域名"
+**改成**：
+```javascript
+JWT_SECRET: '粘贴你刚才生成的随机字符串',
 ```
 
-**示例**：
+#### 第 2 处：七牛云 AccessKey
+
+**找到**：
+```javascript
+QINIU_ACCESS_KEY: '替换成你的 AccessKey',
 ```
-JWT_SECRET="xK9mL2nP5qR8sT1vW4yZ7aB0cD3eF6gH9iJ2kL5mN8o="
-QINIU_ACCESS_KEY="DwLK5ft-Zx0XgxiI8HaIyeUh0wyaHddssczs2s0c"
-QINIU_SECRET_KEY="14ykOp2Q-nkbLmSfZdd2aHmoEnZUHqWxk1BeFN2-"
-QINIU_BUCKET="zhuque-guangdong"
-QINIU_DOMAIN="https://video.jiangmeijixie.com"
-QINIU_PREFIX="参考网站 2026/"
+
+**改成**：
+```javascript
+QINIU_ACCESS_KEY: '你的 AccessKey',
+```
+
+#### 第 3 处：七牛云 SecretKey
+
+**找到**：
+```javascript
+QINIU_SECRET_KEY: '替换成你的 SecretKey',
+```
+
+**改成**：
+```javascript
+QINIU_SECRET_KEY: '你的 SecretKey',
+```
+
+#### 第 4 处：七牛云 Bucket
+
+**找到**：
+```javascript
+QINIU_BUCKET: '替换成你的储存空间名称',
+```
+
+**改成**：
+```javascript
+QINIU_BUCKET: '你的储存空间名称',
+```
+
+#### 第 5 处：七牛云域名
+
+**找到**：
+```javascript
+QINIU_DOMAIN: '替换成你的七牛云域名（带 https://）',
+```
+
+**改成**：
+```javascript
+QINIU_DOMAIN: 'https://你的七牛云域名',
+```
+
+### 5.4 修改后的示例
+
+```javascript
+env: {
+  NODE_ENV: 'production',
+  PORT: 3002,
+  
+  // JWT 配置
+  JWT_SECRET: 'xK9mL2nP5qR8sT1vW4yZ7aB0cD3eF6gH9iJ2kL5mN8o=',
+  JWT_EXPIRES_IN: '7d',
+  
+  // 七牛云配置
+  QINIU_ACCESS_KEY: 'DwLK5ft-Zx0XgxiI8HaIyeUh0wyaHddssczs2s0c',
+  QINIU_SECRET_KEY: '14ykOp2Q-nkbLmSfZdd2aHmoEnZUHqWxk1BeFN2-',
+  QINIU_BUCKET: 'zhuque-guangdong',
+  QINIU_DOMAIN: 'https://video.jiangmeijixie.com',
+  QINIU_PREFIX: '参考网站 2026/',
+  
+  // 数据库配置
+  DATABASE_URL: 'file:/var/www/ckanim/server/prisma/dev.db',
+},
 ```
 
 **⚠️ 重要提示**：
@@ -263,6 +310,14 @@ cd ..
 
 ## 7. 初始化数据库
 
+### 7.1 创建日志目录
+
+```bash
+mkdir -p logs
+```
+
+### 7.2 初始化数据库
+
 ```bash
 cd server
 npx prisma migrate dev --name init
@@ -270,6 +325,20 @@ cd ..
 ```
 
 **成功的标志**：看到绿色文字 `✔ Generated Prisma Client`
+
+### 7.3 创建管理员账户
+
+```bash
+cd server
+npx tsx src/scripts/create-admin.ts
+cd ..
+```
+
+**成功的标志**：看到 `管理员账户创建成功`
+
+**默认管理员**：
+- 用户名：`admin`
+- 密码：`admin123`
 
 ---
 
@@ -361,9 +430,30 @@ pm2 startup
 
 ---
 
-## 11. 访问网站
+## 11. 关闭服务器防火墙（可选）
 
-### 11.1 前台网站
+**⚠️ 如果第 10 步后网站仍无法访问，执行此步**
+
+### 11.1 检查防火墙状态
+
+```bash
+systemctl status firewalld
+```
+
+### 11.2 关闭防火墙
+
+```bash
+systemctl stop firewalld
+systemctl disable firewalld
+```
+
+**成功的标志**：出现 `Removed symlink`
+
+---
+
+## 12. 访问网站
+
+### 12.1 前台网站
 
 打开浏览器，访问：
 
@@ -371,7 +461,7 @@ pm2 startup
 http://39.102.115.79:5173
 ```
 
-### 11.2 管理后台
+### 12.2 管理后台
 
 打开浏览器，访问：
 
@@ -385,7 +475,7 @@ http://39.102.115.79:3003
 
 ---
 
-## 12. 常见问题
+## 13. 常见问题
 
 ### Q1: 网站打不开
 
@@ -393,6 +483,7 @@ http://39.102.115.79:3003
 1. 检查安全组端口是否开放
 2. 检查服务状态：`pm2 status`
 3. 重启服务：`pm2 restart all`
+4. 关闭防火墙：`systemctl stop firewalld`
 
 ### Q2: 管理后台登录失败
 
@@ -410,6 +501,7 @@ npx tsx src/scripts/create-admin.ts
 1. 检查七牛云配置是否正确
 2. 检查 `QINIU_DOMAIN` 是否带 `https://`
 3. 检查 `QINIU_BUCKET` 是否是储存空间名称（不是域名）
+4. 查看后端日志：`pm2 logs ckanim-server`
 
 ### Q4: 服务状态不是 online
 
@@ -418,6 +510,13 @@ npx tsx src/scripts/create-admin.ts
 pm2 logs        # 查看错误日志
 pm2 restart all # 重启所有服务
 ```
+
+### Q5: 视频播放失败
+
+**解决**：
+1. 检查七牛云域名是否可访问
+2. 检查视频文件是否存在
+3. 查看浏览器控制台错误信息
 
 ---
 
@@ -429,6 +528,7 @@ pm2 restart all # 重启所有服务
 | `pm2 logs` | 查看日志 |
 | `pm2 restart all` | 重启所有服务 |
 | `pm2 stop all` | 停止所有服务 |
+| `pm2 delete all` | 删除所有服务 |
 
 ---
 
@@ -446,6 +546,6 @@ pm2 restart all # 重启所有服务
 
 ---
 
-**版本**: v5（最终版）  
+**版本**: v6（修正版）  
 **最后更新**: 2026-03-21  
 **GitHub**: https://github.com/CNMJH/CKAnim
