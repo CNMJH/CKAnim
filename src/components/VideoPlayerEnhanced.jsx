@@ -1300,8 +1300,12 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '12px' }}>
                   <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '8px', display: 'block' }}>形状</div>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => setEraserShape('circle')} style={{ flex: 1, padding: '8px 12px', borderRadius: '4px', border: eraserShape === 'circle' ? '2px solid #00A1D6' : '1px solid rgba(255,255,255,0.2)', backgroundColor: eraserShape === 'circle' ? 'rgba(0,161,214,0.2)' : 'transparent', color: eraserShape === 'circle' ? '#00A1D6' : 'white', fontSize: '13px', cursor: 'pointer' }}>圆形</button>
-                    <button onClick={() => setEraserShape('square')} style={{ flex: 1, padding: '8px 12px', borderRadius: '4px', border: eraserShape === 'square' ? '2px solid #00A1D6' : '1px solid rgba(255,255,255,0.2)', backgroundColor: eraserShape === 'square' ? 'rgba(0,161,214,0.2)' : 'transparent', color: eraserShape === 'square' ? '#00A1D6' : 'white', fontSize: '13px', cursor: 'pointer' }}>方形</button>
+                    <button onClick={() => setEraserShape('circle')} style={{ flex: 1, padding: '8px', borderRadius: '4px', border: eraserShape === 'circle' ? '2px solid #00A1D6' : '1px solid rgba(255,255,255,0.2)', backgroundColor: eraserShape === 'circle' ? 'rgba(0,161,214,0.2)' : 'transparent', color: eraserShape === 'circle' ? '#00A1D6' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                      <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="8" fill="currentColor" /></svg>
+                    </button>
+                    <button onClick={() => setEraserShape('square')} style={{ flex: 1, padding: '8px', borderRadius: '4px', border: eraserShape === 'square' ? '2px solid #00A1D6' : '1px solid rgba(255,255,255,0.2)', backgroundColor: eraserShape === 'square' ? 'rgba(0,161,214,0.2)' : 'transparent', color: eraserShape === 'square' ? '#00A1D6' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                      <svg viewBox="0 0 24 24" width="20" height="20"><rect x="4" y="4" width="16" height="16" fill="currentColor" /></svg>
+                    </button>
                   </div>
                 </div>
               </div>
