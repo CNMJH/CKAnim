@@ -738,7 +738,9 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
             onClick={() => setShowDrawing(!showDrawing)}
             title="绘画内容总可视开关 (H)"
           >
-            👁️
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path fill="white" d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+            </svg>
           </button>
           
           <button 
@@ -748,7 +750,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
           >
             <svg viewBox="0 0 24 24" width="24" height="24" style={{
               transform: `scale(${Math.max(0.3, Math.min(1, brushSize / 50))})`,
-              transition: 'transform 0.2s',
+              transition: 'transform 0.1s',
             }}>
               <circle cx="12" cy="12" r="10" fill="white" />
             </svg>
@@ -794,7 +796,9 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
             onClick={() => { setBrushType('permanent'); setCurrentTool('brush'); }}
             title="画笔（全程）- 类似水印，全程显示"
           >
-            ✏️
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path fill="white" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+            </svg>
           </button>
           
           <button 
@@ -802,7 +806,9 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
             onClick={() => { setBrushType('single'); setCurrentTool('brush'); }}
             title="画笔（单帧）- 仅当前帧显示"
           >
-            🖊️
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path fill="white" d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+            </svg>
           </button>
           
           <button 
@@ -810,7 +816,9 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
             onClick={() => setCurrentTool('eraser')}
             title="橡皮擦 - 点击擦除最后一笔"
           >
-            🧹
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path fill="white" d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 0 1-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l8.48-8.48-6.37-6.37L4.22 15.58z"/>
+            </svg>
           </button>
           
           <button 
@@ -818,7 +826,9 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
             onClick={() => setCurrentTool('text')}
             title="文本工具"
           >
-            T
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path fill="white" d="M5 4v3h5v12h3V7h5V4H5z"/>
+            </svg>
           </button>
           
           <button 
@@ -827,7 +837,9 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
             disabled={historyIndex === -1}
             title={`上一步 (Ctrl+Z) - ${getHistoryStatus()}`}
           >
-            ↩️
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path fill="white" d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/>
+            </svg>
           </button>
           
           <button 
@@ -836,11 +848,15 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
             disabled={historyIndex >= history.length - 1}
             title={`下一步 (Ctrl+Y) - ${getHistoryStatus()}`}
           >
-            ↪️
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path fill="white" d="M18.4 10.6C16.55 9 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/>
+            </svg>
           </button>
           
           <button className="control-btn icon-btn" onClick={clearAll} title="清除全部">
-            🔄
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path fill="white" d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/>
+            </svg>
           </button>
           
           <button 
@@ -848,7 +864,9 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
             onClick={saveDrawings}
             title="保存当前帧为 PNG 图片（带绘画内容）"
           >
-            💾
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path fill="white" d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+            </svg>
           </button>
         </div>
       )}

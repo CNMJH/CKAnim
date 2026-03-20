@@ -163,6 +163,11 @@
   display: block;
 }
 
+/* 颜色按钮特殊处理 */
+.control-btn.icon-btn.color-btn {
+  background: #ff0000;
+}
+
 /* 颜色按钮 */
 .control-btn.color-btn {
   width: 40px;
