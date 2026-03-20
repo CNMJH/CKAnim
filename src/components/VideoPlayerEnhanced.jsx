@@ -38,6 +38,12 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const lastFrameRef = useRef(-1);  // 用于 requestAnimationFrame 帧追踪
+  const drawingsRef = useRef([]);  // 存储最新的 drawings，避免闭包问题
+  
+  // 统一的帧索引计算函数（30fps 视频）
+  const getCurrentFrame = useCallback((time) => {
+    return Math.round(time * 30);
+  }, []);
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPos, setLastPos] = useState(null);
   const [currentPath, setCurrentPath] = useState([]); // 当前正在画的路径
@@ -96,7 +102,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       }
       
       // 计算当前帧（30fps 视频）
-      const currentFrame = Math.round(video.currentTime * 30);
+      const currentFrame = getCurrentFrame(video.currentTime);
       
       // 只在帧变化时重新渲染
       if (currentFrame !== lastFrameRef.current) {
@@ -113,13 +119,13 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           
           // 渲染全程绘画（所有帧都显示）
-          const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+          const permanentDrawings = drawingsRef.current.filter(d => d.type === 'permanent');
           permanentDrawings.forEach(drawing => {
             renderDrawing(ctx, drawing);
           });
           
           // 渲染当前帧的单帧绘画
-          const frameDrawings = drawings.filter(d => 
+          const frameDrawings = drawingsRef.current.filter(d => 
             d.type === 'single' && d.frameIndex === currentFrame
           );
           frameDrawings.forEach(drawing => {
@@ -140,7 +146,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [drawings, showDrawing]);
+  }, [showDrawing, getCurrentFrame]);
   
   // 切换视频时清空画板
   useEffect(() => {
@@ -220,100 +226,9 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       ctx.restore(); // 恢复状态
     }
   };
-
-    // 渲染当前帧的绘画
-  const renderCurrentFrameDrawings = useCallback((time) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return;
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    if (!showDrawing) return;
-    
-    const currentFrame = Math.floor(time * 30); // 30fps
-    
-    // 渲染全程绘画（所有帧都显示）
-    const permanentDrawings = drawings.filter(d => d.type === 'permanent');
-    permanentDrawings.forEach(drawing => {
-      renderDrawing(ctx, drawing);
-    });
-    
-    // 渲染当前帧的单帧绘画
-    const frameDrawings = drawings.filter(d => 
-      d.type === 'single' && d.frameIndex === currentFrame
-    );
-    frameDrawings.forEach(drawing => {
-      renderDrawing(ctx, drawing);
-    });
-  }, [drawings, showDrawing,]);
-  
-  
-  // 监听帧变化，重新渲染
-  const [lastFrame, setLastFrame] = useState(-1);
-  
-  useEffect(() => {
-    const currentFrame = Math.floor(currentTime * 30);
-    if (currentFrame !== lastFrame) {
-      setLastFrame(currentFrame);
-      // 直接使用 renderCurrentFrameDrawings，确保使用最新的 drawings
-      const canvas = canvasRef.current;
-      const ctx = canvas?.getContext('2d');
-      if (!canvas || !ctx) return;
-      
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      if (!showDrawing) return;
-      
-      // 渲染全程绘画（所有帧都显示）
-      const permanentDrawings = drawings.filter(d => d.type === 'permanent');
-      permanentDrawings.forEach(drawing => {
-        renderDrawing(ctx, drawing);
-      });
-      
-      // 渲染当前帧的单帧绘画
-      const frameDrawings = drawings.filter(d => 
-        d.type === 'single' && d.frameIndex === currentFrame
-      );
-      frameDrawings.forEach(drawing => {
-        renderDrawing(ctx, drawing);
-      });
-    }
-  }, [currentTime, lastFrame, drawings, showDrawing]);
-  
-  // 监听 drawings 变化（撤销/重做时），重新渲染 Canvas
-  useEffect(() => {
-    if (canvasRef.current && videoRef.current) {
-      const currentTime = videoRef.current.currentTime;
-      const currentFrame = Math.floor(currentTime * 30);
-      setLastFrame(currentFrame);
-      
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      if (!showDrawing) return;
-      
-      // 渲染全程绘画
-      const permanentDrawings = drawings.filter(d => d.type === 'permanent');
-      permanentDrawings.forEach(drawing => {
-        renderDrawing(ctx, drawing);
-      });
-      
-      // 渲染当前帧的单帧绘画
-      const frameDrawings = drawings.filter(d => 
-        d.type === 'single' && d.frameIndex === currentFrame
-      );
-      frameDrawings.forEach(drawing => {
-        renderDrawing(ctx, drawing);
-      });
-    }
-  }, [drawings, showDrawing]);
-  
   // 播放控制
   const togglePlay = () => {
+
     const video = videoRef.current;
     if (!video) return;
     
@@ -347,20 +262,23 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       const ctx = canvas?.getContext('2d');
       if (!canvas || !ctx) return;
       
+      const currentFrame = getCurrentFrame(video.currentTime);
+      
+      // 更新 lastFrameRef，防止 requestAnimationFrame 循环重复渲染
+      lastFrameRef.current = currentFrame;
+      
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       if (!showDrawing) return;
       
-      const currentFrame = Math.floor(video.currentTime * 30);
-      
       // 渲染全程绘画
-      const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+      const permanentDrawings = drawingsRef.current.filter(d => d.type === 'permanent');
       permanentDrawings.forEach(drawing => {
         renderDrawing(ctx, drawing);
       });
       
       // 渲染当前帧的单帧绘画
-      const frameDrawings = drawings.filter(d => 
+      const frameDrawings = drawingsRef.current.filter(d => 
         d.type === 'single' && d.frameIndex === currentFrame
       );
       frameDrawings.forEach(drawing => {
@@ -381,20 +299,23 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       const ctx = canvas?.getContext('2d');
       if (!canvas || !ctx) return;
       
+      const currentFrame = getCurrentFrame(video.currentTime);
+      
+      // 更新 lastFrameRef，防止 requestAnimationFrame 循环重复渲染
+      lastFrameRef.current = currentFrame;
+      
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       if (!showDrawing) return;
       
-      const currentFrame = Math.floor(video.currentTime * 30);
-      
       // 渲染全程绘画
-      const permanentDrawings = drawings.filter(d => d.type === 'permanent');
+      const permanentDrawings = drawingsRef.current.filter(d => d.type === 'permanent');
       permanentDrawings.forEach(drawing => {
         renderDrawing(ctx, drawing);
       });
       
       // 渲染当前帧的单帧绘画
-      const frameDrawings = drawings.filter(d => 
+      const frameDrawings = drawingsRef.current.filter(d => 
         d.type === 'single' && d.frameIndex === currentFrame
       );
       frameDrawings.forEach(drawing => {
@@ -503,7 +424,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     // 保存完整路径数据
     if (currentPath.length > 0) {
       const video = videoRef.current;
-      const currentFrame = Math.round(video.currentTime * 30); // 与渲染循环一致
+      const currentFrame = getCurrentFrame(video.currentTime); // 与渲染循环一致
       
       const newDrawing = {
         id: Date.now(),
@@ -568,7 +489,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     } else {
       // 创建新文本
       const video = videoRef.current;
-      const currentFrame = Math.round(video.currentTime * 30); // 与渲染循环一致
+      const currentFrame = getCurrentFrame(video.currentTime); // 与渲染循环一致
       
       const newDrawing = {
         id: Date.now(),
@@ -686,7 +607,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
       
       // 2. 绘制所有绘画内容（坐标缩放）
-      const currentFrame = Math.floor(video.currentTime * 30);
+      const currentFrame = getCurrentFrame(video.currentTime);
       
       // 绘制全程绘画
       const permanentDrawings = drawings.filter(d => d.type === 'permanent');
@@ -788,7 +709,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
             if (!canvas || !ctx) return;
             
             // 使用 Math.round 与 stopDrawing 和渲染循环保持一致
-            const currentFrame = Math.round(video.currentTime * 30);
+            const currentFrame = getCurrentFrame(video.currentTime);
             
             // 更新 lastFrameRef，防止 requestAnimationFrame 循环重复渲染
             lastFrameRef.current = currentFrame;
@@ -822,7 +743,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
             if (!canvas || !ctx) return;
             
             // 使用 Math.round 与 stopDrawing 和渲染循环保持一致
-            const currentFrame = Math.round(video2.currentTime * 30);
+            const currentFrame = getCurrentFrame(video2.currentTime);
             
             // 更新 lastFrameRef，防止 requestAnimationFrame 循环重复渲染
             lastFrameRef.current = currentFrame;
