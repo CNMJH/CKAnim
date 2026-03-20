@@ -262,6 +262,10 @@ function Games() {
 
   const handleActionSelect = (actionId) => {
     setSelectedAction(actionId);
+    // 自动播放视频
+    setTimeout(() => {
+      playVideo();
+    }, 100);
   };
 
   return (

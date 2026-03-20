@@ -536,13 +536,17 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle }) {
       tempCanvas.toBlob((blob) => {
         if (!blob) return;
         
+        // 创建隐藏的 a 标签并触发下载
         const link = document.createElement('a');
         link.download = `frame_with_drawing_${Date.now()}.png`;
         link.href = URL.createObjectURL(blob);
+        link.style.display = 'none';
+        document.body.appendChild(link);
         link.click();
         
-        // 清理 URL
+        // 清理
         setTimeout(() => {
+          document.body.removeChild(link);
           URL.revokeObjectURL(link.href);
         }, 100);
       }, 'image/png');
