@@ -1437,7 +1437,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
             title="画笔粗细设置"
           >
             <svg viewBox="0 0 24 24" width="24" height="24" style={{
-              transform: `scale(${Math.max(0.3, Math.min(1, brushSize / 25))})`,
+              transform: `scale(${Math.max(0.08, Math.min(1, brushSize / 25))})`,
               transition: 'transform 0.1s',
             }}>
               <circle cx="12" cy="12" r="10" fill="white" />
