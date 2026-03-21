@@ -30,14 +30,6 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
   const [eraserSize, setEraserSize] = useState(20); // 橡皮擦大小
   const [eraserShape, setEraserShape] = useState('circle'); // circle (圆形), square (正方形)
   
-  // 颜色选择器状态
-  const [hue, setHue] = useState(0); // 色相 0-360
-  const [saturation, setSaturation] = useState(100); // 饱和度 0-100
-  const [lightness, setLightness] = useState(50); // 亮度 0-100
-  const [opacity, setOpacity] = useState(100); // 透明度 0-100
-  const [rgb, setRgb] = useState({ r: 255, g: 0, b: 0 }); // RGB 值
-  const gradientPanelRef = useRef(null); // 渐变色板引用
-  
   // 文本编辑状态
   const [isEditingText, setIsEditingText] = useState(false);
   const [editingText, setEditingText] = useState('');
@@ -124,18 +116,6 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       video.removeEventListener('ended', handleEnded);
     };
   }, [videoUrl]);
-  
-  // 点击外部关闭颜色选择器
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (showColorPicker && !e.target.closest('.color-picker-wrapper')) {
-        setShowColorPicker(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showColorPicker]);
   
   // 使用 requestAnimationFrame 渲染绘画（解决 timeupdate 频率不足导致的丢帧问题）
   useEffect(() => {
@@ -234,130 +214,6 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     video.addEventListener('ended', handleEnded);
     return () => video.removeEventListener('ended', handleEnded);
   }, []);
-  
-  // ========== 颜色转换辅助函数 ==========
-  // HEX 转 RGB
-  const hexToRgb = (hex) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : { r: 255, g: 0, b: 0 };
-  };
-  
-  // RGB 转 HEX
-  const rgbToHex = (r, g, b) => {
-    return '#' + [r, g, b].map(x => {
-      const hex = Math.max(0, Math.min(255, x)).toString(16);
-      return hex.length === 1 ? '0' + hex : hex;
-    }).join('').toUpperCase();
-  };
-  
-  // HEX 转 HSL
-  const hexToHsl = (hex) => {
-    const { r, g, b } = hexToRgb(hex);
-    const rNorm = r / 255;
-    const gNorm = g / 255;
-    const bNorm = b / 255;
-    
-    const max = Math.max(rNorm, gNorm, bNorm);
-    const min = Math.min(rNorm, gNorm, bNorm);
-    let h, s, l = (max + min) / 2;
-    
-    if (max === min) {
-      h = s = 0;
-    } else {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      switch (max) {
-        case rNorm: h = ((gNorm - bNorm) / d + (gNorm < bNorm ? 6 : 0)) / 6; break;
-        case gNorm: h = ((bNorm - rNorm) / d + 2) / 6; break;
-        case bNorm: h = ((rNorm - gNorm) / d + 4) / 6; break;
-        default: h = 0;
-      }
-    }
-    
-    return {
-      h: Math.round(h * 360),
-      s: Math.round(s * 100),
-      l: Math.round(l * 100)
-    };
-  };
-  
-  // HSL 转 HEX
-  const hslToHex = (h, s, l, a = 1) => {
-    h /= 360;
-    s /= 100;
-    l /= 100;
-    
-    let r, g, b;
-    
-    if (s === 0) {
-      r = g = b = l;
-    } else {
-      const hue2rgb = (p, q, t) => {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1/6) return p + (q - p) * 6 * t;
-        if (t < 1/2) return q;
-        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-        return p;
-      };
-      
-      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      const p = 2 * l - q;
-      r = hue2rgb(p, q, h + 1/3);
-      g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1/3);
-    }
-    
-    const toHex = (x) => {
-      const hex = Math.round(x * 255).toString(16);
-      return hex.length === 1 ? '0' + hex : hex;
-    };
-    
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-  };
-  
-  // 从 HEX 更新所有颜色状态
-  const updateFromHex = (hex) => {
-    setBrushColor(hex);
-    const rgb = hexToRgb(hex);
-    setRgb(rgb);
-    const hsl = hexToHsl(hex);
-    setHue(hsl.h);
-    setSaturation(hsl.s);
-    setLightness(hsl.l);
-  };
-  
-  // 渐变色板鼠标事件处理
-  const handleSaturationLightnessMouseDown = (e) => {
-    const panel = gradientPanelRef.current;
-    if (!panel) return;
-    
-    const updateSaturationLightness = (clientX) => {
-      const rect = panel.getBoundingClientRect();
-      const x = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-      const s = Math.round(x * 100);
-      setSaturation(s);
-      setBrushColor(hslToHex(hue, s, lightness));
-    };
-    
-    updateSaturationLightness(e.clientX);
-    
-    const handleMouseMove = (e) => {
-      updateSaturationLightness(e.clientX);
-    };
-    
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-    
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
   
   // 渲染单个绘画
   const renderDrawing = (ctx, drawing) => {
@@ -1604,136 +1460,18 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
           )}
           
           {/* 颜色选择按钮 */}
-          <div className="color-picker-wrapper">
-            <button 
-              className={`control-btn icon-btn color-btn ${showColorPicker ? 'active' : ''}`}
-              onClick={() => setShowColorPicker(!showColorPicker)}
-              style={{ backgroundColor: brushColor }}
-              title="画笔颜色设置"
-            />
-            
-            {/* 颜色选择器 - 专业调色板 */}
-            {showColorPicker && (
-              <div className="color-picker-popover">
-                <div className="color-picker-header">
-                  <span>选择颜色</span>
-                </div>
-                <div className="color-picker-body">
-                  {/* 渐变色板 */}
-                  <div 
-                    className="color-gradient-panel"
-                    style={{
-                      background: `linear-gradient(to right, #fff, ${hslToHex(hue, 100, 50)})`
-                    }}
-                    onMouseDown={handleSaturationLightnessMouseDown}
-                    ref={gradientPanelRef}
-                  >
-                    {/* 颜色选择点 */}
-                    <div 
-                      className="color-picker-point"
-                      style={{
-                        left: `${saturation}%`,
-                        top: `${100 - lightness}%`,
-                        backgroundColor: brushColor
-                      }}
-                    />
-                  </div>
-                  
-                  {/* 色相滑块 */}
-                  <div className="color-slider-container">
-                    <label>色相</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="360"
-                      value={hue}
-                      onChange={(e) => {
-                        const newHue = parseInt(e.target.value);
-                        setHue(newHue);
-                        setBrushColor(hslToHex(newHue, saturation, lightness));
-                      }}
-                      className="color-slider hue-slider"
-                      style={{
-                        background: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)'
-                      }}
-                    />
-                  </div>
-                  
-                  {/* 透明度滑块 */}
-                  <div className="color-slider-container">
-                    <label>透明度</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={opacity}
-                      onChange={(e) => {
-                        const newOpacity = parseInt(e.target.value);
-                        setOpacity(newOpacity);
-                        setBrushColor(hslToHex(hue, saturation, lightness, newOpacity / 100));
-                      }}
-                      className="color-slider opacity-slider"
-                    />
-                  </div>
-                  
-                  {/* RGB 输入框 */}
-                  <div className="color-rgb-inputs">
-                    <div className="color-rgb-input">
-                      <input
-                        type="number"
-                        min="0"
-                        max="255"
-                        value={rgb.r}
-                        onChange={(e) => {
-                          const r = parseInt(e.target.value) || 0;
-                          const newColor = rgbToHex(r, rgb.g, rgb.b);
-                          updateFromHex(newColor);
-                        }}
-                        className="color-input"
-                      />
-                      <span>R</span>
-                    </div>
-                    <div className="color-rgb-input">
-                      <input
-                        type="number"
-                        min="0"
-                        max="255"
-                        value={rgb.g}
-                        onChange={(e) => {
-                          const g = parseInt(e.target.value) || 0;
-                          const newColor = rgbToHex(rgb.r, g, rgb.b);
-                          updateFromHex(newColor);
-                        }}
-                        className="color-input"
-                      />
-                      <span>G</span>
-                    </div>
-                    <div className="color-rgb-input">
-                      <input
-                        type="number"
-                        min="0"
-                        max="255"
-                        value={rgb.b}
-                        onChange={(e) => {
-                          const b = parseInt(e.target.value) || 0;
-                          const newColor = rgbToHex(rgb.r, rgb.g, b);
-                          updateFromHex(newColor);
-                        }}
-                        className="color-input"
-                      />
-                      <span>B</span>
-                    </div>
-                  </div>
-                  
-                  {/* 当前颜色显示 */}
-                  <div className="color-value-display">
-                    <span>当前颜色：</span>
-                    <span className="color-hex">{brushColor.toUpperCase()}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          <button 
+            className="control-btn icon-btn color-btn"
+            onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'color';
+              input.value = brushColor;
+              input.onchange = (e) => setBrushColor(e.target.value);
+              input.click();
+            }}
+            style={{ backgroundColor: brushColor }}
+            title="画笔颜色设置"
+          />
           
           <button 
             className={`control-btn icon-btn ${brushType === 'permanent' && currentTool === 'brush' ? 'active' : ''}`}
