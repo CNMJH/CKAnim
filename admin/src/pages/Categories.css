@@ -2,6 +2,26 @@
   max-width: 1400px;
 }
 
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 28px;
+  color: #2c3e50;
+}
+
+.page-header .page-note {
+  margin: 8px 0 0 0;
+  font-size: 13px;
+  color: #999;
+  font-weight: normal;
+}
+
 .game-selector {
   margin-bottom: 24px;
   padding: 20px;
