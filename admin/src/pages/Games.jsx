@@ -69,13 +69,21 @@ function Games() {
       formData.append('key', key)
       formData.append('file', file)
 
+      console.log('[图标上传] 开始上传到七牛云:', 'https://up-z2.qiniup.com/')
+      console.log('[图标上传] 文件:', file.name, '大小:', file.size)
+      console.log('[图标上传] Key:', key)
+
       const response = await fetch('https://up-z2.qiniup.com/', {
         method: 'POST',
         body: formData,
       })
 
+      console.log('[图标上传] 七牛云响应状态:', response.status)
+
       if (!response.ok) {
-        throw new Error('上传失败')
+        const errorText = await response.text()
+        console.error('[图标上传] 七牛云响应:', errorText)
+        throw new Error(`上传失败：${response.status} ${errorText}`)
       }
 
       // 4. 更新游戏
