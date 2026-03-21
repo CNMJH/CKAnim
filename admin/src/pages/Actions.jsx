@@ -248,7 +248,7 @@ function Actions() {
           })
           
           // 生成封面 URL
-          coverUrl = `https://video.jiangmeijixie.com/${coverKey}`
+          coverUrl = `http://video.jiangmeijixie.com/${coverKey}`
           console.log(`[封面上传] 成功：${coverUrl}`)
           
         } catch (err) {
