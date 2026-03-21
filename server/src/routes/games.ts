@@ -1,7 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { prisma } from '../lib/db.js';
 import { authenticate } from '../middleware/auth.js';
-import { getUploadToken, generateIconKey, getFileUrl, deleteMultipleFiles, extractKeyFromUrl } from '../lib/qiniu.js';
+import { getUploadToken, generateIconKey, getFileUrl, deleteFile, deleteMultipleFiles, extractKeyFromUrl } from '../lib/qiniu.js';
 
 export const gameRoutes: FastifyPluginAsync = async (server) => {
   // 获取所有游戏
