@@ -221,11 +221,11 @@
 
 /* 保存按钮特殊样式 */
 .control-btn.save-btn {
-  background: #007AFF;
+  background: #5A5A5A;
 }
 
 .control-btn.save-btn:hover {
-  background: #1A8AFF;
+  background: #6A6A6A;
 }
 
 /* 分隔线 */
