@@ -2,31 +2,6 @@
   max-width: 1400px;
 }
 
-/* 分类管理页面标题区域 */
-.categories-page .page-header {
-  position: relative;
-  margin-bottom: 32px;
-}
-
-.categories-page .page-header h2 {
-  margin: 0;
-  font-size: 28px;
-  color: #2c3e50;
-}
-
-.categories-page .page-header .page-note {
-  margin: 8px 0 0 0;
-  font-size: 13px;
-  color: #ff6b6b;
-  font-weight: 500;
-}
-
-.categories-page .page-header .btn-primary {
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-
 .game-selector {
   margin-bottom: 24px;
   padding: 20px;

@@ -225,7 +225,6 @@ function Categories() {
       <div className="categories-page">
         <div className="page-header">
           <h2>分类管理</h2>
-          <p className="page-note">分类下无角色时，前台默认不显示。</p>
           <button 
             className="btn-primary" 
             onClick={() => setShowModal(true)}
