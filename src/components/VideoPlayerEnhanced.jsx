@@ -117,6 +117,18 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     };
   }, [videoUrl]);
   
+  // 点击外部关闭颜色选择器
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showColorPicker && !e.target.closest('.color-picker-wrapper')) {
+        setShowColorPicker(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showColorPicker]);
+  
   // 使用 requestAnimationFrame 渲染绘画（解决 timeupdate 频率不足导致的丢帧问题）
   useEffect(() => {
     let animationFrameId;
@@ -1459,25 +1471,36 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
             </div>
           )}
           
-          <button 
-            className="control-btn icon-btn color-btn"
-            onClick={() => setShowColorPicker(!showColorPicker)}
-            style={{ backgroundColor: brushColor }}
-            title="画笔颜色设置"
-          />
-          
-          {/* 颜色选择器 */}
-          {showColorPicker && (
-            <div className="color-picker-container">
-              <input
-                type="color"
-                className="color-picker"
-                value={brushColor}
-                onChange={(e) => setBrushColor(e.target.value)}
-              />
-              <span className="color-value">{brushColor}</span>
-            </div>
-          )}
+          {/* 颜色选择按钮 */}
+          <div className="color-picker-wrapper">
+            <button 
+              className={`control-btn icon-btn color-btn ${showColorPicker ? 'active' : ''}`}
+              onClick={() => setShowColorPicker(!showColorPicker)}
+              style={{ backgroundColor: brushColor }}
+              title="画笔颜色设置"
+            />
+            
+            {/* 颜色选择器 - B 站风格竖条卡片 */}
+            {showColorPicker && (
+              <div className="color-picker-popover">
+                <div className="color-picker-header">
+                  <span>选择颜色</span>
+                </div>
+                <div className="color-picker-body">
+                  <input
+                    type="color"
+                    className="color-picker-full"
+                    value={brushColor}
+                    onChange={(e) => setBrushColor(e.target.value)}
+                  />
+                  <div className="color-value-display">
+                    <span>当前颜色：</span>
+                    <span className="color-hex">{brushColor}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           
           <button 
             className={`control-btn icon-btn ${brushType === 'permanent' && currentTool === 'brush' ? 'active' : ''}`}
