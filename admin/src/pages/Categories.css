@@ -2,7 +2,8 @@
   max-width: 1400px;
 }
 
-.page-header {
+/* 分类管理页面标题区域 */
+.categories-page .page-header {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -10,20 +11,20 @@
   margin-bottom: 32px;
 }
 
-.page-header h2 {
+.categories-page .page-header h2 {
   margin: 0;
   font-size: 28px;
   color: #2c3e50;
 }
 
-.page-header .page-note {
+.categories-page .page-header .page-note {
   margin: 0;
   font-size: 13px;
   color: #ff6b6b;
   font-weight: 500;
 }
 
-.page-header .btn-primary {
+.categories-page .page-header .btn-primary {
   align-self: flex-end;
   margin-top: 8px;
 }
