@@ -810,19 +810,88 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
+      const newDrawings = [...history[newIndex]]; // 深拷贝
       setHistoryIndex(newIndex);
-      setDrawings([...history[newIndex]]); // 深拷贝
+      setDrawings(newDrawings);
+      drawingsRef.current = newDrawings; // ⭐ 同步更新 drawingsRef
+      
+      // ⭐ 立即触发 Canvas 渲染
+      setTimeout(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (!canvas || !ctx) return;
+        
+        const currentFrame = getCurrentFrame(videoRef.current?.currentTime || 0);
+        lastFrameRef.current = currentFrame;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        if (showDrawing) {
+          // 渲染全程绘画
+          const permanentDrawings = newDrawings.filter(d => d.type === 'permanent');
+          permanentDrawings.forEach(drawing => {
+            renderDrawing(ctx, drawing);
+          });
+          // 渲染当前帧的单帧绘画
+          const frameDrawings = newDrawings.filter(d => 
+            d.type === 'single' && d.frameIndex === currentFrame
+          );
+          frameDrawings.forEach(drawing => {
+            renderDrawing(ctx, drawing);
+          });
+        }
+      }, 50);
     } else if (historyIndex === 0) {
       setHistoryIndex(-1);
-      setDrawings([]);
+      const newDrawings = [];
+      setDrawings(newDrawings);
+      drawingsRef.current = newDrawings; // ⭐ 同步更新 drawingsRef
+      
+      // ⭐ 立即清空 Canvas
+      setTimeout(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (canvas && ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }, 50);
     }
   };
   
   const redo = () => {
     if (historyIndex < history.length - 1) {
       const newIndex = historyIndex + 1;
+      const newDrawings = [...history[newIndex]]; // 深拷贝
       setHistoryIndex(newIndex);
-      setDrawings([...history[newIndex]]); // 深拷贝
+      setDrawings(newDrawings);
+      drawingsRef.current = newDrawings; // ⭐ 同步更新 drawingsRef
+      
+      // ⭐ 立即触发 Canvas 渲染
+      setTimeout(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (!canvas || !ctx) return;
+        
+        const currentFrame = getCurrentFrame(videoRef.current?.currentTime || 0);
+        lastFrameRef.current = currentFrame;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        if (showDrawing) {
+          // 渲染全程绘画
+          const permanentDrawings = newDrawings.filter(d => d.type === 'permanent');
+          permanentDrawings.forEach(drawing => {
+            renderDrawing(ctx, drawing);
+          });
+          // 渲染当前帧的单帧绘画
+          const frameDrawings = newDrawings.filter(d => 
+            d.type === 'single' && d.frameIndex === currentFrame
+          );
+          frameDrawings.forEach(drawing => {
+            renderDrawing(ctx, drawing);
+          });
+        }
+      }, 50);
     }
   };
   
