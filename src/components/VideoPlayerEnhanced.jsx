@@ -1437,7 +1437,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
             title="画笔粗细设置"
           >
             <svg viewBox="0 0 24 24" width="24" height="24" style={{
-              transform: `scale(${Math.max(0.3, Math.min(1, brushSize / 50))})`,
+              transform: `scale(${Math.max(0.3, Math.min(1, brushSize / 25))})`,
               transition: 'transform 0.1s',
             }}>
               <circle cx="12" cy="12" r="10" fill="white" />
@@ -1451,7 +1451,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
                 type="range"
                 className="brush-size-slider"
                 min="1"
-                max="50"
+                max="25"
                 value={brushSize}
                 onChange={(e) => setBrushSize(Number(e.target.value))}
               />
