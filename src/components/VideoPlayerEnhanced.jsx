@@ -1460,18 +1460,28 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
           )}
           
           {/* 颜色选择按钮 */}
-          <button 
-            className="control-btn icon-btn color-btn"
-            onClick={() => {
-              const input = document.createElement('input');
-              input.type = 'color';
-              input.value = brushColor;
-              input.onchange = (e) => setBrushColor(e.target.value);
-              input.click();
-            }}
-            style={{ backgroundColor: brushColor }}
-            title="画笔颜色设置"
-          />
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <input
+              type="color"
+              value={brushColor}
+              onChange={(e) => setBrushColor(e.target.value)}
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: '100%',
+                height: '100%',
+                opacity: 0,
+                cursor: 'pointer'
+              }}
+              title="画笔颜色设置"
+            />
+            <button 
+              className="control-btn icon-btn color-btn"
+              style={{ backgroundColor: brushColor, pointerEvents: 'none' }}
+              title="画笔颜色设置"
+            />
+          </div>
           
           <button 
             className={`control-btn icon-btn ${brushType === 'permanent' && currentTool === 'brush' ? 'active' : ''}`}
