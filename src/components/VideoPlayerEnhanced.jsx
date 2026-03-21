@@ -1133,7 +1133,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isDrawingBoardOpen, showDrawing]);
+  }, [isDrawingBoardOpen, showDrawing, undo, redo, saveDrawings, duration]);
   
   // 格式化时间
   const formatTime = (seconds) => {
