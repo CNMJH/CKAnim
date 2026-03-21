@@ -4,10 +4,7 @@
 
 /* 分类管理页面标题区域 */
 .categories-page .page-header {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
+  position: relative;
   margin-bottom: 32px;
 }
 
@@ -18,15 +15,16 @@
 }
 
 .categories-page .page-header .page-note {
-  margin: 0;
+  margin: 8px 0 0 0;
   font-size: 13px;
   color: #ff6b6b;
   font-weight: 500;
 }
 
 .categories-page .page-header .btn-primary {
-  align-self: flex-end;
-  margin-top: 8px;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 .game-selector {
