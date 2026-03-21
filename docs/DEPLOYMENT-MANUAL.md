@@ -240,7 +240,7 @@ QINIU_DOMAIN: '替换成你的七牛云域名（带 https://）',
 
 **改成**：
 ```javascript
-QINIU_DOMAIN: 'https://你的七牛云域名',
+QINIU_DOMAIN: '替换成你的七牛云域名（生产环境用 http://）',
 ```
 
 ### 5.4 修改后的示例
@@ -258,7 +258,7 @@ env: {
   QINIU_ACCESS_KEY: 'DwLK5ft-Zx0XgxiI8HaIyeUh0wyaHddssczs2s0c',
   QINIU_SECRET_KEY: '14ykOp2Q-nkbLmSfZdd2aHmoEnZUHqWxk1BeFN2-',
   QINIU_BUCKET: 'zhuque-guangdong',
-  QINIU_DOMAIN: 'https://video.jiangmeijixie.com',
+  QINIU_DOMAIN: 'http://video.jiangmeijixie.com',
   QINIU_PREFIX: '参考网站 2026/',
   
   // 数据库配置
@@ -268,7 +268,7 @@ env: {
 
 **⚠️ 重要提示**：
 - `QINIU_BUCKET` 填储存空间名称（如 `zhuque-guangdong`），不是域名！
-- `QINIU_DOMAIN` 要带 `https://`（如 `https://video.jiangmeijixie.com`）
+- `QINIU_DOMAIN` 生产环境用 `http://`（如 `http://video.jiangmeijixie.com`，自定义域名 HTTPS 证书无效）
 
 ### 5.5 保存并退出
 
@@ -499,7 +499,7 @@ npx tsx src/scripts/create-admin.ts
 
 **解决**：
 1. 检查七牛云配置是否正确
-2. 检查 `QINIU_DOMAIN` 是否带 `https://`
+2. 检查 `QINIU_DOMAIN` 是否正确（生产环境用 `http://`）
 3. 检查 `QINIU_BUCKET` 是否是储存空间名称（不是域名）
 4. 查看后端日志：`pm2 logs ckanim-server`
 
