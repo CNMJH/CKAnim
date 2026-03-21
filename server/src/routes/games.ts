@@ -236,6 +236,37 @@ export const gameRoutes: FastifyPluginAsync = async (server) => {
     }
   );
 
+  // 删除游戏图标
+  server.delete(
+    '/games/icon',
+    { preHandler: [authenticate] },
+    async (request, reply) => {
+      try {
+        const { key } = request.query as { key: string };
+
+        if (!key) {
+          return reply.code(400).send({
+            error: 'Bad Request',
+            message: 'Key is required',
+          });
+        }
+
+        // 从七牛云删除
+        await deleteFile(key);
+
+        server.log.info(`[Delete Icon] Success: ${key}`);
+
+        reply.send({ success: true });
+      } catch (error) {
+        server.log.error(error);
+        reply.code(500).send({
+          error: 'Internal Server Error',
+          message: 'Failed to delete icon',
+        });
+      }
+    }
+  );
+
   // 删除游戏（级联删除所有子级 + 七牛云文件）
   server.delete(
     '/games/:id',

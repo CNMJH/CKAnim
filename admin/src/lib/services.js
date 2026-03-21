@@ -13,10 +13,12 @@ export const authAPI = {
 export const gamesAPI = {
   getAll: () => api.get('/admin/games'),
   getOne: (id) => api.get(`/admin/games/${id}`),
+  getById: (id) => api.get(`/admin/games/${id}`),
   create: (data) => api.post('/admin/games', data),
   update: (id, data) => api.put(`/admin/games/${id}`, data),
   delete: (id) => api.delete(`/admin/games/${id}`),
   getIconToken: (filename, gameId) => api.post('/admin/games/icon-token', { filename, gameId }),
+  deleteIcon: (key) => api.delete(`/admin/games/icon?key=${encodeURIComponent(key)}`),
 }
 
 export const categoriesAPI = {

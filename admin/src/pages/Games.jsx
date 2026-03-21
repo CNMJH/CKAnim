@@ -56,10 +56,14 @@ function Games() {
 
     setUploadingIcon(true)
     try {
-      // 1. 获取上传凭证
+      // 1. 获取当前游戏的旧图标信息
+      const { data: game } = await gamesAPI.getById(gameId)
+      const oldIconUrl = game?.iconUrl
+
+      // 2. 获取上传凭证
       const { data: { token, key, url } } = await gamesAPI.getIconToken(file.name, gameId)
 
-      // 2. 上传到七牛云
+      // 3. 上传到七牛云
       const formData = new FormData()
       formData.append('token', token)
       formData.append('key', key)
@@ -74,9 +78,25 @@ function Games() {
         throw new Error('上传失败')
       }
 
-      // 3. 更新游戏
+      // 4. 更新游戏
       if (gameId) {
         updateMutation.mutate({ id: gameId, data: { iconUrl: url } })
+      }
+
+      // 5. 删除旧图标（更新成功后）
+      if (oldIconUrl && oldIconUrl.includes('video.jiangmeijixie.com')) {
+        try {
+          // 提取七牛云 key
+          const keyMatch = oldIconUrl.match(/video\.jiangmeijixie\.com\/(.+)$/)
+          if (keyMatch) {
+            const oldKey = keyMatch[1]
+            console.log('[图标上传] 删除旧图标:', oldKey)
+            await gamesAPI.deleteIcon(oldKey)
+          }
+        } catch (deleteErr) {
+          console.warn('[图标上传] 删除旧图标失败:', deleteErr)
+          // 删除失败不影响主流程
+        }
       }
     } catch (error) {
       console.error('图标上传失败:', error)
