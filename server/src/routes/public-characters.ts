@@ -219,36 +219,26 @@ export const publicCharacterRoutes: FastifyPluginAsync = async (server) => {
     try {
       const { gameId } = request.query as { gameId?: string };
 
-      const where: any = { published: true };
+      // 直接查询分类表，返回所有分类（不依赖角色）
+      const where: any = {};
       if (gameId) {
         where.gameId = parseInt(gameId);
       }
 
-      // 获取所有有分类的角色，包含分类信息
-      const characters = await prisma.character.findMany({
+      const categories = await prisma.gameCategory.findMany({
         where,
-        select: { 
-          category: {
-            select: {
-              id: true,
-              name: true,
-              level: true,
-            },
-          },
+        orderBy: [
+          { level: 'asc' },
+          { order: 'asc' },
+        ],
+        select: {
+          id: true,
+          name: true,
+          level: true,
         },
       });
 
-      // 提取不重复的分类
-      const categories = characters
-        .filter(c => c.category !== null)
-        .map(c => c.category!);
-
-      // 去重
-      const uniqueCategories = categories.filter(
-        (cat, index, self) => index === self.findIndex(c => c.id === cat.id)
-      );
-
-      reply.send({ categories: uniqueCategories });
+      reply.send({ categories });
     } catch (error) {
       server.log.error(error);
       reply.code(500).send({
