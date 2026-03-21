@@ -4,8 +4,9 @@
 
 .page-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
   margin-bottom: 32px;
 }
 
@@ -16,10 +17,15 @@
 }
 
 .page-header .page-note {
-  margin: 8px 0 0 0;
+  margin: 0;
   font-size: 13px;
-  color: #999;
-  font-weight: normal;
+  color: #ff6b6b;
+  font-weight: 500;
+}
+
+.page-header .btn-primary {
+  align-self: flex-end;
+  margin-top: 8px;
 }
 
 .game-selector {
