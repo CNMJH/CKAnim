@@ -283,7 +283,16 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     const video = videoRef.current;
     if (!video) return;
     
-    video.currentTime = Math.max(0, video.currentTime - FRAME_DURATION);
+    // ⭐ 基于帧号计算，而非时间累加（消除累积误差）
+    const currentFrame = Math.round(video.currentTime * 30);
+    video.currentTime = Math.max(0, (currentFrame - 1) / 30);
+    
+    // ⭐ 手动更新进度条和时间显示
+    const newTime = video.currentTime;
+    setCurrentTime(newTime);
+    if (duration > 0) {
+      setProgress((newTime / duration) * 100);
+    }
     
     // 手动触发当前帧绘画渲染
     setTimeout(() => {
@@ -320,7 +329,16 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
     const video = videoRef.current;
     if (!video) return;
     
-    video.currentTime = Math.min(duration, video.currentTime + FRAME_DURATION);
+    // ⭐ 基于帧号计算，而非时间累加（消除累积误差）
+    const currentFrame = Math.round(video.currentTime * 30);
+    video.currentTime = Math.min(duration, (currentFrame + 1) / 30);
+    
+    // ⭐ 手动更新进度条和时间显示
+    const newTime = video.currentTime;
+    setCurrentTime(newTime);
+    if (duration > 0) {
+      setProgress((newTime / duration) * 100);
+    }
     
     // 手动触发当前帧绘画渲染
     setTimeout(() => {
@@ -933,10 +951,19 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       switch(e.key) {
         case 'ArrowLeft':
           e.preventDefault();
-          // 直接修改 video.currentTime 并立即渲染（和按钮逻辑完全一致）
+          // ⭐ 基于帧号计算，而非时间累加（消除累积误差）
           const video = videoRef.current;
           if (!video) return;
-          video.currentTime = Math.max(0, video.currentTime - FRAME_DURATION);
+          const currentFrame = Math.round(video.currentTime * 30);
+          video.currentTime = Math.max(0, (currentFrame - 1) / 30);
+          
+          // ⭐ 手动更新进度条和时间显示（和按钮逻辑一致）
+          const newTime = video.currentTime;
+          setCurrentTime(newTime);
+          if (duration > 0) {
+            setProgress((newTime / duration) * 100);
+          }
+          
           setTimeout(() => {
             const canvas = canvasRef.current;
             const ctx = canvas?.getContext('2d');
@@ -967,10 +994,19 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
           break;
         case 'ArrowRight':
           e.preventDefault();
-          // 直接修改 video.currentTime 并立即渲染（和按钮逻辑完全一致）
+          // ⭐ 基于帧号计算，而非时间累加（消除累积误差）
           const video2 = videoRef.current;
           if (!video2) return;
-          video2.currentTime = Math.min(duration, video2.currentTime + FRAME_DURATION);
+          const currentFrame2 = Math.round(video2.currentTime * 30);
+          video2.currentTime = Math.min(duration, (currentFrame2 + 1) / 30);
+          
+          // ⭐ 手动更新进度条和时间显示（和按钮逻辑一致）
+          const newTime2 = video2.currentTime;
+          setCurrentTime(newTime2);
+          if (duration > 0) {
+            setProgress((newTime2 / duration) * 100);
+          }
+          
           setTimeout(() => {
             const canvas = canvasRef.current;
             const ctx = canvas?.getContext('2d');
