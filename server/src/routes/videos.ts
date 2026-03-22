@@ -610,6 +610,14 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           },
         });
 
+        // 同步更新 Action 名称（如果更新了 title 且有关联的 Action）
+        if (title !== undefined && video.actionId) {
+          await prisma.action.update({
+            where: { id: video.actionId },
+            data: { name: title },
+          });
+        }
+
         // 更新分类关联
         if (categoryIds !== undefined) {
           await prisma.video.update({
