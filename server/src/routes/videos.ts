@@ -676,17 +676,33 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           });
         }
 
-        // 删除七牛云上的视频文件
+        // 删除七牛云上的视频文件（文件不存在时不报错）
         if (video.qiniuKey) {
-          await deleteFile(video.qiniuKey);
-          server.log.info(`Deleted qiniu video: ${video.qiniuKey}`);
+          try {
+            await deleteFile(video.qiniuKey);
+            server.log.info(`Deleted qiniu video: ${video.qiniuKey}`);
+          } catch (err: any) {
+            if (err.message.includes('612')) {
+              server.log.warn(`Qiniu file not found (612), skipping: ${video.qiniuKey}`);
+            } else {
+              server.log.error(`Failed to delete qiniu video: ${video.qiniuKey}`, err);
+            }
+          }
         }
 
-        // 删除封面图
+        // 删除封面图（文件不存在时不报错）
         if (video.coverUrl) {
-          const coverKey = video.coverUrl.replace('https://video.jiangmeijixie.com/', '');
-          await deleteFile(coverKey);
-          server.log.info(`Deleted qiniu cover: ${coverKey}`);
+          const coverKey = video.coverUrl.replace('http://video.jiangmeijixie.com/', '').replace('https://video.jiangmeijixie.com/', '');
+          try {
+            await deleteFile(coverKey);
+            server.log.info(`Deleted qiniu cover: ${coverKey}`);
+          } catch (err: any) {
+            if (err.message.includes('612')) {
+              server.log.warn(`Qiniu file not found (612), skipping: ${coverKey}`);
+            } else {
+              server.log.error(`Failed to delete qiniu cover: ${coverKey}`, err);
+            }
+          }
         }
 
         // 删除视频记录（动作会级联删除）
