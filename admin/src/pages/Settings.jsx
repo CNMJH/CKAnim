@@ -18,7 +18,7 @@ function Settings() {
   const [siteName, setSiteName] = useState('CKAnim')
   const [siteNamePosition, setSiteNamePosition] = useState('header')
   const [footerText, setFooterText] = useState('')
-  const [footerLinks, setFooterLinks] = useState('[]')
+  const [footerLinks, setFooterLinks] = useState([]) // 改为数组
   const [announcementText, setAnnouncementText] = useState('')
   const [announcementEnabled, setAnnouncementEnabled] = useState(true)
   const [announcementColor, setAnnouncementColor] = useState('#666')
@@ -45,7 +45,7 @@ function Settings() {
         try {
           const footer = JSON.parse(settingsData.siteFooter.value)
           setFooterText(footer.text || '')
-          setFooterLinks(JSON.stringify(footer.links || [], null, 2))
+          setFooterLinks(footer.links || []) // 直接存储数组
         } catch (e) {
           console.error('解析页脚失败:', e)
         }
@@ -78,20 +78,12 @@ function Settings() {
   // 保存设置
   const saveMutation = useMutation({
     mutationFn: async () => {
-      // 验证 JSON 格式
-      let links
-      try {
-        links = JSON.parse(footerLinks || '[]')
-      } catch (e) {
-        throw new Error('页脚链接格式错误，请输入有效的 JSON 数组')
-      }
-
       const settings = [
         { key: 'siteName', value: siteName, description: '网站名称' },
         { key: 'siteNamePosition', value: siteNamePosition, description: '网站名称显示位置' },
         {
           key: 'siteFooter',
-          value: JSON.stringify({ text: footerText, links }),
+          value: JSON.stringify({ text: footerText, links: footerLinks }),
           description: '网站页脚信息',
         },
         {
@@ -147,6 +139,23 @@ function Settings() {
     passwordMutation.mutate()
   }
 
+  // 添加链接
+  const handleAddLink = () => {
+    setFooterLinks([...footerLinks, { text: '', url: '' }])
+  }
+
+  // 删除链接
+  const handleRemoveLink = (index) => {
+    setFooterLinks(footerLinks.filter((_, i) => i !== index))
+  }
+
+  // 更新链接
+  const handleUpdateLink = (index, field, value) => {
+    const newLinks = [...footerLinks]
+    newLinks[index][field] = value
+    setFooterLinks(newLinks)
+  }
+
   return (
     <Layout>
       <div className="settings-page">
@@ -200,15 +209,43 @@ function Settings() {
           </div>
 
           <div className="form-group">
-            <label>页脚链接（JSON 数组）</label>
-            <textarea
-              value={footerLinks}
-              onChange={(e) => setFooterLinks(e.target.value)}
-              placeholder='[{"text": "关于我们", "url": "/about"}]'
-              rows={5}
-              style={{ fontFamily: 'monospace', fontSize: '13px' }}
-            />
-            <small className="hint">格式：[{`{"text": "链接文字", "url": "/链接地址"}`}]</small>
+            <label>页脚链接</label>
+            <div style={{ marginBottom: '12px' }}>
+              {footerLinks.map((link, index) => (
+                <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    placeholder="链接文字"
+                    value={link.text}
+                    onChange={(e) => handleUpdateLink(index, 'text', e.target.value)}
+                    style={{ flex: 1, padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="链接地址"
+                    value={link.url}
+                    onChange={(e) => handleUpdateLink(index, 'url', e.target.value)}
+                    style={{ flex: 2, padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                  <button
+                    onClick={() => handleRemoveLink(index)}
+                    style={{ padding: '8px 12px', background: '#ff4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                  >
+                    删除
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={handleAddLink}
+              style={{ padding: '8px 16px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+            >
+              + 添加链接
+            </button>
+            <small className="hint" style={{ display: 'block', marginTop: '8px' }}>
+              添加显示在网站底部的友情链接
+            </small>
           </div>
 
           <div className="form-group">
