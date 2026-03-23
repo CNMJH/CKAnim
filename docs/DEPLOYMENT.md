@@ -178,8 +178,8 @@ docker-compose exec server bash # 进入后端容器
 |--------|------|------|
 | `JWT_SECRET` | JWT 签名密钥 | `your-secret-key` |
 | `JWT_EXPIRES_IN` | Token 有效期 | `7d` |
-| `QINIU_ACCESS_KEY` | 七牛云 AccessKey | `DwLK5ft-...` |
-| `QINIU_SECRET_KEY` | 七牛云 SecretKey | `14ykOp2Q-...` |
+| `QINIU_ACCESS_KEY` | 七牛云 AccessKey | `YOUR_ACCESS_KEY` |
+| `QINIU_SECRET_KEY` | 七牛云 SecretKey | `YOUR_SECRET_KEY` |
 | `QINIU_BUCKET` | 七牛云存储桶 | `zhuque-guangdong` |
 | `QINIU_DOMAIN` | 七牛云域名 | `https://video.jiangmeijixie.com` |
 | `QINIU_PREFIX` | 存储路径前缀 | `参考网站 2026/` |

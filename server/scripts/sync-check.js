@@ -23,8 +23,8 @@ const prisma = new PrismaClient();
 
 // 七牛云配置
 const QINIU_CONFIG = {
-  accessKey: process.env.QINIU_ACCESS_KEY || 'DwLK5ft-Zx0XgxiI8HaIyeUh0wyaHddssczs2s0c',
-  secretKey: process.env.QINIU_SECRET_KEY || '14ykOp2Q-nkbLmSfZdd2aHmoEnZUHqWxk1BeFN2-',
+  accessKey: process.env.QINIU_ACCESS_KEY || 'YOUR_ACCESS_KEY_HERE',
+  secretKey: process.env.QINIU_SECRET_KEY || 'YOUR_SECRET_KEY_HERE',
   bucket: process.env.QINIU_BUCKET || 'zhuque-guangdong',
   domain: process.env.QINIU_DOMAIN || 'https://video.jiangmeijixie.com',
 };

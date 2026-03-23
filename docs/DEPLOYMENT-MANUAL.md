@@ -22,8 +22,8 @@
 
 **步骤 2**：获取 AccessKey 和 SecretKey
 - 点击右上角头像 → **密钥管理**
-- 复制 **AccessKey**（类似 `DwLK5ft-xxxxx`）
-- 复制 **SecretKey**（类似 `14ykOp2Q-xxxxx`）
+- 复制 **AccessKey**（类似 `AbCdEfGhIjKlMnOpQrStUvWxYz123456`）
+- 复制 **SecretKey**（类似 `1234567890AbCdEfGhIjKlMnOpQrStUvWx`）
 
 **步骤 3**：获取储存空间名称
 - 点击左侧 **对象存储**
@@ -255,8 +255,8 @@ env: {
   JWT_EXPIRES_IN: '7d',
   
   // 七牛云配置
-  QINIU_ACCESS_KEY: 'DwLK5ft-Zx0XgxiI8HaIyeUh0wyaHddssczs2s0c',
-  QINIU_SECRET_KEY: '14ykOp2Q-nkbLmSfZdd2aHmoEnZUHqWxk1BeFN2-',
+  QINIU_ACCESS_KEY: 'YOUR_ACCESS_KEY_HERE',
+  QINIU_SECRET_KEY: 'YOUR_SECRET_KEY_HERE',
   QINIU_BUCKET: 'zhuque-guangdong',
   QINIU_DOMAIN: 'http://video.jiangmeijixie.com',
   QINIU_PREFIX: '参考网站 2026/',
