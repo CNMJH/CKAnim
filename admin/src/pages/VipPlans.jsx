@@ -3,15 +3,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import './VipPlans.css'
 
-// 获取 Token
-const getToken = () => localStorage.getItem('admin_token') || localStorage.getItem('token')
-
-// API 请求
+// API 请求（使用拦截器动态添加 Token）
 const api = axios.create({
   baseURL: '/api/admin',
-  headers: {
-    'Authorization': `Bearer ${getToken()}`,
-  },
+})
+
+// 添加请求拦截器，每次请求时动态获取 Token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token') || localStorage.getItem('admin_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
 })
 
 function VipPlans() {
