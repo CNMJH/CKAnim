@@ -204,6 +204,19 @@
 .vip-card.featured {
   border-color: #667eea;
   background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  position: relative;
+}
+
+.vip-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .vip-card h3 {
@@ -216,6 +229,13 @@
   font-size: 28px;
   color: #667eea;
   font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.vip-original-price {
+  font-size: 14px;
+  color: #999;
+  text-decoration: line-through;
   margin: 0 0 20px 0;
 }
 

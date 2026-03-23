@@ -6,6 +6,7 @@ import Categories from './pages/Categories'
 import Settings from './pages/Settings'
 import Characters from './pages/Characters'
 import Actions from './pages/Actions'
+import VipPlans from './pages/VipPlans'
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -53,6 +54,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Settings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/vip-plans"
+        element={
+          <ProtectedRoute>
+            <VipPlans />
           </ProtectedRoute>
         }
       />

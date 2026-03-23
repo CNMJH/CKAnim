@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { userAPI, authUtils } from '../lib/api'
+import axios from 'axios'
 import './UserCenter.css'
 
 function UserCenter() {
@@ -17,9 +18,11 @@ function UserCenter() {
     confirmPassword: '',
   })
   const [message, setMessage] = useState({ type: '', text: '' })
+  const [vipPlans, setVipPlans] = useState([]) // VIP 套餐列表
 
   useEffect(() => {
     loadUserInfo()
+    loadVipPlans()
   }, [])
 
   const loadUserInfo = async () => {
@@ -34,6 +37,15 @@ function UserCenter() {
       console.error('Failed to load user info:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadVipPlans = async () => {
+    try {
+      const { data } = await axios.get('/api/vip-plans')
+      setVipPlans(data.plans || [])
+    } catch (err) {
+      console.error('Failed to load VIP plans:', err)
     }
   }
 
@@ -247,39 +259,31 @@ function UserCenter() {
         {activeTab === 'vip' && (
           <div className="vip-section">
             <h2>会员开通</h2>
-            <div className="vip-cards">
-              <div className="vip-card">
-                <h3>VIP1 月卡</h3>
-                <p className="vip-price">¥15/月</p>
-                <ul className="vip-features">
-                  <li>✓ 高清画质</li>
-                  <li>✓ 去广告</li>
-                  <li>✓ 专属标识</li>
-                </ul>
-                <button className="btn-vip">立即开通</button>
+            {vipPlans.length === 0 ? (
+              <p className="empty-hint">会员套餐加载中...</p>
+            ) : (
+              <div className="vip-cards">
+                {vipPlans.map((plan, index) => (
+                  <div 
+                    key={plan.id} 
+                    className={`vip-card ${plan.badge ? 'featured' : ''}`}
+                  >
+                    {plan.badge && <span className="vip-badge">{plan.badge}</span>}
+                    <h3>{plan.name}</h3>
+                    <p className="vip-price">{plan.price}</p>
+                    {plan.originalPrice && (
+                      <p className="vip-original-price">{plan.originalPrice}</p>
+                    )}
+                    <ul className="vip-features">
+                      {plan.features.map((feature, idx) => (
+                        <li key={idx}>✓ {feature}</li>
+                      ))}
+                    </ul>
+                    <button className="btn-vip">立即开通</button>
+                  </div>
+                ))}
               </div>
-              <div className="vip-card featured">
-                <h3>VIP2 年卡</h3>
-                <p className="vip-price">¥158/年</p>
-                <ul className="vip-features">
-                  <li>✓ 高清画质</li>
-                  <li>✓ 去广告</li>
-                  <li>✓ 专属标识</li>
-                  <li>✓ 离线下载</li>
-                </ul>
-                <button className="btn-vip">立即开通</button>
-              </div>
-              <div className="vip-card">
-                <h3>VIP3 永久</h3>
-                <p className="vip-price">¥398/永久</p>
-                <ul className="vip-features">
-                  <li>✓ 所有 VIP 权益</li>
-                  <li>✓ 优先客服</li>
-                  <li>✓ 终身有效</li>
-                </ul>
-                <button className="btn-vip">立即开通</button>
-              </div>
-            </div>
+            )}
             <p className="vip-hint">会员功能开发中，敬请期待...</p>
           </div>
         )}

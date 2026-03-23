@@ -14,6 +14,7 @@ function Layout({ children }) {
     { path: '/categories', label: '分类管理', icon: '📁' },
     { path: '/characters', label: '角色管理', icon: '👤' },
     { path: '/actions', label: '动作管理', icon: '🎯' },
+    { path: '/vip-plans', label: 'VIP 套餐', icon: '💎' },
     { path: '/settings', label: '设置', icon: '⚙️' },
   ]
 
