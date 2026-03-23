@@ -1348,9 +1348,22 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         </button>
         {/* 会员登录按钮 */}
         {currentUser ? (
-          <div className="user-info-wrapper">
+          <div 
+            className="user-info-wrapper"
+            onClick={() => window.location.href = '/user'}
+            style={{ cursor: 'pointer' }}
+            title="点击访问用户中心"
+          >
             <span className="username">{currentUser.username}</span>
-            <button className="logout-btn" onClick={handleLogout}>退出</button>
+            <button 
+              className="logout-btn" 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLogout();
+              }}
+            >
+              退出
+            </button>
           </div>
         ) : (
           <button 
