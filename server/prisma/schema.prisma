@@ -87,6 +87,7 @@ model Video {
   action      Action?        @relation(fields: [actionId], references: [id], onDelete: Cascade)
   game        Game           @relation(fields: [gameId], references: [id], onDelete: Cascade)
   categories  GameCategory[] @relation("VideoCategories")
+  favorites   Favorite[]
 
   @@index([gameId])
   @@index([actionId])
@@ -150,4 +151,39 @@ model VideoTags {
   @@unique([A, B], map: "_VideoTags_AB_unique")
   @@index([B], map: "_VideoTags_B_index")
   @@map("_VideoTags")
+}
+
+// ==================== 用户系统 ====================
+
+model User {
+  id          Int       @id @default(autoincrement())
+  username    String    @unique
+  email       String    @unique
+  password    String
+  avatar      String?
+  phone       String?
+  role        String    @default("user")  // user, content_admin, system_admin
+  vipLevel    String    @default("none")  // none, vip1, vip2, vip3
+  vipExpires  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  favorites   Favorite[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  videoId   Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, videoId])
+  @@index([userId])
+  @@index([videoId])
+  @@map("favorites")
 }

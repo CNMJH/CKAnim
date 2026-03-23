@@ -1,10 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import './VideoPlayerEnhanced.css';
+import AuthModal from './AuthModal';
+import { authUtils } from '../lib/api';
 
 // 假设视频 30fps
 const FRAME_DURATION = 1 / 30;
 
 function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
+  // 用户认证状态
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  
   // 基础播放状态
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -190,6 +196,25 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
   }, [videoUrl]);
+  
+  // 检查登录状态
+  useEffect(() => {
+    if (authUtils.isAuthenticated()) {
+      // 简单获取用户信息（实际项目中应该调用 API 获取完整信息）
+      setCurrentUser({ username: '用户' });
+    }
+  }, []);
+  
+  // 处理登录成功
+  const handleLoginSuccess = (user) => {
+    setCurrentUser(user);
+  };
+  
+  // 处理登出
+  const handleLogout = () => {
+    authUtils.removeToken();
+    setCurrentUser(null);
+  };
   
   // 自动播放视频
   useEffect(() => {
@@ -1321,6 +1346,20 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         >
           画板
         </button>
+        {/* 会员登录按钮 */}
+        {currentUser ? (
+          <div className="user-info-wrapper">
+            <span className="username">{currentUser.username}</span>
+            <button className="logout-btn" onClick={handleLogout}>退出</button>
+          </div>
+        ) : (
+          <button 
+            className="control-btn text-btn login-btn"
+            onClick={() => setShowAuthModal(true)}
+          >
+            会员登录
+          </button>
+        )}
         {/* 倍速按钮 - B 站风格 */}
         <div className="speed-volume-wrapper">
           <button 
@@ -1587,6 +1626,13 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
           </button>
         </div>
       )}
+      
+      {/* 登录/注册弹窗 */}
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onLoginSuccess={handleLoginSuccess}
+      />
     </div>
   );
 }

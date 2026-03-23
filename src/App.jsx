@@ -4,6 +4,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Games from './pages/Games';
 import Search from './pages/Search';
+import UserCenter from './pages/UserCenter';
 import './App.css';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/games" element={<Games />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/user" element={<UserCenter />} />
           </Routes>
         </main>
         <Footer />

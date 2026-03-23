@@ -96,3 +96,130 @@ export const siteSettingsAPI = {
     return api.get(`/settings/${key}`);
   },
 };
+
+// ==================== 用户系统 API ====================
+
+// 创建带 Token 的 axios 实例
+const createAuthApi = () => {
+  const token = localStorage.getItem('token');
+  return axios.create({
+    baseURL: '/api',
+    timeout: 10000,
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+    },
+  });
+};
+
+export const userAPI = {
+  // 注册
+  register: (data) => {
+    return axios.post('/api/auth/register', data);
+  },
+
+  // 登录
+  login: (data) => {
+    return axios.post('/api/auth/login', data);
+  },
+
+  // 获取当前用户信息
+  getMe: () => {
+    const api = createAuthApi();
+    return api.get('/auth/me');
+  },
+
+  // 更新用户信息
+  updateMe: (data) => {
+    const api = createAuthApi();
+    return api.put('/auth/me', data);
+  },
+
+  // 修改密码
+  updatePassword: (currentPassword, newPassword) => {
+    const api = createAuthApi();
+    return api.put('/auth/me/password', { currentPassword, newPassword });
+  },
+
+  // 获取收藏夹
+  getFavorites: () => {
+    const api = createAuthApi();
+    return api.get('/favorites');
+  },
+
+  // 添加到收藏夹
+  addFavorite: (videoId) => {
+    const api = createAuthApi();
+    return api.post('/favorites', { videoId });
+  },
+
+  // 从收藏夹移除
+  removeFavorite: (videoId) => {
+    const api = createAuthApi();
+    return api.delete(`/favorites/${videoId}`);
+  },
+
+  // 检查收藏状态
+  checkFavorite: (videoId) => {
+    const api = createAuthApi();
+    return api.get(`/favorites/check/${videoId}`);
+  },
+};
+
+// 用户认证工具函数
+export const authUtils = {
+  // 保存 Token
+  setToken: (token) => {
+    localStorage.setItem('token', token);
+  },
+
+  // 获取 Token
+  getToken: () => {
+    return localStorage.getItem('token');
+  },
+
+  // 移除 Token（登出）
+  removeToken: () => {
+    localStorage.removeItem('token');
+  },
+
+  // 检查是否已登录
+  isAuthenticated: () => {
+    return !!localStorage.getItem('token');
+  },
+
+  // 获取当前用户角色
+  getUserRole: () => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.role;
+    } catch {
+      return null;
+    }
+  },
+
+  // 检查是否是管理员
+  isAdmin: () => {
+    const role = authUtils.getUserRole();
+    return role === 'system_admin' || role === 'content_admin';
+  },
+
+  // 检查是否是系统管理员
+  isSystemAdmin: () => {
+    const role = authUtils.getUserRole();
+    return role === 'system_admin';
+  },
+
+  // 检查是否是内容管理员
+  isContentAdmin: () => {
+    const role = authUtils.getUserRole();
+    return role === 'content_admin';
+  },
+
+  // 检查是否是 VIP 用户
+  isVip: () => {
+    const role = authUtils.getUserRole();
+    return role === 'vip1' || role === 'vip2' || role === 'vip3';
+  },
+};
