@@ -59,7 +59,7 @@ function VideoCard({ video }) {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* 视频元素 */}
+      {/* 视频元素 - 只在播放时可见 */}
       <video
         ref={videoRef}
         src={video.qiniuUrl}
@@ -70,9 +70,10 @@ function VideoCard({ video }) {
         preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
+        style={{ opacity: isPlaying ? 1 : 0 }}
       />
 
-      {/* 封面图 - 只在非播放状态显示 */}
+      {/* 封面图 - 默认显示，播放时隐藏 */}
       {video.coverUrl && (
         <img
           src={video.coverUrl}
