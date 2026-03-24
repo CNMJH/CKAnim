@@ -383,13 +383,6 @@ export const favoriteRoutes: FastifyPluginAsync = async (server) => {
                     name: true,
                     code: true
                   }
-                },
-                character: {
-                  select: {
-                    id: true,
-                    name: true,
-                    avatar: true
-                  }
                 }
               }
             }
@@ -408,9 +401,7 @@ export const favoriteRoutes: FastifyPluginAsync = async (server) => {
             coverUrl: f.video.coverUrl,
             duration: f.video.duration,
             actionName: f.video.action?.name,
-            actionCode: f.video.action?.code,
-            characterName: f.video.character?.name,
-            characterAvatar: f.video.character?.avatar
+            actionCode: f.video.action?.code
           }
         }))
 
