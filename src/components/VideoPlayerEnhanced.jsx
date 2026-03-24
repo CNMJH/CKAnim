@@ -508,7 +508,10 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     
+    // 使用 getBoundingClientRect 获取 Canvas 在视口中的实际位置
     const rect = canvas.getBoundingClientRect();
+    
+    // 计算缩放比例（Canvas 内部像素尺寸 / CSS 显示尺寸）
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
@@ -524,12 +527,17 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
     const video = videoRef.current;
     if (!canvas || !video) return;
     
-    // 获取视频实际显示尺寸
-    const videoRect = video.getBoundingClientRect();
+    // 使用 offsetWidth/offsetHeight 获取视频实际渲染尺寸（更准确）
+    const videoWidth = video.offsetWidth;
+    const videoHeight = video.offsetHeight;
     
-    // 设置 Canvas 内部尺寸匹配显示尺寸
-    canvas.width = videoRect.width;
-    canvas.height = videoRect.height;
+    // 设置 Canvas 内部尺寸匹配视频实际显示尺寸
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
+    
+    // 设置 Canvas 的 CSS 尺寸也匹配视频
+    canvas.style.width = `${videoWidth}px`;
+    canvas.style.height = `${videoHeight}px`;
     
     // 重绘所有绘画
     const ctx = canvas.getContext('2d');
@@ -1415,30 +1423,34 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
       
       {/* 视频区域 */}
       <div className="video-container">
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          className="video-element"
-          loop
-          playsInline
-          crossOrigin="anonymous"
-          onClick={togglePlay}
-        />
-        <canvas
-          ref={canvasRef}
-          className="drawing-overlay"
-          width={1000}
-          height={562.5}
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          style={{ 
-            display: isDrawingBoardOpen && showDrawing ? 'block' : 'none',
-            width: '100%',
-            height: '100%'
-          }}
-        />
+        <div className="video-wrapper">
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            className="video-element"
+            loop
+            playsInline
+            crossOrigin="anonymous"
+            onClick={togglePlay}
+          />
+          <canvas
+            ref={canvasRef}
+            className="drawing-overlay"
+            width={1000}
+            height={562.5}
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+            style={{ 
+              display: isDrawingBoardOpen && showDrawing ? 'block' : 'none',
+              position: 'absolute',
+              top: 0,
+              left: 0
+            }}
+          />
+        </div>
+      </div>
         
         {/* 文本编辑输入框 */}
         {isEditingText && (
