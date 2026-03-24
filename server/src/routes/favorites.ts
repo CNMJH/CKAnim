@@ -456,10 +456,18 @@ export const favoriteRoutes: FastifyPluginAsync = async (server) => {
           })
         }
 
-        // 检查视频是否存在
-        const video = await prisma.video.findUnique({
+        // 检查视频是否存在（支持 videoId 或 actionId）
+        // 前端传递的可能是 action ID，需要查找对应的 video
+        let video = await prisma.video.findUnique({
           where: { id: videoId }
         })
+        
+        // 如果没找到，尝试作为 actionId 查找
+        if (!video) {
+          video = await prisma.video.findFirst({
+            where: { actionId: videoId }
+          })
+        }
 
         if (!video) {
           return reply.code(404).send({
@@ -532,15 +540,34 @@ export const favoriteRoutes: FastifyPluginAsync = async (server) => {
     }
   )
 
-  // 从收藏夹移除视频
+  // 从收藏夹移除视频（支持 videoId 或 actionId）
   server.delete(
     '/favorites/:videoId',
     { preHandler: [authenticate] },
     async (request, reply) => {
       try {
         const userId = request.user.userId
-        const videoId = parseInt((request.params as any).videoId)
+        const inputId = parseInt((request.params as any).videoId)
         const collectionId = request.query.collectionId ? parseInt(request.query.collectionId as string) : undefined
+
+        // 尝试作为 videoId 查找
+        let video = await prisma.video.findUnique({
+          where: { id: inputId }
+        })
+        
+        // 如果没找到，尝试作为 actionId 查找
+        if (!video) {
+          video = await prisma.video.findFirst({
+            where: { actionId: inputId }
+          })
+        }
+
+        if (!video) {
+          return reply.code(404).send({
+            error: 'Not Found',
+            message: '视频不存在',
+          })
+        }
 
         // 确定收藏夹
         let targetCollectionId = collectionId
@@ -562,7 +589,7 @@ export const favoriteRoutes: FastifyPluginAsync = async (server) => {
         await prisma.favorite.deleteMany({
           where: {
             userId,
-            videoId,
+            videoId: video.id,
             collectionId: targetCollectionId
           }
         })
@@ -584,19 +611,38 @@ export const favoriteRoutes: FastifyPluginAsync = async (server) => {
     }
   )
 
-  // 检查视频收藏状态
+  // 检查视频收藏状态（支持 videoId 或 actionId）
   server.get(
     '/favorites/check/:videoId',
     { preHandler: [authenticate] },
     async (request, reply) => {
       try {
         const userId = request.user.userId
-        const videoId = parseInt((request.params as any).videoId)
+        const inputId = parseInt((request.params as any).videoId)
+
+        // 尝试作为 videoId 查找
+        let video = await prisma.video.findUnique({
+          where: { id: inputId }
+        })
+        
+        // 如果没找到，尝试作为 actionId 查找
+        if (!video) {
+          video = await prisma.video.findFirst({
+            where: { actionId: inputId }
+          })
+        }
+
+        if (!video) {
+          return reply.code(404).send({
+            error: 'Not Found',
+            message: '视频不存在',
+          })
+        }
 
         const favorites = await prisma.favorite.findMany({
           where: {
             userId,
-            videoId
+            videoId: video.id
           },
           select: {
             collectionId: true,
