@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import { prisma } from '../lib/db.js';
-import { authenticate } from '../middleware/auth.js';
+import { requireAdmin } from '../middleware/auth.js';
 import { getUploadToken, generateIconKey, getFileUrl } from '../lib/qiniu.js';
 
 export const categoryRoutes: FastifyPluginAsync = async (server) => {
@@ -71,7 +71,7 @@ export const categoryRoutes: FastifyPluginAsync = async (server) => {
   // 创建分类
   server.post(
     '/categories',
-    { preHandler: [authenticate] },
+    { preHandler: [requireAdmin] },
     async (request, reply) => {
       try {
         const { name, level, parentId, gameId, order = 0, iconUrl } = request.body as {
@@ -174,7 +174,7 @@ export const categoryRoutes: FastifyPluginAsync = async (server) => {
   // 更新分类
   server.put(
     '/categories/:id',
-    { preHandler: [authenticate] },
+    { preHandler: [requireAdmin] },
     async (request, reply) => {
       try {
         const { id } = request.params as { id: string };
@@ -220,7 +220,7 @@ export const categoryRoutes: FastifyPluginAsync = async (server) => {
   // 删除分类
   server.delete(
     '/categories/:id',
-    { preHandler: [authenticate] },
+    { preHandler: [requireAdmin] },
     async (request, reply) => {
       try {
         const { id } = request.params as { id: string };

@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { gamesAPI } from '../lib/services'
 import Layout from '../components/Layout'
+import { useAuthStore } from '../store/auth'
 import './Games.css'
 
 function Games() {
@@ -10,6 +11,10 @@ function Games() {
   const [uploadingIcon, setUploadingIcon] = useState(false)
   const iconInputRef = useRef(null)
   const queryClient = useQueryClient()
+  const { user } = useAuthStore()
+
+  // 检查是否有游戏编辑权限（system_admin 才可以编辑）
+  const canEditGames = user?.role === 'system_admin'
 
   const { data: games = [], isLoading } = useQuery({
     queryKey: ['games'],
@@ -136,9 +141,11 @@ function Games() {
       <div className="games-page">
         <div className="page-header">
           <h2>游戏管理</h2>
+          {canEditGames && (
           <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
             + 新建游戏
           </button>
+          )}
         </div>
 
         {isLoading ? (
@@ -163,6 +170,7 @@ function Games() {
                   <span>📁 {game._count.categories} 个分类</span>
                   <span>🎬 {game._count.videos} 个视频</span>
                 </div>
+                {canEditGames && (
                 <div className="game-actions">
                   <button className="btn-secondary" onClick={() => setEditingGame(game)}>
                     编辑
@@ -181,6 +189,7 @@ function Games() {
                     删除
                   </button>
                 </div>
+                )}
               </div>
             ))}
           </div>

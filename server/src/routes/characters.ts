@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import { prisma } from '../lib/db.js';
-import { authenticate } from '../middleware/auth.js';
+import { requireAdmin } from '../middleware/auth.js';
 import { getUploadToken, generateIconKey, getFileUrl, extractKeyFromUrl } from '../lib/qiniu.js';
 
 export const characterRoutes: FastifyPluginAsync = async (server) => {
@@ -9,7 +9,7 @@ export const characterRoutes: FastifyPluginAsync = async (server) => {
   // 获取角色列表（管理员）
   server.get(
     '/characters',
-    { preHandler: [authenticate] },
+    { preHandler: [requireAdmin] },
     async (request, reply) => {
       try {
         const { gameId } = request.query as { gameId?: string };
@@ -58,7 +58,7 @@ export const characterRoutes: FastifyPluginAsync = async (server) => {
   // 获取单个角色（管理员）
   server.get(
     '/characters/:id',
-    { preHandler: [authenticate] },
+    { preHandler: [requireAdmin] },
     async (request, reply) => {
       try {
         const { id } = request.params as { id: string };
@@ -104,7 +104,7 @@ export const characterRoutes: FastifyPluginAsync = async (server) => {
   // 创建角色
   server.post(
     '/characters',
-    { preHandler: [authenticate] },
+    { preHandler: [requireAdmin] },
     async (request, reply) => {
       try {
         const {
@@ -173,7 +173,7 @@ export const characterRoutes: FastifyPluginAsync = async (server) => {
   // 更新角色
   server.put(
     '/characters/:id',
-    { preHandler: [authenticate] },
+    { preHandler: [requireAdmin] },
     async (request, reply) => {
       try {
         const { id } = request.params as { id: string };
@@ -235,7 +235,7 @@ export const characterRoutes: FastifyPluginAsync = async (server) => {
   // 删除角色
   server.delete(
     '/characters/:id',
-    { preHandler: [authenticate] },
+    { preHandler: [requireAdmin] },
     async (request, reply) => {
       try {
         const { id } = request.params as { id: string };
@@ -259,7 +259,7 @@ export const characterRoutes: FastifyPluginAsync = async (server) => {
   // 获取头像上传凭证
   server.post(
     '/characters/avatar-token',
-    { preHandler: [authenticate] },
+    { preHandler: [requireAdmin] },
     async (request, reply) => {
       try {
         const { filename, characterId } = request.body as {

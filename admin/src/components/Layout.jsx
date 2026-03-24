@@ -9,15 +9,40 @@ function Layout({ children }) {
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
 
-  const menuItems = [
-    { path: '/', label: '游戏管理', icon: '🎮' },
-    { path: '/categories', label: '分类管理', icon: '📁' },
-    { path: '/characters', label: '角色管理', icon: '👤' },
-    { path: '/actions', label: '动作管理', icon: '🎯' },
-    { path: '/vip-plans', label: 'VIP 套餐', icon: '💎' },
-    { path: '/avatar-review', label: '头像审核', icon: '🖼️' },
-    { path: '/settings', label: '设置', icon: '⚙️' },
-  ]
+  // 根据角色显示不同的菜单项
+  const getMenuItems = () => {
+    const role = user?.role
+    
+    // 系统管理员：所有菜单
+    if (role === 'system_admin') {
+      return [
+        { path: '/', label: '游戏管理', icon: '🎮' },
+        { path: '/categories', label: '分类管理', icon: '📁' },
+        { path: '/characters', label: '角色管理', icon: '👤' },
+        { path: '/actions', label: '动作管理', icon: '🎯' },
+        { path: '/vip-plans', label: 'VIP 套餐', icon: '💎' },
+        { path: '/avatar-review', label: '头像审核', icon: '🖼️' },
+        { path: '/settings', label: '设置', icon: '⚙️' },
+      ]
+    }
+    
+    // 内容管理员：显示所有菜单，但游戏管理无编辑权限
+    if (role === 'content_admin') {
+      return [
+        { path: '/', label: '游戏管理', icon: '🎮' },  // 只显示，无编辑权限
+        { path: '/categories', label: '分类管理', icon: '📁' },
+        { path: '/characters', label: '角色管理', icon: '👤' },
+        { path: '/actions', label: '动作管理', icon: '🎯' },
+        { path: '/avatar-review', label: '头像审核', icon: '🖼️' },
+        { path: '/settings', label: '设置', icon: '⚙️' },
+      ]
+    }
+    
+    // 默认：不显示任何菜单（未知角色）
+    return []
+  }
+
+  const menuItems = getMenuItems()
 
   const handleLogout = () => {
     logout()
@@ -49,7 +74,7 @@ function Layout({ children }) {
             {sidebarOpen && (
               <div className="user-details">
                 <div className="user-name">{user?.username}</div>
-                <div className="user-role">{user?.role}</div>
+                <div className="user-role">{user?.role === 'system_admin' ? '系统管理员' : user?.role === 'content_admin' ? '内容管理员' : user?.role}</div>
               </div>
             )}
           </div>

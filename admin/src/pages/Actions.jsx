@@ -3,10 +3,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { actionsAPI, charactersAPI, categoriesAPI, gamesAPI, videosAPI } from '../lib/services'
 import { generateVideoCover } from '../lib/cover-generator'
 import Layout from '../components/Layout'
+import { useAuthStore } from '../store/auth'
 import './Actions.css'
 
 function Actions() {
   const queryClient = useQueryClient()
+  const { user } = useAuthStore()
+
+  // 检查是否是管理员（content_admin 或 system_admin）
+  const isAdmin = user?.role === 'content_admin' || user?.role === 'system_admin'
+  
+  // 检查是否是系统管理员（仅 system_admin）
+  const isSystemAdmin = user?.role === 'system_admin'
   
   // 层级筛选状态
   const [selectedGameId, setSelectedGameId] = useState('')
@@ -383,7 +391,7 @@ function Actions() {
             <button
               className="btn-primary"
               onClick={handleOpenUpload}
-              disabled={!selectedCharacterId}
+              disabled={!selectedCharacterId || !isAdmin}
             >
               📤 批量上传
             </button>
@@ -413,10 +421,12 @@ function Actions() {
                       {video.action?.character?.name} · {video.action?.name}
                     </p>
                   </div>
+                  {isAdmin && (
                   <div className="video-actions">
                     <button onClick={() => handleEdit(video)} className="btn-secondary">编辑</button>
                     <button onClick={() => handleDelete(video)} className="btn-danger">删除</button>
                   </div>
+                  )}
                 </div>
               ))}
             </div>

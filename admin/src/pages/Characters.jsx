@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { gamesAPI, charactersAPI, categoriesAPI } from '../lib/services'
 import Layout from '../components/Layout'
+import { useAuthStore } from '../store/auth'
 import './Characters.css'
 
 function Characters() {
@@ -18,6 +19,13 @@ function Characters() {
     order: 0,
     published: true,
   })
+  const { user } = useAuthStore()
+
+  // 检查是否是管理员（content_admin 或 system_admin）
+  const isAdmin = user?.role === 'content_admin' || user?.role === 'system_admin'
+  
+  // 检查是否是系统管理员（仅 system_admin）
+  const isSystemAdmin = user?.role === 'system_admin'
 
   const queryClient = useQueryClient()
 
@@ -189,7 +197,9 @@ function Characters() {
       <div className="characters-page">
       <div className="page-header">
         <h1>角色管理</h1>
+        {isAdmin && (
         <button className="btn-primary" onClick={handleNew}>+ 新建角色</button>
+        )}
       </div>
 
       {/* 层级筛选器：游戏 > 分类 */}
@@ -244,8 +254,12 @@ function Characters() {
                 <span className={`status-badge ${character.published ? 'published' : 'draft'}`}>
                   {character.published ? '已发布' : '未发布'}
                 </span>
+                {isAdmin && (
+                <>
                 <button className="btn-sm" onClick={() => handleEdit(character)}>编辑</button>
                 <button className="btn-sm btn-danger" onClick={() => deleteMutation.mutate(character.id)}>删除</button>
+                </>
+                )}
               </div>
             </div>
           ))}

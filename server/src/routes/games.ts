@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import { prisma } from '../lib/db.js';
-import { authenticate } from '../middleware/auth.js';
+import { requireSeniorAdmin } from '../middleware/auth.js';
 import { getUploadToken, generateIconKey, getFileUrl, deleteFile, deleteMultipleFiles, extractKeyFromUrl } from '../lib/qiniu.js';
 
 export const gameRoutes: FastifyPluginAsync = async (server) => {
@@ -78,7 +78,7 @@ export const gameRoutes: FastifyPluginAsync = async (server) => {
   // 创建游戏
   server.post(
     '/games',
-    { preHandler: [authenticate] },
+    { preHandler: [requireSeniorAdmin] },
     async (request, reply) => {
       try {
         const { name, description, icon, order = 0 } = request.body as {
@@ -131,7 +131,7 @@ export const gameRoutes: FastifyPluginAsync = async (server) => {
   // 更新游戏
   server.put(
     '/games/:id',
-    { preHandler: [authenticate] },
+    { preHandler: [requireSeniorAdmin] },
     async (request, reply) => {
       try {
         const { id } = request.params as { id: string };
@@ -197,7 +197,7 @@ export const gameRoutes: FastifyPluginAsync = async (server) => {
   // 获取游戏图标上传凭证
   server.post(
     '/games/icon-token',
-    { preHandler: [authenticate] },
+    { preHandler: [requireSeniorAdmin] },
     async (request, reply) => {
       try {
         const { filename, gameId } = request.body as {
@@ -270,7 +270,7 @@ export const gameRoutes: FastifyPluginAsync = async (server) => {
   // 删除游戏（级联删除所有子级 + 七牛云文件）
   server.delete(
     '/games/:id',
-    { preHandler: [authenticate] },
+    { preHandler: [requireSeniorAdmin] },
     async (request, reply) => {
       try {
         const { id } = request.params as { id: string };

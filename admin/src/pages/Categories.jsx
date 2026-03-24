@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { gamesAPI, categoriesAPI } from '../lib/services'
 import Layout from '../components/Layout'
+import { useAuthStore } from '../store/auth'
 import './Categories.css'
 
 function Categories() {
@@ -15,6 +16,13 @@ function Categories() {
   const [uploadingIcon, setUploadingIcon] = useState(false)
   const iconInputRef = useRef(null)
   const queryClient = useQueryClient()
+  const { user } = useAuthStore()
+
+  // 检查是否是管理员（content_admin 或 system_admin）
+  const isAdmin = user?.role === 'content_admin' || user?.role === 'system_admin'
+  
+  // 检查是否是系统管理员（仅 system_admin）
+  const isSystemAdmin = user?.role === 'system_admin'
 
   // 获取游戏列表
   const { data: games = [] } = useQuery({
@@ -187,6 +195,7 @@ function Categories() {
           )}
           <span className="node-name">{node.name}</span>
           <span className="node-level">L{node.level}</span>
+          {isAdmin && (
           <div className="node-actions">
             <button className="btn-sm" onClick={() => setEditingCategory(node)}>编辑</button>
             <label className="btn-sm btn-icon">
@@ -201,6 +210,7 @@ function Categories() {
             </label>
             <button className="btn-sm btn-danger" onClick={() => deleteMutation.mutate(node.id)}>删除</button>
           </div>
+          )}
         </div>
         {node.children && node.children.length > 0 && expandedNodes[node.id] && (
           <div className="tree-children">
@@ -226,6 +236,7 @@ function Categories() {
         <div className="page-header">
           <h2>分类管理</h2>
           <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#999', display: 'block' }}>分类下无角色时，前台默认不显示。</p>
+          {isAdmin && (
           <button 
             className="btn-primary" 
             onClick={() => setShowModal(true)}
@@ -233,6 +244,7 @@ function Categories() {
           >
             + 新建分类
           </button>
+          )}
         </div>
 
         {/* 游戏选择 */}

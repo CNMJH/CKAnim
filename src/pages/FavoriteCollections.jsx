@@ -168,6 +168,17 @@ function FavoriteCollections() {
         <p className="drag-hint">💡 拖动收藏夹可调整排序（默认收藏夹不可拖动）</p>
       )}
 
+      {collections.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+          </div>
+          <h3>暂无收藏夹</h3>
+          <p>点击右上角按钮创建您的第一个收藏夹</p>
+        </div>
+      ) : (
       <div className="collections-grid">
         {collections.map((collection) => (
           <div
@@ -236,6 +247,7 @@ function FavoriteCollections() {
           </div>
         ))}
       </div>
+      )}
 
       {/* 创建/编辑弹窗 */}
       {(showCreateModal || editingCollection) && (

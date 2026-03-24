@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import { prisma } from '../lib/db.js';
-import { authenticate } from '../middleware/auth.js';
+import { requireAdmin } from '../middleware/auth.js';
 
 export const actionRoutes: FastifyPluginAsync = async (server) => {
   // ===== 管理员路由（需要认证） =====
@@ -8,7 +8,7 @@ export const actionRoutes: FastifyPluginAsync = async (server) => {
   // 获取动作列表（管理员）- 支持按角色筛选
   server.get(
     '/actions',
-    { preHandler: [authenticate] },
+    { preHandler: [requireAdmin] },
     async (request, reply) => {
       try {
         const { characterId } = request.query as { characterId?: string };
@@ -46,7 +46,7 @@ export const actionRoutes: FastifyPluginAsync = async (server) => {
   // 获取单个动作（包含角色和游戏信息）
   server.get(
     '/actions/:id',
-    { preHandler: [authenticate] },
+    { preHandler: [requireAdmin] },
     async (request, reply) => {
       try {
         const { id } = request.params as { id: string };
@@ -90,7 +90,7 @@ export const actionRoutes: FastifyPluginAsync = async (server) => {
   // 创建动作（必须选择角色）
   server.post(
     '/actions',
-    { preHandler: [authenticate] },
+    { preHandler: [requireAdmin] },
     async (request, reply) => {
       try {
         const {
@@ -168,7 +168,7 @@ export const actionRoutes: FastifyPluginAsync = async (server) => {
   // 更新动作
   server.put(
     '/actions/:id',
-    { preHandler: [authenticate] },
+    { preHandler: [requireAdmin] },
     async (request, reply) => {
       try {
         const { id } = request.params as { id: string };
@@ -220,7 +220,7 @@ export const actionRoutes: FastifyPluginAsync = async (server) => {
   // 删除动作（级联删除关联的视频）
   server.delete(
     '/actions/:id',
-    { preHandler: [authenticate] },
+    { preHandler: [requireAdmin] },
     async (request, reply) => {
       try {
         const { id } = request.params as { id: string };

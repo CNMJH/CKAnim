@@ -11,8 +11,11 @@ function Settings() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const { logout } = useAuthStore()
+  const { logout, user } = useAuthStore()
   const queryClient = useQueryClient()
+
+  // 检查是否是系统管理员
+  const isSystemAdmin = user?.role === 'system_admin'
 
   // 网站设置状态
   const [siteName, setSiteName] = useState('CKAnim')
@@ -161,16 +164,19 @@ function Settings() {
       <div className="settings-page">
         <div className="settings-header">
           <h2>⚙️ 设置</h2>
-          <button
-            className="btn-secondary"
-            onClick={() => initMutation.mutate()}
-            disabled={initMutation.isPending}
-          >
-            {initMutation.isPending ? '初始化中...' : '🔄 初始化默认设置'}
-          </button>
+          {isSystemAdmin && (
+            <button
+              className="btn-secondary"
+              onClick={() => initMutation.mutate()}
+              disabled={initMutation.isPending}
+            >
+              {initMutation.isPending ? '初始化中...' : '🔄 初始化默认设置'}
+            </button>
+          )}
         </div>
 
-        {/* 网站配置 */}
+        {/* 网站配置 - 仅系统管理员可见 */}
+        {isSystemAdmin && (
         <div className="settings-section">
           <h3>🌐 网站配置</h3>
           
@@ -288,6 +294,7 @@ function Settings() {
             {saveMutation.isPending ? '保存中...' : '💾 保存设置'}
           </button>
         </div>
+        )}
 
         {/* 修改密码 */}
         <div className="settings-section">
@@ -343,11 +350,15 @@ function Settings() {
           <h3>👤 账户信息</h3>
           <div className="info-row">
             <span className="label">用户名：</span>
-            <span className="value">admin</span>
+            <span className="value">{user?.username || '-'}</span>
           </div>
           <div className="info-row">
             <span className="label">角色：</span>
-            <span className="value">管理员</span>
+            <span className="value">
+              {user?.role === 'system_admin' ? '系统管理员' : 
+               user?.role === 'content_admin' ? '内容管理员' : 
+               user?.role || '-'}
+            </span>
           </div>
         </div>
 
