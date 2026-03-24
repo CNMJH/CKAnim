@@ -11,6 +11,10 @@ export const publicVideoRoutes: FastifyPluginAsync = async (server) => {
         limit?: number;
       };
 
+      // 确保是整数（前端传递的可能是字符串）
+      const pageNum = typeof page === 'string' ? parseInt(page) : page;
+      const limitNum = typeof limit === 'string' ? parseInt(limit) : limit;
+
       const where: any = {
         published: true,
       };
@@ -23,8 +27,8 @@ export const publicVideoRoutes: FastifyPluginAsync = async (server) => {
         prisma.video.findMany({
           where,
           orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
-          skip: (page - 1) * limit,
-          take: limit,
+          skip: (pageNum - 1) * limitNum,
+          take: limitNum,
           include: {
             game: {
               select: {
@@ -48,10 +52,10 @@ export const publicVideoRoutes: FastifyPluginAsync = async (server) => {
       reply.send({
         videos,
         pagination: {
-          page,
-          limit,
+          page: pageNum,
+          limit: limitNum,
           total,
-          totalPages: Math.ceil(total / limit),
+          totalPages: Math.ceil(total / limitNum),
         },
       });
     } catch (error) {
@@ -71,6 +75,10 @@ export const publicVideoRoutes: FastifyPluginAsync = async (server) => {
         page?: number;
         limit?: number;
       };
+
+      // 确保是整数（前端传递的可能是字符串）
+      const pageNum = typeof page === 'string' ? parseInt(page) : page;
+      const limitNum = typeof limit === 'string' ? parseInt(limit) : limit;
 
       const where: any = {
         published: true,
@@ -101,8 +109,8 @@ export const publicVideoRoutes: FastifyPluginAsync = async (server) => {
         prisma.video.findMany({
           where,
           orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
-          skip: (page - 1) * limit,
-          take: limit,
+          skip: (pageNum - 1) * limitNum,
+          take: limitNum,
           include: {
             game: {
               select: {
@@ -127,10 +135,10 @@ export const publicVideoRoutes: FastifyPluginAsync = async (server) => {
       reply.send({
         videos,
         pagination: {
-          page,
-          limit,
+          page: pageNum,
+          limit: limitNum,
           total,
-          totalPages: Math.ceil(total / limit),
+          totalPages: Math.ceil(total / limitNum),
         },
       });
     } catch (error) {
