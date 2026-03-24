@@ -44,7 +44,6 @@ export const favoriteRoutes: FastifyPluginAsync = async (server) => {
           id: c.id,
           name: c.name,
           description: c.description,
-          isPublic: c.isPublic,
           isDefault: c.isDefault,
           cover: c.cover,
           count: c._count.favorites,

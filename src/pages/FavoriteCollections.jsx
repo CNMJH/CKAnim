@@ -13,6 +13,8 @@ function FavoriteCollections() {
     name: '',
     description: '',
   })
+  const [draggedId, setDraggedId] = useState(null)
+  const [dragOverId, setDragOverId] = useState(null)
 
   // 加载收藏夹列表
   const loadCollections = async () => {
@@ -92,6 +94,61 @@ function FavoriteCollections() {
     setFormData({ name: '', description: '' })
   }
 
+  // 拖拽排序
+  const handleDragStart = (e, id) => {
+    setDraggedId(id)
+    e.dataTransfer.effectAllowed = 'move'
+    // 设置拖拽预览
+    const dragImage = e.target.querySelector('.collection-card')
+    if (dragImage) {
+      e.dataTransfer.setDragImage(dragImage, 0, 0)
+    }
+  }
+
+  const handleDragOver = (e, id) => {
+    e.preventDefault()
+    if (id !== draggedId) {
+      setDragOverId(id)
+    }
+  }
+
+  const handleDragLeave = () => {
+    setDragOverId(null)
+  }
+
+  const handleDrop = async (e, targetId) => {
+    e.preventDefault()
+    setDragOverId(null)
+    
+    if (draggedId && draggedId !== targetId) {
+      try {
+        // 获取拖拽前后的收藏夹信息
+        const draggedCollection = collections.find(c => c.id === draggedId)
+        const targetCollection = collections.find(c => c.id === targetId)
+        
+        if (draggedCollection && targetCollection) {
+          // 交换排序值
+          const tempOrder = draggedCollection.order
+          await favoritesAPI.updateCollectionOrder(draggedId, targetCollection.order)
+          await favoritesAPI.updateCollectionOrder(targetId, tempOrder)
+          
+          // 重新加载列表
+          await loadCollections()
+        }
+      } catch (err) {
+        console.error('Failed to reorder:', err)
+        alert('排序失败：' + (err.response?.data?.message || '未知错误'))
+      } finally {
+        setDraggedId(null)
+      }
+    }
+  }
+
+  const handleDragEnd = () => {
+    setDraggedId(null)
+    setDragOverId(null)
+  }
+
   if (loading) {
     return <div className="favorite-collections-loading">加载中...</div>
   }
@@ -105,11 +162,21 @@ function FavoriteCollections() {
         </button>
       </div>
 
+      {collections.length > 1 && (
+        <p className="drag-hint">💡 拖动收藏夹可调整排序（默认收藏夹不可拖动）</p>
+      )}
+
       <div className="collections-grid">
         {collections.map((collection) => (
           <div
             key={collection.id}
-            className={`collection-card ${collection.isDefault ? 'default' : ''}`}
+            className={`collection-card ${collection.isDefault ? 'default' : ''} ${dragOverId === collection.id ? 'drag-over' : ''}`}
+            draggable={!collection.isDefault}
+            onDragStart={(e) => handleDragStart(e, collection.id)}
+            onDragOver={(e) => handleDragOver(e, collection.id)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, collection.id)}
+            onDragEnd={handleDragEnd}
           >
             <div className="collection-cover">
               {collection.cover ? (

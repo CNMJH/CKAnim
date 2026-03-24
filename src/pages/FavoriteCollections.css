@@ -28,6 +28,16 @@
   margin: 0;
 }
 
+.drag-hint {
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  color: #666;
+  background: #f5f5f5;
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
 .create-btn {
   padding: 10px 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -339,6 +349,32 @@
 .submit-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 拖拽排序样式 */
+.collection-card[draggable="true"] {
+  cursor: grab;
+}
+
+.collection-card[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.collection-card.drag-over {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  transform: scale(1.02);
+}
+
+/* 拖拽时的视觉提示 */
+.collections-grid {
+  position: relative;
+}
+
+/* 默认收藏夹不可拖拽提示 */
+.collection-card.default[draggable="false"] {
+  cursor: not-allowed;
+  opacity: 0.9;
 }
 
 /* 响应式设计 */
