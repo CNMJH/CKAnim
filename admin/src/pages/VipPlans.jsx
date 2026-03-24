@@ -209,6 +209,7 @@ function VipPlans() {
                     onChange={(e) => setFormData({ ...formData, level: e.target.value })}
                     required
                   >
+                    <option value="vip0">VIP0（普通用户）</option>
                     <option value="vip1">VIP1</option>
                     <option value="vip2">VIP2</option>
                     <option value="vip3">VIP3</option>

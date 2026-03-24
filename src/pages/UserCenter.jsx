@@ -85,6 +85,7 @@ function UserCenter() {
 
   const getVipLevelText = (level) => {
     const map = {
+      vip0: '普通用户',
       none: '普通用户',
       vip1: '月卡会员',
       vip2: '年卡会员',

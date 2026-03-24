@@ -179,7 +179,7 @@ model User {
 model VipPlan {
   id          Int       @id @default(autoincrement())
   name        String    // 套餐名称，如 "VIP1 月卡"
-  level       String    // 套餐等级，如 "vip1", "vip2", "vip3"
+  level       String    // 套餐等级，如 "vip0", "vip1", "vip2", "vip3"
   price       String    // 价格显示，如 "¥15/月"
   originalPrice String? // 原价（可选），如 "¥180"
   features    String    // 权益列表，JSON 格式：["高清画质", "去广告", "专属标识"]

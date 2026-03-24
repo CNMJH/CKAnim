@@ -15,6 +15,16 @@ async function main() {
   // 创建默认套餐
   const defaultPlans = [
     {
+      name: '普通用户',
+      level: 'vip0',
+      price: '免费',
+      originalPrice: '',
+      features: JSON.stringify(['基础画质', '收藏功能', '评论互动']),
+      badge: '',
+      order: 0,
+      enabled: true,
+    },
+    {
       name: 'VIP1 月卡',
       level: 'vip1',
       price: '¥15/月',
@@ -50,7 +60,8 @@ async function main() {
     data: defaultPlans,
   })
 
-  console.log('✅ 成功创建 3 个 VIP 套餐')
+  console.log('✅ 成功创建 4 个 VIP 套餐')
+  console.log('  - 普通用户 (免费)')
   console.log('  - VIP1 月卡 (¥15/月)')
   console.log('  - VIP2 年卡 (¥158/年) [热销]')
   console.log('  - VIP3 永久 (¥398/永久) [推荐]')
