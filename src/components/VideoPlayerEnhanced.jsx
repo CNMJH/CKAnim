@@ -1341,7 +1341,11 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
   };
   
   return (
-    <>
+    <div 
+      className={`video-player-enhanced ${isFullscreen ? 'fullscreen' : ''}`}
+      ref={playerContainerRef}
+      onDoubleClick={toggleFullscreen}
+    >
       {/* 全屏模式下的关闭按钮 */}
       {isFullscreen && (
         <button className="fullscreen-close-btn" onClick={exitFullscreen}>
@@ -1351,22 +1355,17 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
         </button>
       )}
       
-      <div 
-        className={`video-player-enhanced ${isFullscreen ? 'fullscreen' : ''}`}
-        ref={playerContainerRef}
-        onDoubleClick={toggleFullscreen}
-      >
-        {/* 视频区域 */}
-        <div className="video-container">
-          <video
-            ref={videoRef}
-            src={videoUrl}
-            className="video-element"
-            loop
-            playsInline
-            crossOrigin="anonymous"
-            onClick={togglePlay}
-          />
+      {/* 视频区域 */}
+      <div className="video-container">
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          className="video-element"
+          loop
+          playsInline
+          crossOrigin="anonymous"
+          onClick={togglePlay}
+        />
         <canvas
           ref={canvasRef}
           className="drawing-overlay"
@@ -1822,7 +1821,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
         onClose={() => setShowAuthModal(false)}
         onLoginSuccess={handleLoginSuccess}
       />
-    </>
+    </div>
   );
 }
 
