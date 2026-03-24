@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from 'fastify'
 import { prisma } from '../lib/db'
+import { requireSystemAdmin } from '../middleware/auth'
 
 export const vipRoutes: FastifyPluginAsync = async (server) => {
   // ==================== 公开接口：获取所有 VIP 套餐 ====================
@@ -32,28 +33,7 @@ export const vipRoutes: FastifyPluginAsync = async (server) => {
   // ==================== 管理员接口：获取所有 VIP 套餐 ====================
   server.get(
     '/admin/vip-plans',
-    {
-      preHandler: [async (request, reply) => {
-        const authHeader = request.headers.authorization
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          return reply.code(401).send({ error: 'Unauthorized', message: '未登录' })
-        }
-        try {
-          const token = authHeader.split(' ')[1]
-          const jwt = require('jsonwebtoken')
-          const JWT_SECRET = process.env.JWT_SECRET || 'ckanim-admin-secret-key-change-in-production-2026'
-          const decoded = jwt.verify(token, JWT_SECRET) as any
-          request.user = decoded
-          
-          // 检查是否是管理员
-          if (!['system_admin', 'content_admin'].includes(decoded.role)) {
-            return reply.code(403).send({ error: 'Forbidden', message: '权限不足' })
-          }
-        } catch (err) {
-          return reply.code(401).send({ error: 'Unauthorized', message: 'Token 无效' })
-        }
-      }],
-    },
+    { preHandler: [requireSystemAdmin] },
     async (request, reply) => {
       try {
         const plans = await prisma.vipPlan.findMany({
@@ -80,27 +60,7 @@ export const vipRoutes: FastifyPluginAsync = async (server) => {
   // ==================== 管理员接口：创建 VIP 套餐 ====================
   server.post(
     '/admin/vip-plans',
-    {
-      preHandler: [async (request, reply) => {
-        const authHeader = request.headers.authorization
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          return reply.code(401).send({ error: 'Unauthorized', message: '未登录' })
-        }
-        try {
-          const token = authHeader.split(' ')[1]
-          const jwt = require('jsonwebtoken')
-          const JWT_SECRET = process.env.JWT_SECRET || 'ckanim-admin-secret-key-change-in-production-2026'
-          const decoded = jwt.verify(token, JWT_SECRET) as any
-          request.user = decoded
-          
-          if (decoded.role !== 'system_admin') {
-            return reply.code(403).send({ error: 'Forbidden', message: '仅系统管理员可操作' })
-          }
-        } catch (err) {
-          return reply.code(401).send({ error: 'Unauthorized', message: 'Token 无效' })
-        }
-      }],
-    },
+    { preHandler: [requireSystemAdmin] },
     async (request, reply) => {
       try {
         const { name, level, price, originalPrice, features, badge, order, enabled } = request.body as {
@@ -148,27 +108,7 @@ export const vipRoutes: FastifyPluginAsync = async (server) => {
   // ==================== 管理员接口：更新 VIP 套餐 ====================
   server.put(
     '/admin/vip-plans/:id',
-    {
-      preHandler: [async (request, reply) => {
-        const authHeader = request.headers.authorization
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          return reply.code(401).send({ error: 'Unauthorized', message: '未登录' })
-        }
-        try {
-          const token = authHeader.split(' ')[1]
-          const jwt = require('jsonwebtoken')
-          const JWT_SECRET = process.env.JWT_SECRET || 'ckanim-admin-secret-key-change-in-production-2026'
-          const decoded = jwt.verify(token, JWT_SECRET) as any
-          request.user = decoded
-          
-          if (decoded.role !== 'system_admin') {
-            return reply.code(403).send({ error: 'Forbidden', message: '仅系统管理员可操作' })
-          }
-        } catch (err) {
-          return reply.code(401).send({ error: 'Unauthorized', message: 'Token 无效' })
-        }
-      }],
-    },
+    { preHandler: [requireSystemAdmin] },
     async (request, reply) => {
       try {
         const { id } = request.params as { id: string }
@@ -222,27 +162,7 @@ export const vipRoutes: FastifyPluginAsync = async (server) => {
   // ==================== 管理员接口：删除 VIP 套餐 ====================
   server.delete(
     '/admin/vip-plans/:id',
-    {
-      preHandler: [async (request, reply) => {
-        const authHeader = request.headers.authorization
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          return reply.code(401).send({ error: 'Unauthorized', message: '未登录' })
-        }
-        try {
-          const token = authHeader.split(' ')[1]
-          const jwt = require('jsonwebtoken')
-          const JWT_SECRET = process.env.JWT_SECRET || 'ckanim-admin-secret-key-change-in-production-2026'
-          const decoded = jwt.verify(token, JWT_SECRET) as any
-          request.user = decoded
-          
-          if (decoded.role !== 'system_admin') {
-            return reply.code(403).send({ error: 'Forbidden', message: '仅系统管理员可操作' })
-          }
-        } catch (err) {
-          return reply.code(401).send({ error: 'Unauthorized', message: 'Token 无效' })
-        }
-      }],
-    },
+    { preHandler: [requireSystemAdmin] },
     async (request, reply) => {
       try {
         const { id } = request.params as { id: string }
@@ -271,27 +191,7 @@ export const vipRoutes: FastifyPluginAsync = async (server) => {
   // ==================== 管理员接口：初始化默认 VIP 套餐 ====================
   server.post(
     '/admin/vip-plans/init',
-    {
-      preHandler: [async (request, reply) => {
-        const authHeader = request.headers.authorization
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          return reply.code(401).send({ error: 'Unauthorized', message: '未登录' })
-        }
-        try {
-          const token = authHeader.split(' ')[1]
-          const jwt = require('jsonwebtoken')
-          const JWT_SECRET = process.env.JWT_SECRET || 'ckanim-admin-secret-key-change-in-production-2026'
-          const decoded = jwt.verify(token, JWT_SECRET) as any
-          request.user = decoded
-          
-          if (decoded.role !== 'system_admin') {
-            return reply.code(403).send({ error: 'Forbidden', message: '仅系统管理员可操作' })
-          }
-        } catch (err) {
-          return reply.code(401).send({ error: 'Unauthorized', message: 'Token 无效' })
-        }
-      }],
-    },
+    { preHandler: [requireSystemAdmin] },
     async (request, reply) => {
       try {
         // 检查是否已有数据
