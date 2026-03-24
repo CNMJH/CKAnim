@@ -214,7 +214,15 @@ function UserCenter() {
         {activeTab === 'favorites' && (
           <div className="favorites-section">
             <h2>我的收藏</h2>
-            <p className="empty-hint">收藏夹功能开发中...</p>
+            <div className="favorites-hint">
+              <p>管理你的收藏夹，创建多个分类收藏喜欢的视频</p>
+              <button 
+                className="btn-primary"
+                onClick={() => window.location.href = '/user/favorites'}
+              >
+                管理收藏夹
+              </button>
+            </div>
           </div>
         )}
 

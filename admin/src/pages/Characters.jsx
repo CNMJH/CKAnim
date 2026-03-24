@@ -117,10 +117,17 @@ function Characters() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    
+    // 处理 categoryId：空字符串转换为 null
+    const submitData = {
+      ...formData,
+      categoryId: formData.categoryId === '' ? null : formData.categoryId,
+    }
+    
     if (editingCharacter) {
-      updateMutation.mutate({ id: editingCharacter.id, data: formData })
+      updateMutation.mutate({ id: editingCharacter.id, data: submitData })
     } else {
-      createMutation.mutate(formData)
+      createMutation.mutate(submitData)
     }
   }
 

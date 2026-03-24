@@ -297,3 +297,38 @@
   color: #333;
   margin-bottom: 8px;
 }
+
+/* 收藏夹标签页样式 */
+.favorites-section h2 {
+  margin-bottom: 16px;
+}
+
+.favorites-hint {
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.favorites-hint p {
+  color: #666;
+  font-size: 15px;
+  margin-bottom: 24px;
+}
+
+.favorites-hint .btn-primary {
+  padding: 12px 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.favorites-hint .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}

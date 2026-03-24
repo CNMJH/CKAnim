@@ -156,18 +156,19 @@ model VideoTags {
 // ==================== 用户系统 ====================
 
 model User {
-  id          Int       @id @default(autoincrement())
-  username    String    @unique
-  email       String    @unique
+  id          Int                @id @default(autoincrement())
+  username    String             @unique
+  email       String             @unique
   password    String
   avatar      String?
   phone       String?
-  role        String    @default("user")  // user, content_admin, system_admin
-  vipLevel    String    @default("none")  // none, vip1, vip2, vip3
+  role        String             @default("user")  // user, content_admin, system_admin
+  vipLevel    String             @default("none")  // none, vip1, vip2, vip3
   vipExpires  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
   favorites   Favorite[]
+  favoriteCollections FavoriteCollection[]
 
   @@index([email])
   @@index([role])
@@ -193,16 +194,38 @@ model VipPlan {
   @@map("vip_plans")
 }
 
-model Favorite {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  videoId   Int
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+// 收藏夹集合（支持多收藏夹，类似 B 站）
+model FavoriteCollection {
+  id          Int        @id @default(autoincrement())
+  userId      Int
+  name        String     // 收藏夹名称
+  description String?    // 描述
+  isDefault   Boolean    @default(false) // 是否默认收藏夹（不可删除）
+  cover       String?    // 封面图（最新收藏的视频封面）
+  count       Int        @default(0) // 收藏数量
+  order       Int        @default(0) // 排序
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  favorites   Favorite[]
 
-  @@unique([userId, videoId])
+  @@index([userId])
+  @@map("favorite_collections")
+}
+
+model Favorite {
+  id             Int                @id @default(autoincrement())
+  userId         Int
+  videoId        Int
+  collectionId   Int                // 关联到收藏夹
+  createdAt      DateTime           @default(now())
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video          Video              @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  collection     FavoriteCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, videoId, collectionId]) // 同一视频在同一收藏夹中只能收藏一次
   @@index([userId])
   @@index([videoId])
+  @@index([collectionId])
   @@map("favorites")
 }

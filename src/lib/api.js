@@ -223,3 +223,74 @@ export const authUtils = {
     return role === 'vip1' || role === 'vip2' || role === 'vip3';
   },
 };
+
+// ==================== 收藏夹 API ====================
+export const favoritesAPI = {
+  // 获取所有收藏夹
+  getCollections: () => {
+    return api.get('/favorite-collections');
+  },
+
+  // 创建收藏夹
+  createCollection: (data) => {
+    return api.post('/favorite-collections', data);
+  },
+
+  // 更新收藏夹
+  updateCollection: (id, data) => {
+    return api.put(`/favorite-collections/${id}`, data);
+  },
+
+  // 删除收藏夹
+  deleteCollection: (id) => {
+    return api.delete(`/favorite-collections/${id}`);
+  },
+
+  // 调整收藏夹排序
+  updateCollectionOrder: (id, order) => {
+    return api.put(`/favorite-collections/${id}/order`, { order });
+  },
+
+  // 获取收藏夹内的视频列表
+  getFavorites: (collectionId) => {
+    return api.get('/favorites', {
+      params: { collectionId },
+    });
+  },
+
+  // 添加视频到收藏夹
+  addFavorite: (videoId, collectionId) => {
+    return api.post('/favorites', { videoId, collectionId });
+  },
+
+  // 从收藏夹移除视频
+  removeFavorite: (videoId, collectionId) => {
+    return api.delete(`/favorites/${videoId}`, {
+      params: { collectionId },
+    });
+  },
+
+  // 检查视频收藏状态
+  checkFavorite: (videoId) => {
+    return api.get(`/favorites/check/${videoId}`);
+  },
+
+  // 批量添加视频
+  batchAdd: (videoIds, collectionId) => {
+    return api.post('/favorites/batch-add', { videoIds, collectionId });
+  },
+
+  // 批量移动视频
+  batchMove: (videoIds, fromCollectionId, toCollectionId) => {
+    return api.post('/favorites/batch-move', {
+      videoIds,
+      fromCollectionId,
+      toCollectionId,
+    });
+  },
+
+  // 批量删除视频
+  batchRemove: (videoIds, collectionId) => {
+    return api.post('/favorites/batch-remove', { videoIds, collectionId });
+  },
+};

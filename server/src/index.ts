@@ -17,6 +17,7 @@ import { actionRoutes } from './routes/actions';
 import { settingsRoutes } from './routes/settings';
 import { userRoutes } from './routes/users';
 import { vipRoutes } from './routes/vip';
+import { favoriteRoutes } from './routes/favorites';
 
 dotenv.config();
 
@@ -54,6 +55,7 @@ await server.register(publicCharacterRoutes, { prefix: '/api' });
 // 管理员路由（需要认证）
 await server.register(userRoutes, { prefix: '/api' });
 await server.register(vipRoutes, { prefix: '/api' });
+await server.register(favoriteRoutes, { prefix: '/api' });
 await server.register(authRoutes, { prefix: '/api/admin' });
 await server.register(gameRoutes, { prefix: '/api/admin' });
 await server.register(categoryRoutes, { prefix: '/api/admin' });
