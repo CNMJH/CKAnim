@@ -5,19 +5,30 @@ function VideoCard({ video }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [coverLoaded, setCoverLoaded] = useState(false);
 
   // 鼠标移入 - 开始播放
   const handleMouseEnter = useCallback(() => {
     if (videoRef.current) {
-      videoRef.current.currentTime = 0; // 从头开始
-      videoRef.current.play().catch(err => {
-        console.log('Auto-play prevented:', err);
+      const video = videoRef.current;
+      // 如果视频还未加载，先加载
+      if (!isLoaded) {
+        video.load();
+        setIsLoaded(true);
+      }
+      video.currentTime = 0; // 从头开始
+      video.play().catch(err => {
+        // 忽略自动播放阻止错误
+        if (err.name !== 'AbortError') {
+          console.log('Auto-play prevented:', err);
+        }
       });
       setIsPlaying(true);
     }
-  }, []);
+  }, [isLoaded]);
 
-  // 鼠标移出 - 停止播放并清理缓冲
+  // 鼠标移出 - 停止播放但保留缓冲
   const handleMouseLeave = useCallback(() => {
     if (videoRef.current) {
       const video = videoRef.current;
@@ -25,20 +36,8 @@ function VideoCard({ video }) {
       // 暂停播放
       video.pause();
       
-      // 重置进度
+      // 重置进度（不清空缓冲）
       video.currentTime = 0;
-      
-      // 保存原始视频 URL
-      const originalSrc = video.src;
-      
-      // 清空视频源 - 释放缓冲的内存
-      video.src = '';
-      
-      // 强制重新加载（清空内部缓冲）
-      video.load();
-      
-      // 恢复原始 URL（下次播放时使用）
-      video.src = originalSrc;
       
       setIsPlaying(false);
       setProgress(0);
@@ -59,8 +58,22 @@ function VideoCard({ video }) {
   const handleEnded = useCallback(() => {
     if (videoRef.current) {
       videoRef.current.currentTime = 0;
-      videoRef.current.play();
+      videoRef.current.play().catch(err => {
+        if (err.name !== 'AbortError') {
+          console.log('Loop prevented:', err);
+        }
+      });
     }
+  }, []);
+
+  // 视频加载完成
+  const handleLoadedData = useCallback(() => {
+    setIsLoaded(true);
+  }, []);
+
+  // 封面图加载完成
+  const handleCoverLoad = useCallback(() => {
+    setCoverLoaded(true);
   }, []);
 
   return (
@@ -69,17 +82,7 @@ function VideoCard({ video }) {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* 封面图 */}
-      {video.coverUrl && (
-        <img
-          src={video.coverUrl}
-          alt={video.title}
-          className="video-cover"
-          style={{ opacity: isPlaying ? 0 : 1 }}
-        />
-      )}
-
-      {/* 视频元素 */}
+      {/* 视频元素 - 预加载元数据 */}
       <video
         ref={videoRef}
         src={video.qiniuUrl}
@@ -87,9 +90,30 @@ function VideoCard({ video }) {
         muted
         loop
         playsInline
+        preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
+        onLoadedData={handleLoadedData}
       />
+
+      {/* 封面图 - 使用 lazy 加载，播放时隐藏 */}
+      {video.coverUrl && (
+        <img
+          src={video.coverUrl}
+          alt={video.title}
+          className="video-cover"
+          loading="lazy"
+          onLoad={handleCoverLoad}
+          onError={(e) => {
+            // 封面加载失败时隐藏
+            e.target.style.display = 'none';
+          }}
+          style={{ 
+            opacity: isPlaying ? 0 : 1,
+            display: coverLoaded || !video.qiniuUrl ? 'block' : 'none'
+          }}
+        />
+      )}
 
       {/* 进度条 */}
       <div className="progress-bar">
@@ -100,7 +124,7 @@ function VideoCard({ video }) {
       </div>
 
       {/* 时长 */}
-      <span className="video-duration">{video.duration}</span>
+      <span className="video-duration">{video.duration || '--:--'}</span>
 
       {/* 标题 */}
       <div className="video-title">{video.title}</div>
