@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { videos, banners } from '../data/mockData';
-import { siteSettingsAPI } from '../lib/api';
+import { videosAPI, siteSettingsAPI } from '../lib/api';
 import VideoCard from '../components/VideoCard';
 import './Home.css';
 
 function Home() {
   const [currentBanner, setCurrentBanner] = useState(0);
+  const [videos, setVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [siteSettings, setSiteSettings] = useState({
     siteName: 'CKAnim',
     announcement: {
@@ -14,6 +15,13 @@ function Home() {
       color: '#666',
     },
   });
+
+  // 轮播图数据（暂时使用静态数据）
+  const banners = [
+    { id: 1, title: '欢迎来到 CKAnim', image: 'https://placehold.co/640x360/3b82f6/ffffff?text=CKAnim' },
+    { id: 2, title: '发现精彩游戏动作', image: 'https://placehold.co/640x360/10b981/ffffff?text=Game+Actions' },
+    { id: 3, title: '每日更新不间断', image: 'https://placehold.co/640x360/f59e0b/ffffff?text=Daily+Updates' },
+  ];
 
   // 加载网站设置
   useEffect(() => {
@@ -38,6 +46,22 @@ function Home() {
     loadSettings();
   }, []);
 
+  // 加载视频数据
+  useEffect(() => {
+    const loadVideos = async () => {
+      try {
+        setLoading(true);
+        const response = await videosAPI.getAll({ limit: 20 });
+        setVideos(response.data.videos || []);
+      } catch (error) {
+        console.error('加载视频失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadVideos();
+  }, []);
+
   // 自动轮播
   useEffect(() => {
     const timer = setInterval(() => {
@@ -46,9 +70,16 @@ function Home() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleRefresh = () => {
-    console.log('刷新视频列表');
-    // 实际项目中会重新请求数据
+  const handleRefresh = async () => {
+    try {
+      setLoading(true);
+      const response = await videosAPI.getAll({ limit: 20 });
+      setVideos(response.data.videos || []);
+    } catch (error) {
+      console.error('刷新视频失败:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -84,29 +115,37 @@ function Home() {
 
         {/* 右侧区域：视频网格 + 换一批按钮 */}
         <div className="right-section">
-          {/* 视频卡片 - 2 行×3 列 = 6 个 */}
-          {videos.slice(0, 6).map(video => (
-            <VideoCard key={video.id} video={video} />
-          ))}
+          {loading ? (
+            <div className="loading">加载中...</div>
+          ) : (
+            <>
+              {/* 视频卡片 - 2 行×3 列 = 6 个 */}
+              {videos.slice(0, 6).map(video => (
+                <VideoCard key={video.id} video={video} />
+              ))}
 
-          {/* 换一批按钮 - 右上角，垂直排列 */}
-          <button className="refresh-btn" onClick={handleRefresh}>
-            <span className="refresh-icon">🔄</span>
-            <span className="refresh-text">
-              <span>换</span>
-              <span>一</span>
-              <span>批</span>
-            </span>
-          </button>
+              {/* 换一批按钮 - 右上角，垂直排列 */}
+              <button className="refresh-btn" onClick={handleRefresh}>
+                <span className="refresh-icon">🔄</span>
+                <span className="refresh-text">
+                  <span>换</span>
+                  <span>一</span>
+                  <span>批</span>
+                </span>
+              </button>
+            </>
+          )}
         </div>
       </div>
 
       {/* 下方视频网格 - 2 行×5 列 = 10 个 */}
-      <div className="video-grid-full">
-        {videos.slice(6, 16).map(video => (
-          <VideoCard key={video.id} video={video} />
-        ))}
-      </div>
+      {!loading && videos.length > 6 && (
+        <div className="video-grid-full">
+          {videos.slice(6, 16).map(video => (
+            <VideoCard key={video.id} video={video} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
