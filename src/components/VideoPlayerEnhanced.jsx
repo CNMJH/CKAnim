@@ -279,7 +279,13 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
       // 更新收藏夹列表（刷新封面和数量）
       await loadCollections();
     } catch (err) {
-      alert(err.response?.data?.message || '添加收藏失败');
+      // 检查是否是未登录错误
+      if (err.response?.status === 401) {
+        alert('请先登录后再收藏视频');
+      } else {
+        alert(err.response?.data?.message || '添加收藏失败');
+      }
+      console.error('收藏失败:', err);
     }
   };
   
@@ -500,6 +506,8 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
   // Canvas 绘画事件
   const getCanvasCoordinates = (e) => {
     const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
@@ -509,6 +517,56 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
       y: (e.clientY - rect.top) * scaleY
     };
   };
+  
+  // 更新 Canvas 尺寸以匹配显示尺寸（修复全屏坐标问题）
+  const updateCanvasSize = useCallback(() => {
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    if (!canvas || !video) return;
+    
+    // 获取视频实际显示尺寸
+    const videoRect = video.getBoundingClientRect();
+    
+    // 设置 Canvas 内部尺寸匹配显示尺寸
+    canvas.width = videoRect.width;
+    canvas.height = videoRect.height;
+    
+    // 重绘所有绘画
+    const ctx = canvas.getContext('2d');
+    if (ctx && showDrawing) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // 重绘永久绘画
+      const permanentDrawings = drawingsRef.current.filter(d => d.type === 'permanent');
+      permanentDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
+      
+      // 重绘当前帧绘画
+      const currentFrame = getCurrentFrame(video.currentTime);
+      const frameDrawings = drawingsRef.current.filter(d => 
+        d.type === 'frame' && d.frame === currentFrame
+      );
+      frameDrawings.forEach(drawing => {
+        renderDrawing(ctx, drawing);
+      });
+    }
+  }, [showDrawing, getCurrentFrame]);
+  
+  // 监听全屏状态变化，更新 Canvas 尺寸
+  useEffect(() => {
+    updateCanvasSize();
+  }, [isFullscreen, updateCanvasSize]);
+  
+  // 监听窗口大小变化，更新 Canvas 尺寸
+  useEffect(() => {
+    const handleResize = () => {
+      updateCanvasSize();
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [updateCanvasSize]);
   
   const startDrawing = (e) => {
     if (!isDrawingBoardOpen) return;
@@ -1375,7 +1433,11 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
-          style={{ display: isDrawingBoardOpen && showDrawing ? 'block' : 'none' }}
+          style={{ 
+            display: isDrawingBoardOpen && showDrawing ? 'block' : 'none',
+            width: '100%',
+            height: '100%'
+          }}
         />
         
         {/* 文本编辑输入框 */}
