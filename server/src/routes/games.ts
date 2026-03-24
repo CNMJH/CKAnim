@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import { prisma } from '../lib/db.js';
-import { requireSystemAdmin } from '../middleware/auth.js';
+import { authenticate, requireSystemAdmin } from '../middleware/auth.js';
 import { getUploadToken, generateIconKey, getFileUrl, deleteFile, deleteMultipleFiles, extractKeyFromUrl } from '../lib/qiniu.js';
 
 export const gameRoutes: FastifyPluginAsync = async (server) => {
