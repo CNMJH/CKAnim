@@ -117,21 +117,29 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
       // 初始化音量为 100%
       video.volume = 1;
       setVolume(1);
+      // 更新 Canvas 尺寸
+      updateCanvasSize();
     };
     
+    const handleLoadedData = () => {
+      // 确保视频完全加载后再次更新 Canvas 尺寸
+      updateCanvasSize();
+    };
 
     const handleEnded = () => {
       setIsPlaying(false);
     };
     
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('loadeddata', handleLoadedData);
     video.addEventListener('ended', handleEnded);
     
     return () => {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('loadeddata', handleLoadedData);
       video.removeEventListener('ended', handleEnded);
     };
-  }, [videoUrl]);
+  }, [videoUrl, updateCanvasSize]);
   
   // 使用 requestAnimationFrame 渲染绘画（解决 timeupdate 频率不足导致的丢帧问题）
   useEffect(() => {
@@ -527,17 +535,17 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
     const video = videoRef.current;
     if (!canvas || !video) return;
     
+    // 等待视频元数据加载完成
+    if (video.readyState < 1) return;
+    
     // 使用 offsetWidth/offsetHeight 获取视频实际渲染尺寸（更准确）
     const videoWidth = video.offsetWidth;
     const videoHeight = video.offsetHeight;
     
-    // 设置 Canvas 内部尺寸匹配视频实际显示尺寸
+    // 只设置 Canvas 内部像素尺寸，不设置 CSS 尺寸
+    // CSS 尺寸由 video-wrapper 的 flex 布局自动控制
     canvas.width = videoWidth;
     canvas.height = videoHeight;
-    
-    // 设置 Canvas 的 CSS 尺寸也匹配视频
-    canvas.style.width = `${videoWidth}px`;
-    canvas.style.height = `${videoHeight}px`;
     
     // 重绘所有绘画
     const ctx = canvas.getContext('2d');

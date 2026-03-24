@@ -620,8 +620,8 @@
   border-radius: 2px;
   outline: none;
   cursor: pointer;
-  writing-mode: bt-lr; /* IE */
-  -webkit-appearance: slider-vertical; /* WebKit */
+  writing-mode: vertical-lr; /* 垂直滑块的标准写法 */
+  direction: rtl;
 }
 
 .volume-slider-vertical::-webkit-slider-thumb {
