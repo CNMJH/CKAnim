@@ -8,15 +8,20 @@ function FavoriteDetail() {
   const navigate = useNavigate()
   const [collection, setCollection] = useState(null)
   const [favorites, setFavorites] = useState([])
+  const [allCollections, setAllCollections] = useState([]) // 所有收藏夹（用于移动）
   const [loading, setLoading] = useState(true)
   const [selectMode, setSelectMode] = useState(false)
   const [selectedVideos, setSelectedVideos] = useState(new Set())
+  const [showMoveMenu, setShowMoveMenu] = useState(false) // 移动菜单显示
+  const [targetCollectionId, setTargetCollectionId] = useState(null) // 目标收藏夹 ID
 
   // 加载收藏夹和视频列表
   const loadData = async () => {
     try {
-      // 获取收藏夹列表
+      // 获取所有收藏夹列表
       const { data: collectionsData } = await favoritesAPI.getCollections()
+      setAllCollections(collectionsData.collections || [])
+      
       const currentCollection = collectionsData.collections.find(c => c.id === parseInt(id))
       setCollection(currentCollection)
 
@@ -81,6 +86,35 @@ function FavoriteDetail() {
     }
   }
 
+  // 批量移动
+  const handleBatchMove = async () => {
+    if (selectedVideos.size === 0) return
+    if (!targetCollectionId) {
+      alert('请选择目标收藏夹')
+      return
+    }
+
+    if (!confirm(`确定要将选中的 ${selectedVideos.size} 个视频移动到"${allCollections.find(c => c.id === targetCollectionId)?.name}"吗？`)) {
+      return
+    }
+
+    try {
+      await favoritesAPI.batchMove(
+        Array.from(selectedVideos),
+        parseInt(id),
+        parseInt(targetCollectionId)
+      )
+      setSelectedVideos(new Set())
+      setSelectMode(false)
+      setShowMoveMenu(false)
+      setTargetCollectionId(null)
+      loadData()
+      alert('移动成功！')
+    } catch (err) {
+      alert(err.response?.data?.message || '移动失败')
+    }
+  }
+
   // 删除单个视频
   const handleDeleteVideo = async (videoId) => {
     if (!confirm('确定要取消收藏这个视频吗？')) {
@@ -129,10 +163,53 @@ function FavoriteDetail() {
           {collection.description && <p>{collection.description}</p>}
           <div className="header-meta">
             <span>{favorites.length} 个视频</span>
-            {collection.isPublic && <span className="public-tag">公开</span>}
           </div>
         </div>
         <div className="header-actions">
+          {selectMode && (
+            <>
+              <div className="move-dropdown">
+                <button
+                  className="action-btn move-btn"
+                  onClick={() => setShowMoveMenu(!showMoveMenu)}
+                  disabled={selectedVideos.size === 0}
+                >
+                  批量移动
+                </button>
+                {showMoveMenu && (
+                  <div className="move-dropdown-menu">
+                    <div className="move-dropdown-header">选择目标收藏夹</div>
+                    {allCollections
+                      .filter(c => c.id !== parseInt(id)) // 排除当前收藏夹
+                      .map(c => (
+                        <button
+                          key={c.id}
+                          className="move-option"
+                          onClick={() => {
+                            setTargetCollectionId(c.id)
+                            setShowMoveMenu(false)
+                            handleBatchMove()
+                          }}
+                        >
+                          {c.name}
+                          {c.isDefault && <span className="default-badge">默认</span>}
+                        </button>
+                      ))}
+                    {allCollections.filter(c => c.id !== parseInt(id)).length === 0 && (
+                      <div className="move-dropdown-empty">暂无其他收藏夹</div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <button
+                className="action-btn delete-btn"
+                onClick={handleBatchDelete}
+                disabled={selectedVideos.size === 0}
+              >
+                批量删除
+              </button>
+            </>
+          )}
           <button
             className={`action-btn ${selectMode ? 'active' : ''}`}
             onClick={toggleSelectMode}
@@ -153,13 +230,6 @@ function FavoriteDetail() {
             全选
           </label>
           <span className="selected-count">已选择 {selectedVideos.size} 个</span>
-          <button
-            className="delete-btn"
-            onClick={handleBatchDelete}
-            disabled={selectedVideos.size === 0}
-          >
-            删除选中
-          </button>
         </div>
       )}
 
