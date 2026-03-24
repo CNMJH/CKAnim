@@ -1,15 +1,21 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import './VideoPlayerEnhanced.css';
 import AuthModal from './AuthModal';
-import { authUtils } from '../lib/api';
+import { authUtils, favoritesAPI } from '../lib/api';
 
 // 假设视频 30fps
 const FRAME_DURATION = 1 / 30;
 
-function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
+function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }) {
   // 用户认证状态
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  
+  // 收藏相关状态
+  const [isFavorited, setIsFavorited] = useState(false); // 是否已收藏
+  const [showFavoriteMenu, setShowFavoriteMenu] = useState(false); // 收藏夹菜单显示
+  const [collections, setCollections] = useState([]); // 收藏夹列表
+  const [selectedCollectionId, setSelectedCollectionId] = useState(null); // 当前选择的收藏夹 ID
   
   // 基础播放状态
   const [isPlaying, setIsPlaying] = useState(false);
@@ -214,6 +220,77 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
   const handleLogout = () => {
     authUtils.removeToken();
     setCurrentUser(null);
+    setIsFavorited(false);
+  };
+  
+  // 加载收藏夹列表
+  const loadCollections = useCallback(async () => {
+    if (!authUtils.isAuthenticated()) return;
+    try {
+      const res = await favoritesAPI.getCollections();
+      setCollections(res.data.collections || []);
+    } catch (err) {
+      console.error('加载收藏夹失败:', err);
+    }
+  }, []);
+  
+  // 检查收藏状态
+  const checkFavoriteStatus = useCallback(async () => {
+    if (!videoId || !authUtils.isAuthenticated()) return;
+    try {
+      const res = await favoritesAPI.checkFavorite(videoId);
+      setIsFavorited(res.data.favorited || false);
+    } catch (err) {
+      console.error('检查收藏状态失败:', err);
+    }
+  }, [videoId]);
+  
+  // 切换收藏菜单
+  const toggleFavoriteMenu = async () => {
+    if (!authUtils.isAuthenticated()) {
+      setShowAuthModal(true);
+      return;
+    }
+    
+    if (showFavoriteMenu) {
+      setShowFavoriteMenu(false);
+      return;
+    }
+    
+    // 加载收藏夹列表
+    await loadCollections();
+    // 检查收藏状态
+    await checkFavoriteStatus();
+    setShowFavoriteMenu(true);
+  };
+  
+  // 添加到收藏夹
+  const handleAddToFavorite = async (collectionId) => {
+    if (!videoId) return;
+    try {
+      await favoritesAPI.addFavorite(videoId, collectionId);
+      setIsFavorited(true);
+      setSelectedCollectionId(collectionId);
+      setShowFavoriteMenu(false);
+      // 更新收藏夹列表（刷新封面和数量）
+      await loadCollections();
+    } catch (err) {
+      alert(err.response?.data?.message || '添加收藏失败');
+    }
+  };
+  
+  // 从收藏夹移除
+  const handleRemoveFromFavorite = async () => {
+    if (!videoId || !selectedCollectionId) return;
+    try {
+      await favoritesAPI.removeFavorite(videoId, selectedCollectionId);
+      setIsFavorited(false);
+      setShowFavoriteMenu(false);
+      // 更新收藏夹列表
+      await loadCollections();
+    } catch (err) {
+      alert(err.response?.data?.message || '移除收藏失败');
+    }
   };
   
   // 自动播放视频
@@ -226,6 +303,16 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
       setIsPlaying(true);
     }
   }, [autoPlay, videoUrl]);
+  
+  // 监听 videoId 变化，检查收藏状态
+  useEffect(() => {
+    if (videoId && authUtils.isAuthenticated()) {
+      checkFavoriteStatus();
+    } else {
+      setIsFavorited(false);
+      setSelectedCollectionId(null);
+    }
+  }, [videoId, checkFavoriteStatus]);
   
   // 视频播放结束后重置 autoPlay
   useEffect(() => {
@@ -1346,6 +1433,66 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, autoPlay = false }) {
         >
           画板
         </button>
+        
+        {/* 收藏按钮 - B 站风格 */}
+        <div className="speed-volume-wrapper">
+          <button 
+            className={`control-btn icon-btn ${showFavoriteMenu ? 'active' : ''}`}
+            onClick={toggleFavoriteMenu}
+            title={isFavorited ? '已收藏' : '添加到收藏夹'}
+            style={{ width: '40px', padding: 0 }}
+          >
+            {isFavorited ? (
+              <svg viewBox="0 0 24 24" width="20" height="20">
+                <path fill="#FF4081" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" width="20" height="20">
+                <path fill="white" d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.56 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/>
+              </svg>
+            )}
+          </button>
+          {showFavoriteMenu && (
+            <div className="speed-volume-menu favorite-menu">
+              {isFavorited ? (
+                <button
+                  className="favorite-action-btn remove-btn"
+                  onClick={handleRemoveFromFavorite}
+                >
+                  <svg viewBox="0 0 24 24" width="16" height="16" style={{ marginRight: '6px' }}>
+                    <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                  </svg>
+                  移除收藏
+                </button>
+              ) : (
+                <>
+                  <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '8px', display: 'block', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    选择收藏夹
+                  </div>
+                  {collections.length === 0 ? (
+                    <div style={{ padding: '8px 0', color: '#999', fontSize: '12px' }}>
+                      暂无收藏夹
+                    </div>
+                  ) : (
+                    collections.map(collection => (
+                      <button
+                        key={collection.id}
+                        className="favorite-option"
+                        onClick={() => handleAddToFavorite(collection.id)}
+                      >
+                        <span className="favorite-option-name">{collection.name}</span>
+                        {collection.isDefault && (
+                          <span className="favorite-option-badge">默认</span>
+                        )}
+                      </button>
+                    ))
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+        
         {/* 会员登录按钮 */}
         {currentUser ? (
           <div 

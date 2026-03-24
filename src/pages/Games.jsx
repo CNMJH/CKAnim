@@ -321,6 +321,7 @@ function Games() {
             <VideoPlayerEnhanced
               videoUrl={getCurrentVideoUrl()}
               videoTitle={`${selectedCharacter.name} - ${characterActions.find(ca => ca.id === selectedAction)?.name || '未命名'}`}
+              videoId={selectedAction}
               autoPlay={autoPlayVideo}
             />
           ) : (
