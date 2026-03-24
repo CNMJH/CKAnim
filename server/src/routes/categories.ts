@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import { prisma } from '../lib/db.js';
-import { requireAdmin } from '../middleware/auth.js';
+import { authenticate, requireAdmin } from '../middleware/auth.js';
 import { getUploadToken, generateIconKey, getFileUrl } from '../lib/qiniu.js';
 
 export const categoryRoutes: FastifyPluginAsync = async (server) => {
