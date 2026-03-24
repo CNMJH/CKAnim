@@ -103,16 +103,16 @@ function VideoPlayerEnhanced({
     
     if (!canvas || !video) return { x: 0, y: 0 };
     
-    // 获取视频在视口中的实际位置和尺寸
-    const videoRect = video.getBoundingClientRect();
+    // 获取 Canvas 在视口中的实际位置（Canvas 与视频完全重合）
+    const canvasRect = canvas.getBoundingClientRect();
     
-    // 计算鼠标相对于视频左上角的位置
-    const relativeX = e.clientX - videoRect.left;
-    const relativeY = e.clientY - videoRect.top;
+    // 计算鼠标相对于 Canvas 左上角的位置
+    const relativeX = e.clientX - canvasRect.left;
+    const relativeY = e.clientY - canvasRect.top;
     
-    // 计算缩放比例（Canvas 内部像素尺寸 / 视频显示尺寸）
-    const scaleX = canvas.width / videoRect.width;
-    const scaleY = canvas.height / videoRect.height;
+    // 计算缩放比例（Canvas 内部像素尺寸 / Canvas 显示尺寸）
+    const scaleX = canvas.width / canvasRect.width;
+    const scaleY = canvas.height / canvasRect.height;
     
     // 转换为 Canvas 内部坐标
     return {
@@ -141,6 +141,10 @@ function VideoPlayerEnhanced({
     // 设置 Canvas 内部像素尺寸与视频完全一致
     canvas.width = videoWidth;
     canvas.height = videoHeight;
+    
+    // 设置 Canvas CSS 尺寸与视频完全一致（关键修复）
+    canvas.style.width = `${videoWidth}px`;
+    canvas.style.height = `${videoHeight}px`;
     
     // 重绘所有绘画
     const ctx = canvas.getContext('2d');
@@ -580,12 +584,7 @@ function VideoPlayerEnhanced({
             onMouseUp={stopDrawing}
             onMouseLeave={stopDrawing}
             style={{ 
-              display: isDrawingBoardOpen && showDrawing ? 'block' : 'none',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%'
+              display: isDrawingBoardOpen && showDrawing ? 'block' : 'none'
             }}
           />
         </div>

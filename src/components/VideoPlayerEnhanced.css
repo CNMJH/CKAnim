@@ -92,16 +92,16 @@
   object-fit: contain;
 }
 
-/* Canvas 覆盖层 - 关键修复：不使用 transform，直接绝对定位 */
+/* Canvas 覆盖层 - 关键修复：与视频完全重合 */
 .drawing-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   cursor: crosshair;
   touch-action: none;
   pointer-events: auto;
+  /* Canvas 尺寸由 JS 动态设置，与视频完全一致 */
 }
 
 /* 全屏模式下 */
