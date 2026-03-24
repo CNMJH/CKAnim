@@ -17,7 +17,7 @@
 }
 
 /* 封面图 */
-.video-card-cover {
+.video-cover {
   position: absolute;
   top: 0;
   left: 0;
@@ -26,6 +26,8 @@
   object-fit: cover;
   transition: opacity 0.2s;
   z-index: 2;
+  /* 确保封面图可见 */
+  display: block !important;
 }
 
 /* 视频元素 */
