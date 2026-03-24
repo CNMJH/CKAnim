@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
-import { userAPI, authUtils } from '../lib/api'
+import { useNavigate } from 'react-router-dom'
+import { userAPI, authUtils, favoritesAPI } from '../lib/api'
 import axios from 'axios'
 import './UserCenter.css'
 
 function UserCenter() {
+  const navigate = useNavigate()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('profile') // profile, favorites, security, vip
@@ -19,11 +21,34 @@ function UserCenter() {
   })
   const [message, setMessage] = useState({ type: '', text: '' })
   const [vipPlans, setVipPlans] = useState([]) // VIP 套餐列表
+  const [collections, setCollections] = useState([]) // 收藏夹列表
+  const [collectionsLoading, setCollectionsLoading] = useState(false)
 
   useEffect(() => {
     loadUserInfo()
     loadVipPlans()
   }, [])
+
+  // 加载收藏夹列表
+  const loadCollections = async () => {
+    if (!authUtils.isAuthenticated()) return
+    setCollectionsLoading(true)
+    try {
+      const { data } = await favoritesAPI.getCollections()
+      setCollections(data.collections || [])
+    } catch (err) {
+      console.error('Failed to load collections:', err)
+    } finally {
+      setCollectionsLoading(false)
+    }
+  }
+
+  // 切换到收藏夹标签页时加载数据
+  useEffect(() => {
+    if (activeTab === 'favorites') {
+      loadCollections()
+    }
+  }, [activeTab])
 
   const loadUserInfo = async () => {
     try {
@@ -215,15 +240,58 @@ function UserCenter() {
         {activeTab === 'favorites' && (
           <div className="favorites-section">
             <h2>我的收藏</h2>
-            <div className="favorites-hint">
-              <p>管理你的收藏夹，创建多个分类收藏喜欢的视频</p>
-              <button 
-                className="btn-primary"
-                onClick={() => window.location.href = '/user/favorites'}
-              >
-                管理收藏夹
-              </button>
-            </div>
+            
+            {collectionsLoading ? (
+              <div className="collections-loading">加载中...</div>
+            ) : collections.length === 0 ? (
+              <div className="favorites-hint">
+                <p>管理你的收藏夹，创建多个分类收藏喜欢的视频</p>
+                <button 
+                  className="btn-primary"
+                  onClick={() => navigate('/user/favorites')}
+                >
+                  管理收藏夹
+                </button>
+              </div>
+            ) : (
+              <div className="user-collections-list">
+                {collections.map((collection) => (
+                  <div
+                    key={collection.id}
+                    className="user-collection-item"
+                    onClick={() => navigate(`/user/favorites/${collection.id}`)}
+                  >
+                    <div className="collection-cover">
+                      {collection.cover ? (
+                        <img src={collection.cover} alt={collection.name} />
+                      ) : (
+                        <div className="empty-cover">
+                          <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    <div className="collection-info">
+                      <div className="collection-name">
+                        {collection.name}
+                        {collection.isDefault && (
+                          <span className="default-badge">默认</span>
+                        )}
+                      </div>
+                      <div className="collection-count">
+                        {collection.count} 个视频
+                      </div>
+                    </div>
+                    <div className="collection-arrow">
+                      <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                        <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                      </svg>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
