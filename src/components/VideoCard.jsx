@@ -5,40 +5,27 @@ function VideoCard({ video }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [coverLoaded, setCoverLoaded] = useState(false);
 
   // 鼠标移入 - 开始播放
   const handleMouseEnter = useCallback(() => {
     if (videoRef.current) {
       const video = videoRef.current;
-      // 如果视频还未加载，先加载
-      if (!isLoaded) {
-        video.load();
-        setIsLoaded(true);
-      }
-      video.currentTime = 0; // 从头开始
+      video.currentTime = 0;
       video.play().catch(err => {
-        // 忽略自动播放阻止错误
         if (err.name !== 'AbortError') {
           console.log('Auto-play prevented:', err);
         }
       });
       setIsPlaying(true);
     }
-  }, [isLoaded]);
+  }, []);
 
   // 鼠标移出 - 停止播放但保留缓冲
   const handleMouseLeave = useCallback(() => {
     if (videoRef.current) {
       const video = videoRef.current;
-      
-      // 暂停播放
       video.pause();
-      
-      // 重置进度（不清空缓冲）
       video.currentTime = 0;
-      
       setIsPlaying(false);
       setProgress(0);
     }
@@ -66,23 +53,13 @@ function VideoCard({ video }) {
     }
   }, []);
 
-  // 视频加载完成
-  const handleLoadedData = useCallback(() => {
-    setIsLoaded(true);
-  }, []);
-
-  // 封面图加载完成
-  const handleCoverLoad = useCallback(() => {
-    setCoverLoaded(true);
-  }, []);
-
   return (
     <div
       className="video-card"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* 视频元素 - 预加载元数据 */}
+      {/* 视频元素 */}
       <video
         ref={videoRef}
         src={video.qiniuUrl}
@@ -93,25 +70,15 @@ function VideoCard({ video }) {
         preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
-        onLoadedData={handleLoadedData}
       />
 
-      {/* 封面图 - 使用 lazy 加载，播放时隐藏 */}
+      {/* 封面图 - 只在非播放状态显示 */}
       {video.coverUrl && (
         <img
           src={video.coverUrl}
           alt={video.title}
           className="video-cover"
-          loading="lazy"
-          onLoad={handleCoverLoad}
-          onError={(e) => {
-            // 封面加载失败时隐藏
-            e.target.style.display = 'none';
-          }}
-          style={{ 
-            opacity: isPlaying ? 0 : 1,
-            display: coverLoaded || !video.qiniuUrl ? 'block' : 'none'
-          }}
+          style={{ opacity: isPlaying ? 0 : 1 }}
         />
       )}
 
