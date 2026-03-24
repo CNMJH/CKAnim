@@ -49,6 +49,10 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
   const [textRotation, setTextRotation] = useState(0); // 文字旋转角度
   const [selectedDrawing, setSelectedDrawing] = useState(null); // 当前选中的绘画（用于编辑）
   
+  // 全屏状态
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const playerContainerRef = useRef(null);
+  
   // Canvas 相关
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -291,6 +295,16 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
     } catch (err) {
       alert(err.response?.data?.message || '移除收藏失败');
     }
+  };
+  
+  // 全屏切换
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+  
+  // 退出全屏
+  const exitFullscreen = () => {
+    setIsFullscreen(false);
   };
   
   // 自动播放视频
@@ -1327,17 +1341,32 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
   };
   
   return (
-    <div className="video-player-enhanced">
-      {/* 视频区域 */}
-      <div className="video-container">        <video
-          ref={videoRef}
-          src={videoUrl}
-          className="video-element"
-          loop
-          playsInline
-          crossOrigin="anonymous"
-          onClick={togglePlay}
-        />
+    <>
+      {/* 全屏模式下的关闭按钮 */}
+      {isFullscreen && (
+        <button className="fullscreen-close-btn" onClick={exitFullscreen}>
+          <svg viewBox="0 0 24 24" width="24" height="24">
+            <path fill="white" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </button>
+      )}
+      
+      <div 
+        className={`video-player-enhanced ${isFullscreen ? 'fullscreen' : ''}`}
+        ref={playerContainerRef}
+        onDoubleClick={toggleFullscreen}
+      >
+        {/* 视频区域 */}
+        <div className="video-container">
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            className="video-element"
+            loop
+            playsInline
+            crossOrigin="anonymous"
+            onClick={togglePlay}
+          />
         <canvas
           ref={canvasRef}
           className="drawing-overlay"
@@ -1793,7 +1822,7 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
         onClose={() => setShowAuthModal(false)}
         onLoginSuccess={handleLoginSuccess}
       />
-    </div>
+    </>
   );
 }
 
