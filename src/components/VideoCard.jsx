@@ -5,6 +5,7 @@ function VideoCard({ video }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [coverError, setCoverError] = useState(false);
 
   // 鼠标移入 - 开始播放
   const handleMouseEnter = useCallback(() => {
@@ -53,6 +54,17 @@ function VideoCard({ video }) {
     }
   }, []);
 
+  // 封面图加载错误
+  const handleCoverError = useCallback((e) => {
+    console.error('封面图加载失败:', video.title, video.coverUrl);
+    setCoverError(true);
+  }, [video.title, video.coverUrl]);
+
+  // 封面图加载成功
+  const handleCoverLoad = useCallback(() => {
+    console.log('封面图加载成功:', video.title);
+  }, [video.title]);
+
   return (
     <div
       className="video-card"
@@ -74,13 +86,20 @@ function VideoCard({ video }) {
       />
 
       {/* 封面图 - 默认显示，播放时隐藏 */}
-      {video.coverUrl && (
+      {!coverError && video.coverUrl && (
         <img
           src={video.coverUrl}
           alt={video.title}
           className="video-cover"
           style={{ opacity: isPlaying ? 0 : 1 }}
+          onLoad={handleCoverLoad}
+          onError={handleCoverError}
         />
+      )}
+
+      {/* 调试信息：封面图加载失败时显示标题 */}
+      {coverError && (
+        <div className="video-title-debug">{video.title}</div>
       )}
 
       {/* 进度条 */}

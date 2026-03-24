@@ -26,6 +26,20 @@
   object-fit: cover;
   transition: opacity 0.2s;
   z-index: 2;
+  /* 确保封面图可见 */
+  display: block !important;
+}
+
+/* 调试信息 */
+.video-title-debug {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+  z-index: 3;
 }
 
 /* 视频元素 */
