@@ -13,6 +13,10 @@ async function authenticate(request: any, reply: any) {
   try {
     const decoded: any = jwt.verify(token, JWT_SECRET)
     request.user = decoded
+    // 兼容处理：JWT 中使用 'id' 字段，但代码中使用 'userId'
+    if (decoded.id && !decoded.userId) {
+      decoded.userId = decoded.id
+    }
   } catch (err) {
     return reply.code(401).send({ error: 'Unauthorized', message: 'Token 无效' })
   }

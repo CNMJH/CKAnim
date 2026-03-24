@@ -42,7 +42,7 @@ export const authRoutes: FastifyPluginAsync = async (server) => {
 
       // 生成 JWT
       const token = server.jwt.sign({
-        id: admin.id,
+        userId: admin.id,
         username: admin.username,
         role: admin.role,
       });
