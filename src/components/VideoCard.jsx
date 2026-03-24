@@ -78,7 +78,7 @@ function VideoCard({ video }) {
         <img
           src={video.coverUrl}
           alt={video.title}
-          className="video-cover"
+          className="video-card-cover"
           style={{ opacity: isPlaying ? 0 : 1 }}
         />
       )}
