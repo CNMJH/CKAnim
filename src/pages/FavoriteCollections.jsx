@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { favoritesAPI, authUtils } from '../lib/api'
+import UserCenterLayout from '../components/UserCenterLayout'
 import './FavoriteCollections.css'
 
 function FavoriteCollections() {
@@ -154,13 +155,14 @@ function FavoriteCollections() {
   }
 
   return (
-    <div className="favorite-collections-page">
-      <div className="page-header">
-        <h2>我的收藏夹</h2>
-        <button className="create-btn" onClick={() => setShowCreateModal(true)}>
-          + 新建收藏夹
-        </button>
-      </div>
+    <UserCenterLayout>
+      <div className="favorite-collections-page">
+        <div className="page-header">
+          <h2>我的收藏夹</h2>
+          <button className="create-btn" onClick={() => setShowCreateModal(true)}>
+            + 新建收藏夹
+          </button>
+        </div>
 
       {collections.length > 1 && (
         <p className="drag-hint">💡 拖动收藏夹可调整排序（默认收藏夹不可拖动）</p>
@@ -278,6 +280,7 @@ function FavoriteCollections() {
         </div>
       )}
     </div>
+    </UserCenterLayout>
   )
 }
 

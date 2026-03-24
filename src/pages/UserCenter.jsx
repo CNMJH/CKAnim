@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { userAPI, authUtils, favoritesAPI } from '../lib/api'
 import axios from 'axios'
+import UserCenterLayout from '../components/UserCenterLayout'
 import './UserCenter.css'
 
 function UserCenter() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('profile') // profile, favorites, security, vip
@@ -23,6 +25,22 @@ function UserCenter() {
   const [vipPlans, setVipPlans] = useState([]) // VIP 套餐列表
   const [collections, setCollections] = useState([]) // 收藏夹列表
   const [collectionsLoading, setCollectionsLoading] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false) // 头像上传中
+  const [avatarPreview, setAvatarPreview] = useState(null) // 头像预览 URL
+
+  // 根据 URL 路径设置 activeTab
+  useEffect(() => {
+    const path = location.pathname
+    if (path === '/user/security') {
+      setActiveTab('security')
+    } else if (path === '/user/vip') {
+      setActiveTab('vip')
+    } else if (path === '/user/favorites') {
+      setActiveTab('favorites')
+    } else {
+      setActiveTab('profile')
+    }
+  }, [location.pathname])
 
   useEffect(() => {
     loadUserInfo()
@@ -103,6 +121,64 @@ function UserCenter() {
     }
   }
 
+  // 处理头像上传
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      showMessage('error', '请上传图片文件')
+      return
+    }
+
+    // 验证文件大小（最大 5MB）
+    if (file.size > 5 * 1024 * 1024) {
+      showMessage('error', '头像大小不能超过 5MB')
+      return
+    }
+
+    try {
+      setUploadingAvatar(true)
+
+      // 1. 获取上传凭证
+      const { data: tokenData } = await userAPI.getAvatarUploadToken(file.name)
+      const { token, key, uploadUrl } = tokenData
+
+      // 2. 上传到七牛云
+      const formData = new FormData()
+      formData.append('token', token)
+      formData.append('file', file)
+      formData.append('key', key)
+
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('上传失败')
+      }
+
+      const uploadResult = await uploadResponse.json()
+      const avatarUrl = `http://video.jiangmeijixie.com/${key}`
+
+      // 3. 提交头像审核
+      await userAPI.submitAvatar(avatarUrl, key)
+
+      // 4. 更新本地显示
+      setAvatarPreview(avatarUrl)
+      setFormData(prev => ({ ...prev, avatar: avatarUrl }))
+      
+      showMessage('success', '头像已上传，等待审核通过后显示')
+    } catch (err) {
+      console.error('Avatar upload error:', err)
+      showMessage('error', '上传失败：' + (err.message || '未知错误'))
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
+
   const showMessage = (type, text) => {
     setMessage({ type, text })
     setTimeout(() => setMessage({ type: '', text: '' }), 3000)
@@ -142,53 +218,7 @@ function UserCenter() {
   }
 
   return (
-    <div className="user-center">
-      <div className="user-center-sidebar">
-        <div className="user-avatar-section">
-          <img
-            src={user.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.username)}
-            alt={user.username}
-            className="user-avatar"
-          />
-          <h3 className="user-username">{user.username}</h3>
-          <p className="user-role">{getRoleText(user.role)}</p>
-        </div>
-        <nav className="user-nav">
-          <button
-            className={activeTab === 'profile' ? 'active' : ''}
-            onClick={() => setActiveTab('profile')}
-          >
-            个人信息
-          </button>
-          <button
-            className={activeTab === 'favorites' ? 'active' : ''}
-            onClick={() => setActiveTab('favorites')}
-          >
-            我的收藏
-          </button>
-          <button
-            className={activeTab === 'security' ? 'active' : ''}
-            onClick={() => setActiveTab('security')}
-          >
-            账号安全
-          </button>
-          <button
-            className={activeTab === 'vip' ? 'active' : ''}
-            onClick={() => setActiveTab('vip')}
-          >
-            会员开通
-          </button>
-          {authUtils.isAdmin() && (
-            <button
-              className={activeTab === 'admin' ? 'active' : ''}
-              onClick={() => window.open('/admin', '_blank')}
-            >
-              管理后台
-            </button>
-          )}
-        </nav>
-      </div>
-
+    <UserCenterLayout>
       <div className="user-center-content">
         {message.text && (
           <div className={`message ${message.type}`}>{message.text}</div>
@@ -197,6 +227,48 @@ function UserCenter() {
         {activeTab === 'profile' && (
           <div className="profile-section">
             <h2>个人信息</h2>
+            
+            {/* 头像上传区域 */}
+            <div className="avatar-upload-section">
+              <div className="avatar-preview">
+                <img
+                  src={avatarPreview || user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=667eea&color=fff&size=200`}
+                  alt="头像"
+                />
+                {user.avatarStatus === 'pending' && (
+                  <div className="avatar-status pending">
+                    <span>审核中</span>
+                  </div>
+                )}
+                {user.avatarStatus === 'rejected' && (
+                  <div className="avatar-status rejected">
+                    <span>已拒绝</span>
+                  </div>
+                )}
+              </div>
+              <div className="avatar-upload-info">
+                <label className="avatar-upload-btn">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    disabled={uploadingAvatar}
+                    style={{ display: 'none' }}
+                  />
+                  {uploadingAvatar ? '上传中...' : '更换头像'}
+                </label>
+                <p className="avatar-hint">支持 JPG、PNG 格式，大小不超过 5MB</p>
+                {user.avatarStatus === 'pending' && (
+                  <p className="avatar-status-hint">头像正在审核中，审核通过前不会显示</p>
+                )}
+                {user.avatarStatus === 'rejected' && (
+                  <p className="avatar-reject-reason">
+                    拒绝原因：{user.avatarRejectReason || '不符合规范'}
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div className="form-group">
               <label>用户名</label>
               <input type="text" value={user.username} disabled />
@@ -365,7 +437,7 @@ function UserCenter() {
           </div>
         )}
       </div>
-    </div>
+    </UserCenterLayout>
   )
 }
 

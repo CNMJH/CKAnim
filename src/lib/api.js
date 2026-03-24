@@ -163,6 +163,18 @@ export const userAPI = {
     const api = createAuthApi();
     return api.get(`/favorites/check/${videoId}`);
   },
+
+  // 获取头像上传凭证
+  getAvatarUploadToken: (filename) => {
+    const api = createAuthApi();
+    return api.get(`/avatar/upload-token`, { params: { filename } });
+  },
+
+  // 提交头像审核
+  submitAvatar: (avatarUrl, avatarKey) => {
+    const api = createAuthApi();
+    return api.post('/avatar/submit', { avatarUrl, avatarKey });
+  },
 };
 
 // 用户认证工具函数

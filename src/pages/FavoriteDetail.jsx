@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { favoritesAPI, authUtils } from '../lib/api'
+import UserCenterLayout from '../components/UserCenterLayout'
 import './FavoriteDetail.css'
 
 function FavoriteDetail() {
@@ -153,18 +154,19 @@ function FavoriteDetail() {
   }
 
   return (
-    <div className="favorite-detail-page">
-      <div className="detail-header">
-        <button className="back-btn" onClick={() => navigate('/user/favorites')}>
-          ← 返回
-        </button>
-        <div className="header-info">
-          <h1>{collection.name}</h1>
-          {collection.description && <p>{collection.description}</p>}
-          <div className="header-meta">
-            <span>{favorites.length} 个视频</span>
+    <UserCenterLayout>
+      <div className="favorite-detail-page">
+        <div className="detail-header">
+          <button className="back-btn" onClick={() => navigate('/user/favorites')}>
+            ← 返回
+          </button>
+          <div className="header-info">
+            <h1>{collection.name}</h1>
+            {collection.description && <p>{collection.description}</p>}
+            <div className="header-meta">
+              <span>{favorites.length} 个视频</span>
+            </div>
           </div>
-        </div>
         <div className="header-actions">
           {selectMode && (
             <>
@@ -299,7 +301,8 @@ function FavoriteDetail() {
           ))
         )}
       </div>
-    </div>
+      </div>
+    </UserCenterLayout>
   )
 }
 

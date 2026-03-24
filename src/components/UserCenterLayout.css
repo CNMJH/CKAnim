@@ -1,0 +1,107 @@
+.user-center-layout {
+  display: flex;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  min-height: calc(100vh - 60px);
+  background: #f5f7fa;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.user-center-sidebar {
+  width: 260px;
+  background: white;
+  padding: 32px 24px;
+  border-right: 1px solid #e8e8e8;
+  min-height: calc(100vh - 60px);
+  flex-shrink: 0;
+}
+
+.user-avatar-section {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.user-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 600;
+  color: white;
+  margin: 0 auto 12px;
+}
+
+.user-username {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #333;
+  font-weight: 600;
+  text-align: center;
+}
+
+.user-role {
+  margin: 0;
+  font-size: 13px;
+  color: #999;
+  text-align: center;
+}
+
+.user-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.user-nav button {
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 15px;
+  color: #666;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.user-nav button:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.user-nav button.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+}
+
+.user-center-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.user-center-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.user-center-sidebar::-webkit-scrollbar-thumb {
+  background: #d0d0d0;
+  border-radius: 3px;
+}
+
+.user-center-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
+.user-center-main {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+}

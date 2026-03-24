@@ -7,6 +7,7 @@ import Settings from './pages/Settings'
 import Characters from './pages/Characters'
 import Actions from './pages/Actions'
 import VipPlans from './pages/VipPlans'
+import AvatarReview from './pages/AvatarReview'
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -62,6 +63,14 @@ function App() {
         element={
           <ProtectedRoute>
             <VipPlans />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/avatar-review"
+        element={
+          <ProtectedRoute>
+            <AvatarReview />
           </ProtectedRoute>
         }
       />

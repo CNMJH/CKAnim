@@ -151,3 +151,106 @@ export function getDownloadUrl(key: string, expiresInSeconds = 3600): string {
     mac
   );
 }
+
+// ==================== 图片内容审核 ====================
+
+// 调用七牛云图片审核 API
+export async function censorImage(imageUrl: string, scenes: string[] = ['pulp', 'terror', 'politician', 'ads']) {
+  const accessKey = process.env.QINIU_ACCESS_KEY;
+  const secretKey = process.env.QINIU_SECRET_KEY;
+  
+  if (!accessKey || !secretKey) {
+    throw new Error('Missing Qiniu credentials for image censor');
+  }
+
+  const auth = new qiniu.auth.digest.Mac(accessKey, secretKey);
+  
+  // 构建请求体
+  const body = {
+    data: {
+      uri: imageUrl,
+    },
+    params: {
+      scenes: scenes,
+    },
+  };
+
+  const bodyStr = JSON.stringify(body);
+  
+  // 生成鉴权 Token
+  const token = qiniu.util.generateAccessTokenV2(auth, 'http://ai.qiniuapi.com/v3/image/censor', 'application/json', bodyStr);
+
+  try {
+    const response = await fetch('http://ai.qiniuapi.com/v3/image/censor', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+      },
+      body: bodyStr,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Image censor API failed: ${response.status} ${errorText}`);
+    }
+
+    const result = await response.json();
+    
+    // 解析审核结果
+    const censorResult = parseCensorResult(result);
+    
+    return censorResult;
+  } catch (error: any) {
+    console.error('Image censor error:', error);
+    throw error;
+  }
+}
+
+// 解析审核结果
+interface CensorResult {
+  suggestion: 'pass' | 'review' | 'block';
+  details: Array<{
+    scene: string;
+    suggestion: 'pass' | 'review' | 'block';
+    label: string;
+    score: number;
+  }>;
+}
+
+function parseCensorResult(result: any): CensorResult {
+  const overallSuggestion = result.result?.suggestion || 'pass';
+  const details: any[] = [];
+
+  const scenes = result.result?.scenes || {};
+  
+  // 遍历所有审核类型的结果
+  for (const [scene, sceneResult] of Object.entries(scenes)) {
+    const sceneData = sceneResult as any;
+    const sceneSuggestion = sceneData.suggestion || 'pass';
+    
+    if (sceneData.details && sceneData.details.length > 0) {
+      for (const detail of sceneData.details) {
+        details.push({
+          scene,
+          suggestion: detail.suggestion || sceneSuggestion,
+          label: detail.label || 'unknown',
+          score: detail.score || 0,
+        });
+      }
+    } else {
+      // 没有 details 时，记录整体结果
+      details.push({
+        scene,
+        suggestion: sceneSuggestion,
+        label: 'normal',
+        score: 1.0,
+      });
+    }
+  }
+
+  return {
+    suggestion: overallSuggestion,
+    details,
+  };
+}

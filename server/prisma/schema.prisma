@@ -160,7 +160,9 @@ model User {
   username    String             @unique
   email       String             @unique
   password    String
-  avatar      String?
+  avatar      String?            // 头像 URL
+  avatarStatus String            @default("pending") // pending, approved, rejected
+  avatarRejectReason String?     // 拒绝原因
   phone       String?
   role        String             @default("user")  // user, content_admin, system_admin
   vipLevel    String             @default("none")  // none, vip1, vip2, vip3

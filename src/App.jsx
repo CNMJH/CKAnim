@@ -20,6 +20,8 @@ function App() {
             <Route path="/games" element={<Games />} />
             <Route path="/search" element={<Search />} />
             <Route path="/user" element={<UserCenter />} />
+            <Route path="/user/security" element={<UserCenter />} />
+            <Route path="/user/vip" element={<UserCenter />} />
             <Route path="/user/favorites" element={<FavoriteCollections />} />
             <Route path="/user/favorites/:id" element={<FavoriteDetail />} />
           </Routes>

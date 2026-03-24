@@ -23,6 +23,8 @@ body {
 .main-content {
   flex: 1;
   padding-bottom: 0;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 footer {
