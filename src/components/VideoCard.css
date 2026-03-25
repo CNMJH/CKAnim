@@ -16,8 +16,8 @@
   transform: translateY(-2px);
 }
 
-/* 封面图 */
-.video-cover {
+/* 封面图 - BEM 命名避免冲突 */
+.video-card__cover {
   position: absolute;
   top: 0;
   left: 0;
