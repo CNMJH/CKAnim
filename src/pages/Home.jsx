@@ -46,20 +46,25 @@ function Home() {
     loadSettings();
   }, []);
 
-  // 加载视频数据
+  // 加载视频数据（随机）
+  const loadRandomVideos = async () => {
+    try {
+      setLoading(true);
+      const response = await videosAPI.getAll({ limit: 100 });
+      const allVideos = response.data.videos || [];
+      // 随机打乱数组
+      const shuffled = [...allVideos].sort(() => Math.random() - 0.5);
+      setVideos(shuffled);
+    } catch (error) {
+      console.error('加载视频失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 初始加载
   useEffect(() => {
-    const loadVideos = async () => {
-      try {
-        setLoading(true);
-        const response = await videosAPI.getAll({ limit: 20 });
-        setVideos(response.data.videos || []);
-      } catch (error) {
-        console.error('加载视频失败:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadVideos();
+    loadRandomVideos();
   }, []);
 
   // 自动轮播
@@ -70,11 +75,15 @@ function Home() {
     return () => clearInterval(timer);
   }, []);
 
+  // 换一批 - 随机刷新
   const handleRefresh = async () => {
     try {
       setLoading(true);
-      const response = await videosAPI.getAll({ limit: 20 });
-      setVideos(response.data.videos || []);
+      const response = await videosAPI.getAll({ limit: 100 });
+      const allVideos = response.data.videos || [];
+      // 随机打乱数组
+      const shuffled = [...allVideos].sort(() => Math.random() - 0.5);
+      setVideos(shuffled);
     } catch (error) {
       console.error('刷新视频失败:', error);
     } finally {
@@ -125,8 +134,13 @@ function Home() {
               ))}
 
               {/* 换一批按钮 - 右上角，垂直排列 */}
-              <button className="refresh-btn" onClick={handleRefresh}>
-                <span className="refresh-icon">🔄</span>
+              <button className="refresh-btn" onClick={handleRefresh} title="换一批">
+                <svg className="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 21" />
+                  <path d="M21 3v6h-6" />
+                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 3" />
+                  <path d="M3 21v-6h6" />
+                </svg>
                 <span className="refresh-text">
                   <span>换</span>
                   <span>一</span>
