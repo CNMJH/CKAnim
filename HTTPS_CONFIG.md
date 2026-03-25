@@ -1,0 +1,58 @@
+# CKAnim 域名与 HTTPS 配置
+
+## 域名信息
+- **主域名**: anick.cn
+- **前台地址**: https://anick.cn（自动跳转 HTTPS）
+- **后台地址**: http://admin.anick.cn（暂未配置 HTTPS）
+
+## DNS 配置
+| 记录类型 | 主机记录 | 记录值 | 说明 |
+|---------|---------|--------|------|
+| A | @ | 39.102.115.79 | 主域名 |
+| A | www | 39.102.115.79 | www 子域名 |
+
+## Nginx 配置
+- **配置文件**: `/etc/nginx/conf.d/ckanim.conf`
+- **HTTP 端口**: 80（自动跳转 HTTPS）
+- **HTTPS 端口**: 443（SSL/TLS）
+
+## SSL 证书
+- **证书类型**: Let's Encrypt（免费）
+- **证书路径**: `/etc/letsencrypt/live/anick.cn/`
+  - 公钥：`fullchain.pem`
+  - 私钥：`privkey.pem`
+- **有效期**: 90 天（自动续期）
+- **到期时间**: 2026-06-23
+- **自动续期**: `certbot-renew.timer`（systemd 定时任务）
+
+## 访问方式
+| 服务 | HTTP | HTTPS |
+|------|------|-------|
+| 前台网站 | http://anick.cn → 自动跳转 | https://anick.cn ✅ |
+| 前台网站 | http://www.anick.cn → 自动跳转 | https://www.anick.cn ✅ |
+| 后台管理 | http://admin.anick.cn ✅ | 暂未配置 |
+
+## 安全配置
+- TLS 1.2 + TLS 1.3
+- HTTP/2 支持
+- HSTS 强制 HTTPS（max-age=63072000，2 年）
+- 现代加密套件（ECDHE-RSA-AES128-GCM-SHA256）
+
+## 维护命令
+```bash
+# 手动续期证书
+certbot renew --dry-run  # 测试续期
+certbot renew            # 实际续期
+
+# 查看证书状态
+certbot certificates
+
+# 重启 Nginx
+systemctl reload nginx
+
+# 查看 Nginx 状态
+systemctl status nginx
+```
+
+## 配置日期
+2026-03-25
