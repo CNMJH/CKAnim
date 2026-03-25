@@ -6,6 +6,7 @@ export default defineConfig({
   server: {
     port: 5173,
     host: '0.0.0.0',
+    allowedHosts: ['anick.cn', 'www.anick.cn', 'admin.anick.cn', 'localhost'],
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:3002',
