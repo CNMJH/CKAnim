@@ -54,17 +54,18 @@
 
 .btn-danger {
   padding: 10px 20px;
-  background: #fee;
-  border: 1px solid #fcc;
+  background: #dc3545;
+  border: 1px solid #dc3545;
   border-radius: 6px;
-  color: #c00;
+  color: white;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .btn-danger:hover {
-  background: #fdd;
+  background: #c82333;
+  border-color: #bd2130;
 }
 
 .games-grid {

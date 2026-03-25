@@ -142,13 +142,14 @@
 }
 
 .btn-sm.btn-danger {
-  background: #fee;
-  border-color: #fcc;
-  color: #c00;
+  background: #dc3545;
+  border-color: #dc3545;
+  color: white;
 }
 
 .btn-sm.btn-danger:hover {
-  background: #fdd;
+  background: #c82333;
+  border-color: #bd2130;
 }
 
 .tree-children {
