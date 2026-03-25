@@ -25,6 +25,37 @@
 - **到期时间**: 2026-06-23
 - **自动续期**: `certbot-renew.timer`（systemd 定时任务）
 
+## 静态资源配置
+
+### 图片存储
+- **存储路径**: `/var/www/ckanim/public/`
+- **访问 URL**: `https://anick.cn/static/`
+- **目录结构**:
+  ```
+  public/
+  ├── icons/
+  │   ├── game/        # 游戏图标 (3 个)
+  │   └── character/   # 角色头像 (11 个)
+  └── covers/          # 视频封面 (91 个)
+  ```
+- **总大小**: 18MB
+
+### Nginx 静态资源配置
+```nginx
+location /static/ {
+    alias /var/www/ckanim/public/;
+    expires 30d;
+    add_header Cache-Control "public, immutable";
+}
+```
+
+### 图片迁移记录
+- ✅ 游戏图标：从 `http://video.jiangmeijixie.com/` 迁移到 `https://anick.cn/static/icons/game/`
+- ✅ 角色头像：从 `http://video.jiangmeijixie.com/` 迁移到 `https://anick.cn/static/icons/character/`
+- ✅ 视频封面：从 `http://video.jiangmeijixie.com/` 迁移到 `https://anick.cn/static/covers/`
+
+---
+
 ## 访问方式
 | 服务 | HTTP | HTTPS |
 |------|------|-------|
