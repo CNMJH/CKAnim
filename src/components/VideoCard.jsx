@@ -3,52 +3,20 @@ import './VideoCard.css';
 
 function VideoCard({ video }) {
   const videoRef = useRef(null);
-  const cardRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
 
-  // 使用 Intersection Observer 实现懒加载
+  // 预加载视频元数据
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      {
-        rootMargin: '100px', // 提前 100px 开始加载
-        threshold: 0.1,
-      }
-    );
-
-    if (cardRef.current) {
-      observer.observe(cardRef.current);
-    }
-
-    return () => {
-      if (cardRef.current) {
-        observer.unobserve(cardRef.current);
-      }
-    };
-  }, []);
-
-  // 视频进入视口后只加载元数据，不自动播放
-  useEffect(() => {
-    if (isVisible && videoRef.current && !isLoaded) {
-      const video = videoRef.current;
-      video.load(); // 开始加载视频
-      video.onloadeddata = () => {
+    if (videoRef.current) {
+      videoRef.current.load();
+      videoRef.current.onloadeddata = () => {
         setIsLoaded(true);
-        // 不自动播放，等待鼠标悬停
       };
     }
-  }, [isVisible, isLoaded]);
+  }, []);
 
   // 鼠标移入 - 开始播放
   const handleMouseEnter = useCallback(() => {
@@ -91,12 +59,11 @@ function VideoCard({ video }) {
 
   return (
     <div
-      ref={cardRef}
       className="video-card"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* 视频元素 - 加载完成后显示 */}
+      {/* 视频元素 - 鼠标悬停时显示 */}
       <video
         ref={videoRef}
         src={video.qiniuUrl}
@@ -107,25 +74,18 @@ function VideoCard({ video }) {
         preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
-        style={{ opacity: isLoaded ? 1 : 0 }}
+        style={{ opacity: isHovered && isLoaded ? 1 : 0 }}
       />
 
-      {/* 封面图 - 默认显示，视频加载后隐藏 */}
+      {/* 封面图 - 鼠标未移入时显示 */}
       {video.coverUrl && (
         <img
           src={video.coverUrl}
           alt={video.title}
           className="video-cover"
-          style={{ opacity: isLoaded ? 0 : 1 }}
+          style={{ opacity: isHovered ? 0 : 1 }}
           loading="lazy"
         />
-      )}
-
-      {/* 加载指示器 */}
-      {!isLoaded && (
-        <div className="video-loading">
-          <div className="loading-spinner"></div>
-        </div>
       )}
 
       {/* 进度条 - 鼠标悬停时显示 */}
