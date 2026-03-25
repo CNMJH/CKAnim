@@ -1,13 +1,14 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import './VideoCard.css';
 
 function VideoCard({ video }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
-  // 鼠标移入 - 开始播放
-  const handleMouseEnter = useCallback(() => {
+  // 组件加载后自动播放视频
+  useEffect(() => {
     if (videoRef.current) {
       const video = videoRef.current;
       video.currentTime = 0;
@@ -18,17 +19,16 @@ function VideoCard({ video }) {
       });
       setIsPlaying(true);
     }
+  }, [video]);
+
+  // 鼠标移入 - 保持播放
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
   }, []);
 
-  // 鼠标移出 - 停止播放但保留缓冲
+  // 鼠标移出 - 继续播放（不停止）
   const handleMouseLeave = useCallback(() => {
-    if (videoRef.current) {
-      const video = videoRef.current;
-      video.pause();
-      video.currentTime = 0;
-      setIsPlaying(false);
-      setProgress(0);
-    }
+    setIsHovered(false);
   }, []);
 
   // 进度更新
@@ -59,7 +59,7 @@ function VideoCard({ video }) {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* 视频元素 - 只在播放时可见 */}
+      {/* 视频元素 - 始终可见 */}
       <video
         ref={videoRef}
         src={video.qiniuUrl}
@@ -67,13 +67,13 @@ function VideoCard({ video }) {
         muted
         loop
         playsInline
-        preload="metadata"
+        preload="auto"
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
-        style={{ opacity: isPlaying ? 1 : 0 }}
+        style={{ opacity: 1 }}
       />
 
-      {/* 封面图 - 默认显示，播放时隐藏 */}
+      {/* 封面图 - 仅在视频加载前显示 */}
       {video.coverUrl && (
         <img
           src={video.coverUrl}
@@ -83,8 +83,8 @@ function VideoCard({ video }) {
         />
       )}
 
-      {/* 进度条 */}
-      <div className="progress-bar">
+      {/* 进度条 - 鼠标悬停时显示 */}
+      <div className="progress-bar" style={{ opacity: isHovered ? 1 : 0 }}>
         <div
           className="progress-fill"
           style={{ width: `${progress}%` }}
