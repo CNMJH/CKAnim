@@ -4,40 +4,31 @@ import './VideoCard.css';
 function VideoCard({ video }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // 预加载视频元数据
+  // 组件加载后自动播放视频
   useEffect(() => {
     if (videoRef.current) {
-      videoRef.current.load();
-      videoRef.current.onloadeddata = () => {
-        setIsLoaded(true);
-      };
-    }
-  }, []);
-
-  // 鼠标移入 - 开始播放
-  const handleMouseEnter = useCallback(() => {
-    setIsHovered(true);
-    if (videoRef.current && isLoaded) {
-      videoRef.current.play().catch((err) => {
+      const video = videoRef.current;
+      video.currentTime = 0;
+      video.play().catch((err) => {
         if (err.name !== 'AbortError') {
-          console.log('Play prevented:', err);
+          console.log('Auto-play prevented:', err);
         }
       });
       setIsPlaying(true);
     }
-  }, [isLoaded]);
+  }, [video]);
 
-  // 鼠标移出 - 暂停播放
+  // 鼠标移入 - 保持播放（无操作）
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+  }, []);
+
+  // 鼠标移出 - 继续播放（不停止）
   const handleMouseLeave = useCallback(() => {
     setIsHovered(false);
-    if (videoRef.current) {
-      videoRef.current.pause();
-      setIsPlaying(false);
-    }
   }, []);
 
   // 进度更新
@@ -50,10 +41,15 @@ function VideoCard({ video }) {
     }
   }, []);
 
-  // 视频结束 - 重置
+  // 视频结束 - 循环
   const handleEnded = useCallback(() => {
     if (videoRef.current) {
       videoRef.current.currentTime = 0;
+      videoRef.current.play().catch((err) => {
+        if (err.name !== 'AbortError') {
+          console.log('Loop prevented:', err);
+        }
+      });
     }
   }, []);
 
@@ -63,7 +59,7 @@ function VideoCard({ video }) {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* 视频元素 - 鼠标悬停时显示 */}
+      {/* 视频元素 - 始终可见 */}
       <video
         ref={videoRef}
         src={video.qiniuUrl}
@@ -71,20 +67,19 @@ function VideoCard({ video }) {
         muted
         loop
         playsInline
-        preload="metadata"
+        preload="auto"
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
-        style={{ opacity: isHovered && isLoaded ? 1 : 0 }}
+        style={{ opacity: 1 }}
       />
 
-      {/* 封面图 - 鼠标未移入时显示 */}
+      {/* 封面图 - 仅在视频加载前显示 */}
       {video.coverUrl && (
         <img
           src={video.coverUrl}
           alt={video.title}
           className="video-cover"
-          style={{ opacity: isHovered ? 0 : 1 }}
-          loading="lazy"
+          style={{ opacity: isPlaying ? 0 : 1 }}
         />
       )}
 
