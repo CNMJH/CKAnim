@@ -11,6 +11,7 @@ import {
   generateThumbnail,
   uploadThumbnailToQiniu,
   cleanupTempFile,
+  generateWebpCoverUrl,
 } from '../lib/thumbnail.js';
 import os from 'os';
 import path from 'path';
@@ -459,8 +460,11 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
 
           server.log.info(`[Video Create] Validated: game=${game.name}, character=${character.name}, action=${action.name}`);
 
-          // 4. 生成封面图（如果需要）
+          // 4. 生成封面图（JPG + WebP）
           let finalCoverUrl = coverUrl;
+          let finalCoverUrlJpg = coverUrl;
+          let finalCoverUrlWebp = null;
+          
           if (generateCover && !coverUrl) {
             try {
               const tempDir = path.join(os.tmpdir(), 'ckanim-thumbnails');
@@ -476,12 +480,17 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
                 stdio: 'pipe',
               });
 
-              const thumbnailPath = await generateThumbnail(tempVideoPath, tempDir);
-              const thumbnailResult = await uploadThumbnailToQiniu(thumbnailPath, qiniuKey);
-              finalCoverUrl = thumbnailResult.url;
+              // 生成 JPG 和 WebP 两种格式
+              const thumbnailPaths = await generateThumbnail(tempVideoPath, tempDir);
+              const thumbnailResult = await uploadThumbnailToQiniu(thumbnailPaths, qiniuKey);
+              
+              finalCoverUrl = thumbnailResult.jpg.url;
+              finalCoverUrlJpg = thumbnailResult.jpg.url;
+              finalCoverUrlWebp = thumbnailResult.webp.url;
 
               cleanupTempFile(tempVideoPath);
-              cleanupTempFile(thumbnailPath);
+              cleanupTempFile(thumbnailPaths.jpg);
+              cleanupTempFile(thumbnailPaths.webp);
             } catch (err) {
               server.log.error('Failed to generate thumbnail:', err);
               // 封面生成失败不影响视频创建
@@ -517,6 +526,8 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
               duration,
               thumbnail,
               coverUrl: finalCoverUrl,
+              coverUrlJpg: finalCoverUrlJpg,
+              coverUrlWebp: finalCoverUrlWebp,
               order,
               published: true, // ⭐ 默认发布，前台可访问
               actionId, // ⭐ 直接关联到动作

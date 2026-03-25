@@ -4,31 +4,65 @@ import path from 'path';
 import { getUploadToken, getFileUrl } from './qiniu.js';
 
 /**
- * 从视频生成封面图（截取第 1 帧）
+ * 从视频生成封面图（截取第 1 秒）
+ * 同时生成 JPG 和 WebP 两种格式
  * @param {string} videoPath - 本地视频文件路径
  * @param {string} outputDir - 输出目录
- * @returns {Promise<string>} - 生成的封面图路径
+ * @returns {Promise<{ jpg: string, webp: string }>} - 生成的封面图路径
  */
-export async function generateThumbnail(videoPath: string, outputDir: string): Promise<string> {
+export async function generateThumbnail(videoPath: string, outputDir: string): Promise<{ jpg: string; webp: string }> {
   return new Promise((resolve, reject) => {
     const filename = path.basename(videoPath, path.extname(videoPath));
-    const outputPath = path.join(outputDir, `${filename}-thumbnail.jpg`);
+    const jpgPath = path.join(outputDir, `${filename}-thumbnail.jpg`);
+    const webpPath = path.join(outputDir, `${filename}-thumbnail.webp`);
 
     // 确保输出目录存在
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
+    // 先截取一帧保存为临时文件
+    const tempFrame = path.join(outputDir, `${filename}-temp.jpg`);
+    
     ffmpeg(videoPath)
       .screenshots({
         timestamps: ['00:00:01'], // 截取第 1 秒的帧
-        filename: `${filename}-thumbnail.jpg`,
+        filename: `${filename}-temp.jpg`,
         folder: outputDir,
         size: '640x360', // 缩略图尺寸
       })
-      .on('end', () => {
-        console.log(`Thumbnail generated: ${outputPath}`);
-        resolve(outputPath);
+      .on('end', async () => {
+        try {
+          // 使用 ffmpeg 转换为 JPG 和 WebP
+          await Promise.all([
+            // 生成 JPG（高质量）
+            new Promise<void>((resolveJpg, rejectJpg) => {
+              ffmpeg(tempFrame)
+                .outputOptions(['-q:v 2']) // 高质量 JPEG
+                .save(jpgPath)
+                .on('end', () => resolveJpg())
+                .on('error', rejectJpg);
+            }),
+            // 生成 WebP（高压缩）
+            new Promise<void>((resolveWebp, rejectWebp) => {
+              ffmpeg(tempFrame)
+                .outputOptions(['-c:v libwebp', '-q:v 75', '-lossless 0']) // WebP 格式，质量 75%
+                .save(webpPath)
+                .on('end', () => resolveWebp())
+                .on('error', rejectWebp);
+            })
+          ]);
+          
+          // 清理临时文件
+          if (fs.existsSync(tempFrame)) {
+            fs.unlinkSync(tempFrame);
+          }
+          
+          console.log(`Thumbnails generated: ${jpgPath}, ${webpPath}`);
+          resolve({ jpg: jpgPath, webp: webpPath });
+        } catch (err) {
+          reject(err);
+        }
       })
       .on('error', (err) => {
         console.error('Thumbnail generation error:', err);
@@ -38,55 +72,84 @@ export async function generateThumbnail(videoPath: string, outputDir: string): P
 }
 
 /**
- * 上传封面图到七牛云
- * @param {string} thumbnailPath - 本地封面图路径
+ * 上传封面图到七牛云（JPG + WebP）
+ * @param {string} thumbnailPaths - 封面图路径 { jpg, webp }
  * @param {string} videoKey - 视频在七牛云的 key（用于生成相似路径）
- * @returns {Promise<{ key: string, url: string }>} - 七牛云 key 和 URL
+ * @returns {Promise<{ jpg: { key, url }, webp: { key, url } }>} - 七牛云 key 和 URL
  */
 export async function uploadThumbnailToQiniu(
-  thumbnailPath: string,
+  thumbnailPaths: { jpg: string; webp: string },
   videoKey: string
-): Promise<{ key: string; url: string }> {
-  // 生成封面图的 key（在视频 key 基础上加 thumbnail 前缀）
-  const thumbnailKey = videoKey.replace('.mp4', '-thumbnail.jpg');
-
-  // 获取上传凭证
-  const token = getUploadToken(thumbnailKey);
-
-  // 读取文件
-  const fileContent = fs.readFileSync(thumbnailPath);
-
-  // 使用七牛云 SDK 上传
+): Promise<{ jpg: { key: string; url: string }; webp: { key: string; url: string } }> {
   const qiniu = await import('qiniu');
   const mac = new qiniu.auth.digest.Mac(
     process.env.QINIU_ACCESS_KEY!,
     process.env.QINIU_SECRET_KEY!
   );
 
+  // 生成 JPG 和 WebP 的 key
+  const jpgKey = videoKey.replace('.mp4', '-thumbnail.jpg');
+  const webpKey = videoKey.replace('.mp4', '-thumbnail.webp');
+
+  // 获取上传凭证
+  const jpgToken = getUploadToken(jpgKey);
+  const webpToken = getUploadToken(webpKey);
+
+  // 读取文件
+  const jpgContent = fs.readFileSync(thumbnailPaths.jpg);
+  const webpContent = fs.readFileSync(thumbnailPaths.webp);
+
   const formUploader = new qiniu.form_up.FormUploader();
   const putExtra = new qiniu.form_up.PutExtra();
 
-  return new Promise((resolve, reject) => {
-    formUploader.put(
-      token,
-      thumbnailKey,
-      fileContent,
-      putExtra,
-      (respErr, respBody, respInfo) => {
-        if (respErr) {
-          reject(respErr);
-        } else if (respInfo.statusCode === 200) {
-          const url = getFileUrl(thumbnailKey);
-          resolve({
-            key: thumbnailKey,
-            url,
-          });
-        } else {
-          reject(new Error(`Upload failed: ${respInfo.statusCode}`));
+  // 并行上传两种格式
+  const [jpgResult, webpResult] = await Promise.all([
+    new Promise<{ key: string; url: string }>((resolve, reject) => {
+      formUploader.put(
+        jpgToken,
+        jpgKey,
+        jpgContent,
+        putExtra,
+        (respErr, respBody, respInfo) => {
+          if (respErr) {
+            reject(respErr);
+          } else if (respInfo.statusCode === 200) {
+            resolve({ key: jpgKey, url: getFileUrl(jpgKey) });
+          } else {
+            reject(new Error(`JPG upload failed: ${respInfo.statusCode}`));
+          }
         }
-      }
-    );
-  });
+      );
+    }),
+    new Promise<{ key: string; url: string }>((resolve, reject) => {
+      formUploader.put(
+        webpToken,
+        webpKey,
+        webpContent,
+        putExtra,
+        (respErr, respBody, respInfo) => {
+          if (respErr) {
+            reject(respErr);
+          } else if (respInfo.statusCode === 200) {
+            resolve({ key: webpKey, url: getFileUrl(webpKey) });
+          } else {
+            reject(new Error(`WebP upload failed: ${respInfo.statusCode}`));
+          }
+        }
+      );
+    })
+  ]);
+
+  return { jpg: jpgResult, webp: webpResult };
+}
+
+/**
+ * 从 URL 生成 WebP 格式封面图（使用七牛云图片处理）
+ * @param {string} jpgUrl - JPG 封面图 URL
+ * @returns {string} - WebP 封面图 URL
+ */
+export function generateWebpCoverUrl(jpgUrl: string): string {
+  return `${jpgUrl}?imageMogr2/format/webp/quality/75`;
 }
 
 /**

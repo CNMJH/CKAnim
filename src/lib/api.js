@@ -97,6 +97,14 @@ export const siteSettingsAPI = {
   },
 };
 
+// 轮播图 API
+export const carouselAPI = {
+  // 获取活跃的轮播图（前台使用）
+  getActive: () => {
+    return api.get('/carousels/active');
+  },
+};
+
 // ==================== 用户系统 API ====================
 
 // 创建带 Token 的 axios 实例

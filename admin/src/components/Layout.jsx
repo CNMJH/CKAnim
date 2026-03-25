@@ -20,6 +20,7 @@ function Layout({ children }) {
         { path: '/categories', label: '分类管理', icon: '📁' },
         { path: '/characters', label: '角色管理', icon: '👤' },
         { path: '/actions', label: '动作管理', icon: '🎯' },
+        { path: '/carousels', label: '轮播图管理', icon: '🖼️' },
         { path: '/vip-plans', label: 'VIP 套餐', icon: '💎' },
         { path: '/avatar-review', label: '头像审核', icon: '🖼️' },
         { path: '/database', label: '数据库管理', icon: '🗄️' },

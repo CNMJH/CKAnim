@@ -3,7 +3,7 @@ import Layout from '../components/Layout'
 import { useAuthStore } from '../store/auth'
 import './Database.css'
 
-const API_BASE = 'http://39.102.115.79:3002/api'
+const API_BASE = 'https://admin.anick.cn/api'
 
 const ALLOWED_TABLES = [
   { name: 'User', label: '用户' },

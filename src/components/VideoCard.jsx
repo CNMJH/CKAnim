@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import './VideoCard.css';
 
 function VideoCard({ video }) {
@@ -6,10 +6,29 @@ function VideoCard({ video }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
-  // 鼠标移入 - 开始播放
+  // 检测是否支持 WebP
+  const supportsWebP = typeof document !== 'undefined' 
+    ? document.createElement('canvas').toDataURL('image/webp').includes('webp')
+    : true;
+  
+  // 优先使用 WebP 封面图
+  const coverUrl = video.coverUrlWebp && supportsWebP 
+    ? video.coverUrlWebp 
+    : (video.coverUrl || video.coverUrlJpg);
+
+  // 鼠标移入 - 加载并播放视频
   const handleMouseEnter = useCallback(() => {
     setIsHovered(true);
+    
+    // 如果视频还没加载，开始加载
+    if (!videoLoaded && videoRef.current && video.qiniuUrl) {
+      videoRef.current.src = video.qiniuUrl;
+      setVideoLoaded(true);
+    }
+    
+    // 播放视频
     if (videoRef.current) {
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch((err) => {
@@ -19,7 +38,7 @@ function VideoCard({ video }) {
       });
       setIsPlaying(true);
     }
-  }, []);
+  }, [videoLoaded, video.qiniuUrl]);
 
   // 鼠标移出 - 停止播放并重置
   const handleMouseLeave = useCallback(() => {
@@ -59,10 +78,10 @@ function VideoCard({ video }) {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* 封面图 - 默认显示，鼠标移入时隐藏 */}
-      {video.coverUrl && (
+      {/* 封面图 - 默认显示，鼠标移入时隐藏（优先使用 WebP） */}
+      {coverUrl && (
         <img
-          src={video.coverUrl}
+          src={coverUrl}
           alt={video.title}
           className="video-card__cover"
           style={{ opacity: isPlaying ? 0 : 1, visibility: isPlaying ? 'hidden' : 'visible' }}
@@ -70,15 +89,14 @@ function VideoCard({ video }) {
         />
       )}
 
-      {/* 视频元素 - 鼠标移入时显示 */}
+      {/* 视频元素 - 鼠标移入时才加载并显示 */}
       <video
         ref={videoRef}
-        src={video.qiniuUrl}
         className="video-element"
         muted
         loop
         playsInline
-        preload="metadata"
+        preload="none"
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
         style={{ opacity: isPlaying ? 1 : 0, visibility: isPlaying ? 'visible' : 'hidden' }}

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { videosAPI, siteSettingsAPI } from '../lib/api';
+import { videosAPI, siteSettingsAPI, carouselAPI } from '../lib/api';
 import VideoCard from '../components/VideoCard';
 import './Home.css';
 
 function Home() {
   const [currentBanner, setCurrentBanner] = useState(0);
+  const [banners, setBanners] = useState([]);
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [siteSettings, setSiteSettings] = useState({
@@ -15,13 +16,6 @@ function Home() {
       color: '#666',
     },
   });
-
-  // 轮播图数据（暂时使用静态数据）
-  const banners = [
-    { id: 1, title: '欢迎来到 CKAnim', image: 'https://placehold.co/640x360/3b82f6/ffffff?text=CKAnim' },
-    { id: 2, title: '发现精彩游戏动作', image: 'https://placehold.co/640x360/10b981/ffffff?text=Game+Actions' },
-    { id: 3, title: '每日更新不间断', image: 'https://placehold.co/640x360/f59e0b/ffffff?text=Daily+Updates' },
-  ];
 
   // 加载网站设置
   useEffect(() => {
@@ -44,6 +38,36 @@ function Home() {
       }
     };
     loadSettings();
+  }, []);
+
+  // 加载轮播图
+  useEffect(() => {
+    const loadBanners = async () => {
+      try {
+        const response = await carouselAPI.getActive();
+        const activeBanners = response.data.carousels || [];
+        
+        if (activeBanners.length > 0) {
+          setBanners(activeBanners);
+        } else {
+          // 默认轮播图（如果没有配置）
+          setBanners([
+            { id: 1, title: '欢迎来到 CKAnim', imageUrl: 'https://placehold.co/640x360/3b82f6/ffffff?text=CKAnim' },
+            { id: 2, title: '发现精彩游戏动作', imageUrl: 'https://placehold.co/640x360/10b981/ffffff?text=Game+Actions' },
+            { id: 3, title: '每日更新不间断', imageUrl: 'https://placehold.co/640x360/f59e0b/ffffff?text=Daily+Updates' },
+          ]);
+        }
+      } catch (error) {
+        console.error('加载轮播图失败:', error);
+        // 使用默认轮播图
+        setBanners([
+          { id: 1, title: '欢迎来到 CKAnim', imageUrl: 'https://placehold.co/640x360/3b82f6/ffffff?text=CKAnim' },
+          { id: 2, title: '发现精彩游戏动作', imageUrl: 'https://placehold.co/640x360/10b981/ffffff?text=Game+Actions' },
+          { id: 3, title: '每日更新不间断', imageUrl: 'https://placehold.co/640x360/f59e0b/ffffff?text=Daily+Updates' },
+        ]);
+      }
+    };
+    loadBanners();
   }, []);
 
   // 加载视频数据（随机）
@@ -105,12 +129,29 @@ function Home() {
       <div className="home-content">
         {/* 左侧轮播图 */}
         <div className="banner-section">
-          <div className="banner">
-            <div className="banner-placeholder">
-              轮播图
+          {banners.length > 0 ? (
+            <div className="banner">
+              <img 
+                src={banners[currentBanner].imageUrl} 
+                alt={banners[currentBanner].title}
+                className="banner-image"
+                onClick={() => {
+                  if (banners[currentBanner].targetUrl) {
+                    window.open(banners[currentBanner].targetUrl, '_blank');
+                  }
+                }}
+                style={{ cursor: banners[currentBanner].targetUrl ? 'pointer' : 'default' }}
+              />
+              <div className="banner-title">{banners[currentBanner].title}</div>
             </div>
-            <div className="banner-title">{banners[currentBanner].title}</div>
-          </div>
+          ) : (
+            <div className="banner">
+              <div className="banner-placeholder">
+                轮播图
+              </div>
+              <div className="banner-title">加载中...</div>
+            </div>
+          )}
           <div className="banner-dots">
             {banners.map((_, index) => (
               <span

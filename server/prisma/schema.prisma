@@ -81,6 +81,8 @@ model Video {
   updatedAt   DateTime       @updatedAt
   qiniuKey    String
   qiniuUrl    String
+  coverUrlJpg String?
+  coverUrlWebp String?
   gameId      Int
   actionId    Int?           @unique
   VideoTags   VideoTags[]
@@ -230,4 +232,24 @@ model Favorite {
   @@index([videoId])
   @@index([collectionId])
   @@map("favorites")
+}
+
+// 轮播图管理
+model Carousel {
+  id          Int      @id @default(autoincrement())
+  title       String   // 轮播图标题
+  imageUrl    String   // 图片 URL
+  targetUrl   String?  // 跳转链接（可选）
+  order       Int      @default(0) // 排序
+  duration    Int      @default(24) // 展示时长（小时）
+  startTime   DateTime // 开始时间
+  endTime     DateTime // 结束时间（自动计算）
+  active      Boolean  @default(true) // 是否激活
+  isDefault   Boolean  @default(false) // 是否默认轮播图（常驻）
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
+  @@index([endTime])
+  @@map("carousels")
 }
