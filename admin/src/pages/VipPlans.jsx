@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
+import Layout from '../components/Layout'
+import { useAuthStore } from '../store/auth'
 import './VipPlans.css'
 
 // API 请求（使用拦截器动态添加 Token）
@@ -18,6 +20,7 @@ api.interceptors.request.use((config) => {
 })
 
 function VipPlans() {
+  const { user } = useAuthStore()
   const [editingPlan, setEditingPlan] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
@@ -165,16 +168,17 @@ function VipPlans() {
   if (error) return <div className="error">加载失败：{error.message}</div>
 
   return (
-    <div className="vip-plans-page">
-      <div className="page-header">
-        <h1>VIP 套餐管理</h1>
-        <div className="header-actions">
-          <button className="btn-init" onClick={handleInit}>
-            初始化默认套餐
-          </button>
-          <button 
-            className="btn-add" 
-            onClick={() => {
+    <Layout>
+      <div className="vip-plans-page">
+        <div className="page-header">
+          <h1>VIP 套餐管理</h1>
+          <div className="header-actions">
+            <button className="btn-init" onClick={handleInit}>
+              初始化默认套餐
+            </button>
+            <button 
+              className="btn-add" 
+              onClick={() => {
               resetForm()
               setEditingPlan(null)
               setShowForm(!showForm)
@@ -183,9 +187,8 @@ function VipPlans() {
             {showForm ? '取消' : '+ 添加套餐'}
           </button>
         </div>
-      </div>
 
-      {showForm && (
+        {showForm && (
         <div className="form-modal">
           <div className="form-content">
             <h2>{editingPlan ? '编辑套餐' : '添加套餐'}</h2>
@@ -294,8 +297,9 @@ function VipPlans() {
           </div>
         </div>
       )}
+        </div>
 
-      <div className="vip-plans-list">
+        <div className="vip-plans-list">
         {data && data.length === 0 ? (
           <div className="empty-state">
             <p>暂无 VIP 套餐</p>
@@ -351,8 +355,9 @@ function VipPlans() {
             </tbody>
           </table>
         )}
+        </div>
       </div>
-    </div>
+    </Layout>
   )
 }
 
