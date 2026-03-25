@@ -59,6 +59,17 @@ function VideoCard({ video }) {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
+      {/* 封面图 - 默认显示，鼠标移入时隐藏 */}
+      {video.coverUrl && (
+        <img
+          src={video.coverUrl}
+          alt={video.title}
+          className="video-cover"
+          style={{ opacity: isPlaying ? 0 : 1, visibility: isPlaying ? 'hidden' : 'visible' }}
+          loading="lazy"
+        />
+      )}
+
       {/* 视频元素 - 鼠标移入时显示 */}
       <video
         ref={videoRef}
@@ -70,19 +81,8 @@ function VideoCard({ video }) {
         preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
-        style={{ opacity: isPlaying ? 1 : 0 }}
+        style={{ opacity: isPlaying ? 1 : 0, visibility: isPlaying ? 'visible' : 'hidden' }}
       />
-
-      {/* 封面图 - 默认显示，鼠标移入时隐藏 */}
-      {video.coverUrl && (
-        <img
-          src={video.coverUrl}
-          alt={video.title}
-          className="video-cover"
-          style={{ opacity: isPlaying ? 0 : 1 }}
-          loading="lazy"
-        />
-      )}
 
       {/* 进度条 - 鼠标悬停时显示 */}
       <div className="progress-bar" style={{ opacity: isHovered ? 1 : 0 }}>
