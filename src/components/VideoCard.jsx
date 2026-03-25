@@ -38,31 +38,38 @@ function VideoCard({ video }) {
     };
   }, []);
 
-  // 视频进入视口后开始播放
+  // 视频进入视口后只加载元数据，不自动播放
   useEffect(() => {
     if (isVisible && videoRef.current && !isLoaded) {
       const video = videoRef.current;
       video.load(); // 开始加载视频
       video.onloadeddata = () => {
         setIsLoaded(true);
-        video.play().catch((err) => {
-          if (err.name !== 'AbortError') {
-            console.log('Auto-play prevented:', err);
-          }
-        });
-        setIsPlaying(true);
+        // 不自动播放，等待鼠标悬停
       };
     }
   }, [isVisible, isLoaded]);
 
-  // 鼠标移入 - 保持播放
+  // 鼠标移入 - 开始播放
   const handleMouseEnter = useCallback(() => {
     setIsHovered(true);
-  }, []);
+    if (videoRef.current && isLoaded) {
+      videoRef.current.play().catch((err) => {
+        if (err.name !== 'AbortError') {
+          console.log('Play prevented:', err);
+        }
+      });
+      setIsPlaying(true);
+    }
+  }, [isLoaded]);
 
-  // 鼠标移出 - 继续播放（不停止）
+  // 鼠标移出 - 暂停播放
   const handleMouseLeave = useCallback(() => {
     setIsHovered(false);
+    if (videoRef.current) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
   }, []);
 
   // 进度更新
@@ -75,15 +82,10 @@ function VideoCard({ video }) {
     }
   }, []);
 
-  // 视频结束 - 循环
+  // 视频结束 - 重置
   const handleEnded = useCallback(() => {
     if (videoRef.current) {
       videoRef.current.currentTime = 0;
-      videoRef.current.play().catch((err) => {
-        if (err.name !== 'AbortError') {
-          console.log('Loop prevented:', err);
-        }
-      });
     }
   }, []);
 
