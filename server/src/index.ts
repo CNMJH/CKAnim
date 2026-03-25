@@ -67,7 +67,10 @@ await server.register(characterRoutes, { prefix: '/api/admin' });
 await server.register(actionRoutes, { prefix: '/api/admin' });
 await server.register(settingsRoutes, { prefix: '/api' });
 await server.register(databaseRoutes, { prefix: '/api/admin' });
-await server.register(carouselRoutes, { prefix: '/api/admin' });
+
+// 轮播图路由：公开 + 管理员
+await server.register(carouselRoutes, { prefix: '/api' }); // /api/carousels/active（公开）
+await server.register(carouselRoutes, { prefix: '/api/admin' }); // /api/admin/carousels/*（管理员）
 
 writeFileSync('/tmp/server_startup.log', `Server started at ${new Date().toISOString()}\nRoutes: auth, games, categories, videos, tags, actions\n`, { append: true });
 
