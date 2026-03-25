@@ -40,12 +40,11 @@ export const databaseRoutes: FastifyPluginAsync = async (server) => {
     async (request, reply) => {
       try {
         const { tableName } = request.params as { tableName: string }
-        const { page = 1, limit = 20, search, searchField } = request.query as {
-          page?: number
-          limit?: number
-          search?: string
-          searchField?: string
-        }
+        const query = request.query as any
+        const page = parseInt(query.page) || 1
+        const limit = parseInt(query.limit) || 20
+        const search = query.search as string
+        const searchField = query.searchField as string
 
         // 白名单验证表名
         const allowedTables = [
@@ -61,7 +60,7 @@ export const databaseRoutes: FastifyPluginAsync = async (server) => {
         }
 
         const skip = (page - 1) * limit
-        const where = search && searchField ? {
+        const where: any = search && searchField ? {
           [searchField]: {
             contains: search
           }
@@ -87,7 +86,7 @@ export const databaseRoutes: FastifyPluginAsync = async (server) => {
         ])
 
         // 获取表结构
-        const fields = await prisma.$queryRaw`PRAGMA table_info(${tableName})`
+        const fields = await prisma.$queryRawUnsafe(`PRAGMA table_info(${tableName})`)
 
         reply.send({
           data,
