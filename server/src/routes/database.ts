@@ -206,6 +206,70 @@ export const databaseRoutes: FastifyPluginAsync = async (server) => {
     }
   )
 
+  // 恢复删除的记录
+  server.post(
+    '/database/table/:tableName/restore',
+    { preHandler: [requireSystemAdmin] },
+    async (request, reply) => {
+      try {
+        const { tableName } = request.params as { tableName: string }
+        const { id, data } = request.body as { id: number; data: any }
+
+        const allowedTables = [
+          'User', 'Video', 'Action', 'Game', 'GameCategory', 'Character',
+          'Favorite', 'FavoriteCollection', 'SiteSettings', 'VipPlan', 'AvatarReview'
+        ]
+        
+        if (!allowedTables.includes(tableName)) {
+          return reply.code(400).send({
+            error: 'Bad Request',
+            message: '不支持的表名',
+          })
+        }
+
+        const model = (prisma as any)[tableName]
+        if (!model) {
+          return reply.code(404).send({
+            error: 'Not Found',
+            message: '表不存在',
+          })
+        }
+
+        // 检查 ID 是否已被使用
+        const existing = await model.findUnique({
+          where: { id: parseInt(id) }
+        })
+
+        if (existing) {
+          return reply.code(400).send({
+            error: 'Bad Request',
+            message: '该 ID 已存在，无法恢复',
+          })
+        }
+
+        // 创建记录（包含原始 ID）
+        const restored = await model.create({
+          data: {
+            id: parseInt(id),
+            ...data
+          }
+        })
+
+        reply.send({
+          success: true,
+          data: restored,
+          message: '恢复成功'
+        })
+      } catch (error: any) {
+        server.log.error(error)
+        reply.code(500).send({
+          error: 'Internal Server Error',
+          message: '恢复失败：' + error.message,
+        })
+      }
+    }
+  )
+
   // 执行 SQL 查询（仅限 SELECT）
   server.post(
     '/database/query',

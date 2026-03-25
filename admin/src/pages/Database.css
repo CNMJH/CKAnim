@@ -193,8 +193,18 @@
 
 .table-controls {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: center;
+}
+
+.table-controls .btn {
+  white-space: nowrap;
+}
+
+/* 撤销按钮 */
+.table-controls .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* 数据表格 */

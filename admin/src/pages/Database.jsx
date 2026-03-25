@@ -38,6 +38,8 @@ function Database() {
   const [backupPath, setBackupPath] = useState('')
   const [backups, setBackups] = useState([])
   const [message, setMessage] = useState({ type: '', text: '' })
+  const [operationHistory, setOperationHistory] = useState([])
+  const [isUndoing, setIsUndoing] = useState(false)
 
   // 获取数据库统计
   const loadStats = async () => {
@@ -190,6 +192,10 @@ function Database() {
   const handleUpdateCell = async (id, field, value) => {
     if (!selectedTable) return
 
+    // 获取旧值
+    const oldRow = tableData.find(row => row.id === id)
+    const oldValue = oldRow ? oldRow[field] : null
+
     try {
       const token = localStorage.getItem('token')
       const res = await fetch(`${API_BASE}/admin/database/table/${selectedTable}/${id}`, {
@@ -203,6 +209,18 @@ function Database() {
       const data = await res.json()
       
       if (data.success) {
+        // 记录操作历史
+        const operation = {
+          type: 'update',
+          table: selectedTable,
+          id,
+          field,
+          oldValue,
+          newValue: value,
+          timestamp: Date.now()
+        }
+        setOperationHistory(prev => [operation, ...prev].slice(0, 50)) // 最多保留 50 条
+        
         showMessage('success', '更新成功')
         loadTableData(selectedTable, page)
         setEditingCell(null)
@@ -219,6 +237,9 @@ function Database() {
     if (!selectedTable) return
     if (!confirm('确定要删除这条记录吗？此操作不可恢复！')) return
 
+    // 获取完整行数据
+    const deletedRow = tableData.find(row => row.id === id)
+
     try {
       const token = localStorage.getItem('token')
       const res = await fetch(`${API_BASE}/admin/database/table/${selectedTable}/${id}`, {
@@ -228,6 +249,16 @@ function Database() {
       const data = await res.json()
       
       if (data.success) {
+        // 记录操作历史
+        const operation = {
+          type: 'delete',
+          table: selectedTable,
+          id,
+          data: deletedRow,
+          timestamp: Date.now()
+        }
+        setOperationHistory(prev => [operation, ...prev].slice(0, 50))
+        
         showMessage('success', '删除成功')
         loadTableData(selectedTable, page)
       } else {
@@ -235,6 +266,68 @@ function Database() {
       }
     } catch (err) {
       showMessage('error', '删除失败：' + err.message)
+    }
+  }
+
+  // 撤销操作
+  const handleUndo = async () => {
+    if (operationHistory.length === 0 || isUndoing) return
+
+    const lastOp = operationHistory[0]
+    setIsUndoing(true)
+
+    try {
+      const token = localStorage.getItem('token')
+      
+      if (lastOp.type === 'update') {
+        // 撤销更新：恢复旧值
+        const res = await fetch(`${API_BASE}/admin/database/table/${lastOp.table}/${lastOp.id}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ [lastOp.field]: lastOp.oldValue })
+        })
+        const data = await res.json()
+        
+        if (data.success) {
+          showMessage('success', '已撤销更新')
+          setOperationHistory(prev => prev.slice(1))
+          loadTableData(selectedTable, page)
+        } else {
+          showMessage('error', '撤销失败：' + data.message)
+        }
+      } else if (lastOp.type === 'delete') {
+        // 撤销删除：重新创建记录
+        const { id, data: rowData, ...rest } = lastOp
+        const { createdAt, updatedAt, ...dataToRestore } = rowData
+        
+        const res = await fetch(`${API_BASE}/admin/database/table/${lastOp.table}/restore`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            id: lastOp.id,
+            data: dataToRestore
+          })
+        })
+        const data = await res.json()
+        
+        if (data.success) {
+          showMessage('success', '已恢复删除的记录')
+          setOperationHistory(prev => prev.slice(1))
+          loadTableData(selectedTable, page)
+        } else {
+          showMessage('error', '恢复失败：' + data.message)
+        }
+      }
+    } catch (err) {
+      showMessage('error', '撤销失败：' + err.message)
+    } finally {
+      setIsUndoing(false)
     }
   }
 
@@ -379,6 +472,14 @@ function Database() {
             <div className="table-header">
               <h3>📋 {ALLOWED_TABLES.find(t => t.name === selectedTable)?.label}</h3>
               <div className="table-controls">
+                <button
+                  onClick={handleUndo}
+                  disabled={operationHistory.length === 0 || isUndoing}
+                  className="btn btn-warning"
+                  title="撤销上一次操作"
+                >
+                  ↶ 撤销 {operationHistory.length > 0 ? `(${operationHistory.length})` : ''}
+                </button>
                 <select
                   value={searchField}
                   onChange={(e) => setSearchField(e.target.value)}
