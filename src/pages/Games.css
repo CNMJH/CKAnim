@@ -15,7 +15,7 @@
 .game-panel-wrapper {
   position: relative;
   display: flex;
-  z-index: 1001; /* 确保整个 wrapper 在播放器上方 */
+  z-index: 1001; /* 确保整个 wrapper 在播放器上方，但低于登录弹窗 (10001) */
   /* 移除 overflow: hidden - 会裁切浮窗 */
 }
 
@@ -29,7 +29,7 @@
   justify-content: center;
   cursor: pointer;
   position: relative;
-  z-index: 1001; /* 确保窄条在最上层，高于播放器 */
+  z-index: 1001; /* 确保窄条在最上层，但低于登录弹窗 (10001) */
 }
 
 .letter-index {
@@ -66,7 +66,7 @@
   opacity: 0;
   transition: transform 0.2s ease, opacity 0.2s ease;
   pointer-events: none;
-  z-index: 1000; /* 提高到 1000，确保覆盖播放器 */
+  z-index: 1000; /* 浮窗内容在 wrapper 内部，低于登录弹窗 (10001) */
 }
 
 /* 鼠标悬停 wrapper 时浮窗弹出 */
