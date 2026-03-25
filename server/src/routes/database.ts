@@ -85,20 +85,17 @@ export const databaseRoutes: FastifyPluginAsync = async (server) => {
           model.count({ where })
         ])
 
-        // 获取表结构
-        const fields = await prisma.$queryRawUnsafe(`PRAGMA table_info(${tableName})`)
+        // 从数据中推断字段名
+        const fields = data.length > 0 
+          ? Object.keys(data[0]).map(key => ({ name: key, type: 'TEXT' }))
+          : []
 
         reply.send({
           data,
           total,
           page,
           limit,
-          fields: (fields as any[]).map(f => ({
-            name: f.name,
-            type: f.type,
-            notNull: f.notnull,
-            primaryKey: f.pk
-          }))
+          fields
         })
       } catch (error: any) {
         server.log.error(error)

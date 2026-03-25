@@ -51,7 +51,7 @@ export async function requireSystemAdmin(
   await authenticate(request, reply);
   
   if (request.user?.role !== 'system_admin') {
-    reply.code(403).send({ 
+    return reply.code(403).send({ 
       error: 'Forbidden', 
       message: 'System admin access required' 
     });
