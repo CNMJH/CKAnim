@@ -524,12 +524,20 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
     const video = videoRef.current;
     if (!canvas || !video) return;
     
-    // 获取视频实际显示尺寸
-    const videoRect = video.getBoundingClientRect();
+    // 获取视频实际显示尺寸（使用 offsetWidth/Height 而非 getBoundingClientRect）
+    // 这样在全屏模式下能获取正确的内部尺寸
+    const videoWidth = video.offsetWidth || video.clientWidth;
+    const videoHeight = video.offsetHeight || video.clientHeight;
     
-    // 设置 Canvas 内部尺寸匹配显示尺寸
-    canvas.width = videoRect.width;
-    canvas.height = videoRect.height;
+    if (videoWidth <= 0 || videoHeight <= 0) return;
+    
+    // 设置 Canvas 内部尺寸匹配视频实际显示尺寸
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
+    
+    // 确保 Canvas CSS 尺寸也匹配
+    canvas.style.width = `${videoWidth}px`;
+    canvas.style.height = `${videoHeight}px`;
     
     // 重绘所有绘画
     const ctx = canvas.getContext('2d');
@@ -555,17 +563,42 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
   
   // 监听全屏状态变化，更新 Canvas 尺寸
   useEffect(() => {
-    updateCanvasSize();
+    if (isFullscreen) {
+      // 全屏模式下延迟更新，确保 DOM 已经完全渲染
+      const timer = setTimeout(() => {
+        updateCanvasSize();
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      // 退出全屏立即更新
+      updateCanvasSize();
+    }
   }, [isFullscreen, updateCanvasSize]);
   
   // 监听窗口大小变化，更新 Canvas 尺寸
   useEffect(() => {
     const handleResize = () => {
-      updateCanvasSize();
+      // 使用 requestAnimationFrame 确保在下一帧更新
+      requestAnimationFrame(() => {
+        updateCanvasSize();
+      });
     };
     
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, [updateCanvasSize]);
+  
+  // 视频播放时持续更新 Canvas 尺寸（处理视频加载后的尺寸变化）
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    const handleCanPlay = () => {
+      updateCanvasSize();
+    };
+    
+    video.addEventListener('canplay', handleCanPlay);
+    return () => video.removeEventListener('canplay', handleCanPlay);
   }, [updateCanvasSize]);
   
   const startDrawing = (e) => {
@@ -1427,8 +1460,6 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
         <canvas
           ref={canvasRef}
           className="drawing-overlay"
-          width={1000}
-          height={562.5}
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}
@@ -1436,7 +1467,10 @@ function VideoPlayerEnhanced({ videoUrl, videoTitle, videoId, autoPlay = false }
           style={{ 
             display: isDrawingBoardOpen && showDrawing ? 'block' : 'none',
             width: '100%',
-            height: '100%'
+            height: '100%',
+            position: 'absolute',
+            top: '0',
+            left: '0'
           }}
         />
         

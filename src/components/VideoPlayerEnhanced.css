@@ -38,6 +38,9 @@
   height: 100%;
   object-fit: contain; /* 保留黑边 */
   cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 /* 绘画 Canvas 叠加层 - 覆盖整个视频容器（包括黑边） */
@@ -689,15 +692,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .video-player-enhanced.fullscreen .video-element,
 .video-player-enhanced.fullscreen .drawing-overlay {
   width: 100%;
   height: 100%;
-  max-width: 100vw;
-  max-height: 100%;
   object-fit: contain;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .video-player-enhanced.fullscreen .controls-bar-primary,
