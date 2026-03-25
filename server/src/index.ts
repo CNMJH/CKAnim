@@ -18,6 +18,7 @@ import { settingsRoutes } from './routes/settings';
 import { userRoutes } from './routes/users';
 import { vipRoutes } from './routes/vip';
 import { favoriteRoutes } from './routes/favorites';
+import { databaseRoutes } from './routes/database';
 
 dotenv.config();
 
@@ -64,6 +65,7 @@ await server.register(tagRoutes, { prefix: '/api/admin' });
 await server.register(characterRoutes, { prefix: '/api/admin' });
 await server.register(actionRoutes, { prefix: '/api/admin' });
 await server.register(settingsRoutes, { prefix: '/api' });
+await server.register(databaseRoutes, { prefix: '/api/admin' });
 
 writeFileSync('/tmp/server_startup.log', `Server started at ${new Date().toISOString()}\nRoutes: auth, games, categories, videos, tags, actions\n`, { append: true });
 

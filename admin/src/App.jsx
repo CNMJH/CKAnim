@@ -8,6 +8,7 @@ import Characters from './pages/Characters'
 import Actions from './pages/Actions'
 import VipPlans from './pages/VipPlans'
 import AvatarReview from './pages/AvatarReview'
+import Database from './pages/Database'
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -71,6 +72,14 @@ function App() {
         element={
           <ProtectedRoute>
             <AvatarReview />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/database"
+        element={
+          <ProtectedRoute>
+            <Database />
           </ProtectedRoute>
         }
       />

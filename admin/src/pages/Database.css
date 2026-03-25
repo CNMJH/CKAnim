@@ -1,0 +1,371 @@
+.database-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.database-page h1 {
+  margin-bottom: 24px;
+  font-size: 28px;
+  color: #1a1a1a;
+}
+
+/* 消息提示 */
+.message {
+  padding: 12px 20px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* 统计卡片 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 14px;
+  opacity: 0.9;
+  text-transform: capitalize;
+}
+
+/* 区块 */
+.section {
+  background: white;
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.section h2 {
+  margin-bottom: 20px;
+  font-size: 20px;
+  color: #1a1a1a;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 10px;
+}
+
+.section h3 {
+  margin: 16px 0 12px;
+  font-size: 16px;
+  color: #333;
+}
+
+/* 备份控制 */
+.backup-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.backup-controls .input {
+  flex: 1;
+}
+
+/* 备份列表 */
+.backups-list {
+  margin-top: 16px;
+}
+
+.backup-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.backup-name {
+  flex: 1;
+  font-family: monospace;
+  color: #333;
+}
+
+.backup-size,
+.backup-time {
+  color: #666;
+  font-size: 14px;
+}
+
+/* SQL 编辑器 */
+.sql-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.sql-result {
+  margin-top: 16px;
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 6px;
+  max-height: 400px;
+  overflow: auto;
+}
+
+.sql-result pre {
+  margin: 0;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* 表选择器 */
+.table-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.table-btn {
+  padding: 10px 20px;
+  background: #f0f0f0;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.table-btn:hover {
+  background: #e0e0e0;
+}
+
+.table-btn.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+/* 表头控制 */
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.table-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 数据表格 */
+.table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.data-table th,
+.data-table td {
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  text-align: left;
+}
+
+.data-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.data-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.cell-value {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: block;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell-value:hover {
+  background: #e8f0fe;
+  color: #1a73e8;
+}
+
+.data-table .input {
+  width: 100%;
+  padding: 6px;
+  font-size: 13px;
+}
+
+/* 分页 */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.pagination-info {
+  color: #666;
+  font-size: 14px;
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* 按钮 */
+.btn {
+  padding: 8px 16px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  background: #5568d3;
+}
+
+.btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #667eea;
+}
+
+.btn-primary:hover {
+  background: #5568d3;
+}
+
+.btn-warning {
+  background: #f39c12;
+}
+
+.btn-warning:hover {
+  background: #e67e22;
+}
+
+.btn-danger {
+  background: #e74c3c;
+}
+
+.btn-danger:hover {
+  background: #c0392b;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+/* 输入框和选择框 */
+.input,
+.select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* 加载状态 */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 16px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .backup-controls {
+    flex-direction: column;
+  }
+
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .table-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .table-controls .input {
+    flex: 1;
+    min-width: 200px;
+  }
+}

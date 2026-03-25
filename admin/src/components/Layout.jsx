@@ -22,6 +22,7 @@ function Layout({ children }) {
         { path: '/actions', label: '动作管理', icon: '🎯' },
         { path: '/vip-plans', label: 'VIP 套餐', icon: '💎' },
         { path: '/avatar-review', label: '头像审核', icon: '🖼️' },
+        { path: '/database', label: '数据库管理', icon: '🗄️' },
         { path: '/settings', label: '设置', icon: '⚙️' },
       ]
     }
