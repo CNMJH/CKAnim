@@ -5,39 +5,11 @@ import { getUploadToken, getFileUrl } from '../lib/qiniu';
 import path from 'path';
 import fs from 'fs';
 
+/**
+ * 轮播图管理员路由（后台使用）
+ * 注册路径：/api/admin/carousels/*
+ */
 export const carouselRoutes: FastifyPluginAsync = async (server) => {
-  /**
-   * GET /api/carousels/active
-   * 获取当前有效的轮播图（前台使用，公开访问）
-   */
-  server.get('/carousels/active', {
-    async handler(request, reply) {
-      try {
-        const now = new Date();
-        
-        // 获取所有激活且未过期的轮播图
-        const carousels = await prisma.carousel.findMany({
-          where: {
-            active: true,
-            endTime: { gte: now },
-          },
-          orderBy: [
-            { isDefault: 'desc' }, // 默认轮播图优先
-            { order: 'asc' },
-            { createdAt: 'desc' },
-          ],
-        });
-        
-        return reply.send({ carousels });
-      } catch (error: any) {
-        request.log.error('获取活跃轮播图失败:', error);
-        return reply.code(500).send({ 
-          error: 'Internal Server Error',
-          message: error.message 
-        });
-      }
-    },
-  });
 
   /**
    * POST /api/admin/carousels/upload

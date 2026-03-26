@@ -20,6 +20,7 @@ import { vipRoutes } from './routes/vip';
 import { favoriteRoutes } from './routes/favorites';
 import { databaseRoutes } from './routes/database';
 import { carouselRoutes } from './routes/carousels';
+import { publicCarouselRoutes } from './routes/public-carousels';
 
 dotenv.config();
 
@@ -69,8 +70,8 @@ await server.register(settingsRoutes, { prefix: '/api' });
 await server.register(databaseRoutes, { prefix: '/api/admin' });
 
 // 轮播图路由：公开 + 管理员
-await server.register(carouselRoutes, { prefix: '/api' }); // /api/carousels/active（公开）
-await server.register(carouselRoutes, { prefix: '/api/admin' }); // /api/admin/carousels/*（管理员）
+await server.register(publicCarouselRoutes, { prefix: '/api/carousels' }); // /api/carousels/active（公开）
+await server.register(carouselRoutes, { prefix: '/api/admin/carousels' }); // /api/admin/carousels/*（管理员）
 
 writeFileSync('/tmp/server_startup.log', `Server started at ${new Date().toISOString()}\nRoutes: auth, games, categories, videos, tags, actions\n`, { append: true });
 
