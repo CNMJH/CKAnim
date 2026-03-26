@@ -253,6 +253,15 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           actionId?: number;
         };
 
+        server.log.info('[Upload Token] 请求参数:', {
+          filename,
+          gameId,
+          categoryIds,
+          actionId,
+          categoryIdsLength: categoryIds.length,
+          hasActionId: !!actionId,
+        });
+
         if (!filename) {
           return reply.code(400).send({
             error: 'Bad Request',
@@ -275,6 +284,12 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
             },
           });
           
+          server.log.info('[Upload Token] 从 actionId 获取分类:', {
+            actionId,
+            foundAction: !!action,
+            categoryId: action?.character?.categoryId,
+          });
+          
           if (action && action.character?.categoryId) {
             finalCategoryIds = [action.character.categoryId];
           }
@@ -282,10 +297,15 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
 
         // 获取分类信息（用于生成文件夹路径）
         let categoryPath = '';
-        if (categoryIds.length > 0) {
+        if (finalCategoryIds.length > 0) {
           const categories = await prisma.gameCategory.findMany({
-            where: { id: { in: categoryIds } },
+            where: { id: { in: finalCategoryIds } },
             orderBy: { level: 'asc' },
+          });
+          
+          server.log.info('[Upload Token] 查询分类:', {
+            categoryIds: finalCategoryIds,
+            foundCategories: categories.map(c => ({ id: c.id, name: c.name, level: c.level })),
           });
           
           // 取最高层级的分类作为文件夹路径
@@ -313,11 +333,27 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           }
         }
 
+        server.log.info('[Upload Token] 生成的分类路径:', {
+          categoryPath,
+          finalCategoryIds,
+        });
+
         // 生成文件 key（带分类路径）
         const key = generateFileKey(filename, gameId, categoryPath);
 
+        server.log.info('[Upload Token] 生成的文件 key:', {
+          key,
+          gameId,
+          categoryPath,
+        });
+
         // 生成上传凭证
         const token = getUploadToken(key);
+
+        server.log.info('[Upload Token] 返回上传凭证:', {
+          key,
+          tokenLength: token.length,
+        });
 
         reply.send({
           token,

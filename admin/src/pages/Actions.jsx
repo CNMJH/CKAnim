@@ -355,6 +355,17 @@ function Actions() {
     try {
       // 1. 获取上传凭证
       const categoryIds = editingVideo.categories?.map(c => c.id) || []
+      console.log('[Video Replace] 替换视频调试信息:', {
+        videoId: editingVideo.id,
+        videoTitle: editingVideo.title,
+        gameId: editingVideo.gameId,
+        actionId: editingVideo.actionId,
+        categories: editingVideo.categories,
+        categoryIds: categoryIds,
+        hasAction: !!editingVideo.actionId,
+        categoryIdsLength: categoryIds.length,
+      })
+      
       const tokenResponse = await videosAPI.getUploadToken(
         replaceVideoFile.name,
         editingVideo.gameId,
@@ -363,6 +374,12 @@ function Actions() {
       )
 
       const { token, key, url } = tokenResponse.data
+      
+      console.log('[Video Replace] 获取上传凭证成功:', {
+        key,
+        url,
+        tokenLength: token.length,
+      })
 
       // 2. 上传视频到七牛云（华南区域）- 使用 XMLHttpRequest 与批量上传保持一致
       await new Promise((resolve, reject) => {
@@ -370,6 +387,13 @@ function Actions() {
         formData.append('token', token)
         formData.append('key', key)
         formData.append('file', replaceVideoFile)
+
+        console.log('[Video Replace] 开始上传到七牛云:', {
+          endpoint: 'https://up-z2.qiniup.com/',
+          key,
+          fileSize: replaceVideoFile.size,
+          fileName: replaceVideoFile.name,
+        })
 
         const xhr = new XMLHttpRequest()
         xhr.addEventListener('load', () => {
