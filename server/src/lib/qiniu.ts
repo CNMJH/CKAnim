@@ -71,6 +71,21 @@ export function getFileUrl(key: string): string {
   return `${domain}/${key}`;
 }
 
+// 从 URL 提取文件 key
+export function extractKeyFromUrl(url: string): string | null {
+  if (!url || !url.includes(domain)) {
+    return null;
+  }
+  // URL 格式：https://domain.com/prefix/path/to/file.mp4
+  // 需要提取：prefix/path/to/file.mp4
+  const prefix = domain.replace(/\/$/, '') + '/';
+  const index = url.indexOf(prefix);
+  if (index === -1) {
+    return null;
+  }
+  return url.substring(index + prefix.length);
+}
+
 // 删除文件
 export async function deleteFile(key: string) {
   const bucketManager = new qiniu.rs.BucketManager(mac);

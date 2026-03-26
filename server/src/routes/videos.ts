@@ -1,11 +1,13 @@
 import { FastifyPluginAsync } from 'fastify';
 import { prisma } from '../lib/db.js';
 import { authenticate } from '../middleware/auth.js';
+import { requireAdmin } from '../middleware/auth.js';
 import {
   getUploadToken,
   generateFileKey,
   getFileUrl,
   deleteFile,
+  extractKeyFromUrl,
 } from '../lib/qiniu.js';
 import {
   generateThumbnail,
@@ -574,7 +576,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
   // 替换视频（上传新视频，生成新封面，删除旧文件）
   server.post(
     '/videos/:id/replace',
-    { preHandler: [authenticate] },
+    { preHandler: [requireAdmin] },
     async (request, reply) => {
       try {
         const { id } = request.params as { id: string };
@@ -645,9 +647,9 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
             coverUrl = coverUploadUrl;
             coverUrlJpg = coverUploadUrl;
             coverUrlWebp = generateWebpCoverUrl(coverUploadUrl);
-            server.log.info('[Video Replace] Cover URLs generated:', { coverUrl, coverUrlJpg, coverUrlWebp });
-          } catch (error) {
-            server.log.error('[Video Replace] Failed to generate cover:', error);
+            server.log.info('[Video Replace] Cover URLs generated');
+          } catch (error: any) {
+            server.log.error('[Video Replace] Failed to generate cover:', error.message);
             // 封面生成失败不影响视频替换，继续使用旧封面
           }
         }
@@ -662,6 +664,40 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
               server.log.warn(`[Video Replace] Old qiniu file not found (612), skipping: ${oldVideo.qiniuKey}`);
             } else {
               server.log.error(`[Video Replace] Failed to delete old qiniu video: ${oldVideo.qiniuKey}`, err);
+            }
+          }
+        }
+
+        // 删除七牛云上的旧封面图（如果存在）
+        const oldCoverKeysToDelete: string[] = [];
+        if (oldVideo.coverUrl) {
+          const coverKey = extractKeyFromUrl(oldVideo.coverUrl);
+          if (coverKey) oldCoverKeysToDelete.push(coverKey);
+        }
+        if (oldVideo.coverUrlJpg && oldVideo.coverUrlJpg !== oldVideo.coverUrl) {
+          const coverKeyJpg = extractKeyFromUrl(oldVideo.coverUrlJpg);
+          if (coverKeyJpg && !oldCoverKeysToDelete.includes(coverKeyJpg)) {
+            oldCoverKeysToDelete.push(coverKeyJpg);
+          }
+        }
+        if (oldVideo.coverUrlWebp && oldVideo.coverUrlWebp !== oldVideo.coverUrl) {
+          const coverKeyWebp = extractKeyFromUrl(oldVideo.coverUrlWebp);
+          if (coverKeyWebp && !oldCoverKeysToDelete.includes(coverKeyWebp)) {
+            oldCoverKeysToDelete.push(coverKeyWebp);
+          }
+        }
+
+        if (oldCoverKeysToDelete.length > 0) {
+          for (const coverKey of oldCoverKeysToDelete) {
+            try {
+              await deleteFile(coverKey);
+              server.log.info(`[Video Replace] Deleted old cover: ${coverKey}`);
+            } catch (err: any) {
+              if (err.message.includes('612')) {
+                server.log.warn(`[Video Replace] Old cover not found (612), skipping: ${coverKey}`);
+              } else {
+                server.log.error(`[Video Replace] Failed to delete old cover: ${coverKey}`, err);
+              }
             }
           }
         }
@@ -711,8 +747,8 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
         server.log.info(`[Video Replace] Video ${videoId} replaced successfully`);
 
         reply.send(updatedVideo);
-      } catch (error) {
-        server.log.error('[Video Replace] Error:', error);
+      } catch (error: any) {
+        server.log.error('[Video Replace] Error:', error.message);
         reply.code(500).send({
           error: 'Internal Server Error',
           message: 'Failed to replace video',

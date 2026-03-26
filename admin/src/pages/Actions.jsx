@@ -359,7 +359,7 @@ function Actions() {
         replaceVideoFile.name,
         editingVideo.gameId,
         categoryIds,
-        editingVideo.actionId
+        editingVideo.actionId || undefined
       )
 
       const { token, key, url } = tokenResponse.data
@@ -370,10 +370,19 @@ function Actions() {
       formData.append('key', key)
       formData.append('file', replaceVideoFile)
 
-      await fetch('https://up.qiniup.com', {
+      const uploadResponse = await fetch('https://up.qiniup.com', {
         method: 'POST',
         body: formData,
       })
+
+      // 检查上传是否成功
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json().catch(() => ({}))
+        throw new Error(`七牛云上传失败：${errorData.error || uploadResponse.statusText}`)
+      }
+
+      const uploadResult = await uploadResponse.json()
+      server.log.info('[Video Replace] Qiniu upload result:', uploadResult)
 
       // 3. 调用替换 API
       await videosAPI.replace(editingVideo.id, {
