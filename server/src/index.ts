@@ -21,6 +21,8 @@ import { favoriteRoutes } from './routes/favorites';
 import { databaseRoutes } from './routes/database';
 import { carouselRoutes } from './routes/carousels';
 import { publicCarouselRoutes } from './routes/public-carousels';
+import path from 'path';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -72,6 +74,78 @@ await server.register(databaseRoutes, { prefix: '/api/admin' });
 // 轮播图路由：公开 + 管理员
 await server.register(publicCarouselRoutes, { prefix: '/api/carousels' }); // /api/carousels/active（公开）
 await server.register(carouselRoutes, { prefix: '/api/admin/carousels' }); // /api/admin/carousels/*（管理员）
+
+// 通用上传路由（供前端各页面使用）
+server.post('/api/admin/upload', {
+  preHandler: [async (request, reply) => {
+    // 简单的 JWT 认证
+    try {
+      const token = request.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return reply.code(401).send({ error: 'Unauthorized', message: '未提供 token' });
+      }
+      await request.server.jwt.verify(token);
+    } catch (error) {
+      return reply.code(401).send({ error: 'Unauthorized', message: 'Token 无效' });
+    }
+  }],
+  async handler(request, reply) {
+    try {
+      const data = await request.file();
+      
+      if (!data) {
+        return reply.code(400).send({ 
+          error: 'Bad Request',
+          message: '未找到上传文件' 
+        });
+      }
+      
+      // 验证文件类型
+      const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+      if (!allowedMimes.includes(data.mimetype)) {
+        return reply.code(400).send({ 
+          error: 'Bad Request',
+          message: '只支持图片文件（JPG, PNG, WebP, GIF）' 
+        });
+      }
+      
+      // 根据 type 参数决定保存位置
+      const uploadType = request.body.type || 'carousel';
+      let uploadDir = '/var/www/ckanim/public/carousel-images';
+      let urlBase = 'https://anick.cn/static/carousel-images';
+      
+      if (uploadType === 'avatar') {
+        uploadDir = '/var/www/ckanim/public/avatars';
+        urlBase = 'https://anick.cn/static/avatars';
+      }
+      
+      // 生成文件名
+      const timestamp = Date.now();
+      const ext = path.extname(data.filename);
+      const filename = `${timestamp}-${Math.random().toString(36).substring(2, 8)}${ext}`;
+      const filePath = path.join(uploadDir, filename);
+      
+      // 确保目录存在
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      // 保存文件
+      await fs.promises.writeFile(filePath, data.file);
+      
+      // 生成 URL
+      const url = `${urlBase}/${filename}`;
+      
+      return reply.send({ url });
+    } catch (error) {
+      request.server.log.error('Upload error:', error);
+      return reply.code(500).send({ 
+        error: 'Internal Server Error',
+        message: '上传失败，请稍后重试' 
+      });
+    }
+  }
+});
 
 writeFileSync('/tmp/server_startup.log', `Server started at ${new Date().toISOString()}\nRoutes: auth, games, categories, videos, tags, actions\n`, { append: true });
 
