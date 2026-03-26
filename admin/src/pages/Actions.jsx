@@ -364,24 +364,31 @@ function Actions() {
 
       const { token, key, url } = tokenResponse.data
 
-      // 2. 上传视频到七牛云（华南区域）
-      const formData = new FormData()
-      formData.append('token', token)
-      formData.append('key', key)
-      formData.append('file', replaceVideoFile)
+      // 2. 上传视频到七牛云（华南区域）- 使用 XMLHttpRequest 与批量上传保持一致
+      await new Promise((resolve, reject) => {
+        const formData = new FormData()
+        formData.append('token', token)
+        formData.append('key', key)
+        formData.append('file', replaceVideoFile)
 
-      const uploadResponse = await fetch('https://up-z2.qiniup.com/', {
-        method: 'POST',
-        body: formData,
+        const xhr = new XMLHttpRequest()
+        xhr.addEventListener('load', () => {
+          if (xhr.status === 200) {
+            const uploadResult = JSON.parse(xhr.responseText)
+            console.log('[Video Replace] Upload success:', uploadResult)
+            resolve(uploadResult)
+          } else {
+            console.error('[Video Replace] Upload failed:', xhr.status, xhr.responseText)
+            reject(new Error(`上传失败 (${xhr.status})`))
+          }
+        })
+        xhr.addEventListener('error', () => {
+          console.error('[Video Replace] Upload network error')
+          reject(new Error('网络错误'))
+        })
+        xhr.open('POST', 'https://up-z2.qiniup.com/')
+        xhr.send(formData)
       })
-
-      // 检查上传是否成功
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json().catch(() => ({}))
-        throw new Error(`七牛云上传失败：${errorData.error || uploadResponse.statusText}`)
-      }
-
-      const uploadResult = await uploadResponse.json()
 
       // 3. 调用替换 API
       await videosAPI.replace(editingVideo.id, {
