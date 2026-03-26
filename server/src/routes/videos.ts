@@ -341,10 +341,12 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
         // 生成文件 key（带分类路径）
         const key = generateFileKey(filename, gameId, categoryPath);
 
-        server.log.info('[Upload Token] 生成的文件 key:', JSON.stringify({
+        server.log.info('[Upload Token] 生成的文件 key: ' + key);
+        server.log.info('[Upload Token] 文件 key 详情:', JSON.stringify({
           key,
           gameId,
           categoryPath,
+          keyLength: key.length,
         }));
 
         // 生成上传凭证
