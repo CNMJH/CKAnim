@@ -71,21 +71,6 @@ export function getFileUrl(key: string): string {
   return `${domain}/${key}`;
 }
 
-// 从 URL 提取文件 key
-export function extractKeyFromUrl(url: string): string | null {
-  if (!url || !url.includes(domain)) {
-    return null;
-  }
-  // URL 格式：https://domain.com/prefix/path/to/file.mp4
-  // 需要提取：prefix/path/to/file.mp4
-  const prefix = domain.replace(/\/$/, '') + '/';
-  const index = url.indexOf(prefix);
-  if (index === -1) {
-    return null;
-  }
-  return url.substring(index + prefix.length);
-}
-
 // 删除文件
 export async function deleteFile(key: string) {
   const bucketManager = new qiniu.rs.BucketManager(mac);
@@ -150,10 +135,11 @@ export async function getFileStat(key: string) {
 }
 
 // 从 URL 提取文件 key
-export function extractKeyFromUrl(url: string): string {
-  if (!url || !domain) return '';
+export function extractKeyFromUrl(url: string): string | null {
+  if (!url || !domain) return null;
   // 移除域名前缀
-  return url.replace(`${domain}/`, '');
+  const key = url.replace(`${domain}/`, '');
+  return key || null;
 }
 
 // 生成下载凭证（私有空间）
