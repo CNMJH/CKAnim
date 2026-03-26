@@ -336,7 +336,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
         server.log.info('[Upload Token] 生成的分类路径:', JSON.stringify({
           categoryPath,
           finalCategoryIds,
-        });
+        }));
 
         // 生成文件 key（带分类路径）
         const key = generateFileKey(filename, gameId, categoryPath);
@@ -345,7 +345,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           key,
           gameId,
           categoryPath,
-        });
+        }));
 
         // 生成上传凭证
         const token = getUploadToken(key);
@@ -353,7 +353,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
         server.log.info('[Upload Token] 返回上传凭证:', JSON.stringify({
           key,
           tokenLength: token.length,
-        });
+        }));
 
         reply.send({
           token,
