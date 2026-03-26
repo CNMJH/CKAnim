@@ -121,14 +121,19 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
                 level: true,
               },
             },
-
           },
         }),
         prisma.video.count({ where }),
       ]);
 
+      // 确保返回 actionId 字段（用于替换功能）
+      const videosWithActionId = videos.map(video => ({
+        ...video,
+        actionId: video.action?.id || video.actionId,
+      }));
+
       reply.send({
-        videos,
+        videos: videosWithActionId,
         pagination: {
           page,
           limit,

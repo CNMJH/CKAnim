@@ -356,6 +356,12 @@ function Actions() {
       // 1. 获取上传凭证
       const categoryIds = editingVideo.categories?.map(c => c.id) || []
       
+      // ⭐ 完整输出 editingVideo 对象，检查 categories 字段
+      console.log('[Video Replace] editingVideo 完整对象:', JSON.stringify(editingVideo, null, 2))
+      console.log('[Video Replace] editingVideo.categories:', editingVideo.categories)
+      console.log('[Video Replace] editingVideo.categories type:', Array.isArray(editingVideo.categories) ? 'Array' : typeof editingVideo.categories)
+      console.log('[Video Replace] editingVideo.categories length:', editingVideo.categories?.length || 0)
+      
       // 详细日志：诊断 categoryIds 是否为空
       console.log('[Video Replace] 替换视频调试信息:', {
         videoId: editingVideo.id,
