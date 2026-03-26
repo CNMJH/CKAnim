@@ -355,6 +355,8 @@ function Actions() {
     try {
       // 1. 获取上传凭证
       const categoryIds = editingVideo.categories?.map(c => c.id) || []
+      
+      // 详细日志：诊断 categoryIds 是否为空
       console.log('[Video Replace] 替换视频调试信息:', {
         videoId: editingVideo.id,
         videoTitle: editingVideo.title,
@@ -364,12 +366,14 @@ function Actions() {
         categoryIds: categoryIds,
         hasAction: !!editingVideo.actionId,
         categoryIdsLength: categoryIds.length,
+        willUseActionFallback: categoryIds.length === 0 && !!editingVideo.actionId,
       })
       
+      // 确保传递正确的参数
       const tokenResponse = await videosAPI.getUploadToken(
         replaceVideoFile.name,
         editingVideo.gameId,
-        categoryIds,
+        categoryIds,  // 可能为空数组，后端会从 actionId 获取
         editingVideo.actionId || undefined
       )
 
@@ -404,8 +408,12 @@ function Actions() {
             console.log('[Video Replace] Upload success:', uploadResult)
             resolve(uploadResult)
           } else {
-            console.error('[Video Replace] Upload failed:', xhr.status, xhr.responseText)
-            reject(new Error(`上传失败 (${xhr.status})`))
+            console.error('[Video Replace] Upload failed:', {
+              status: xhr.status,
+              response: xhr.responseText,
+              statusText: xhr.statusText,
+            })
+            reject(new Error(`上传失败 (${xhr.status}): ${xhr.responseText}`))
           }
         })
         xhr.addEventListener('error', () => {
