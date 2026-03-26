@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Layout from '../components/Layout'
 import { useAuthStore } from '../store/auth'
-import { api } from '../lib/api'
+import api from '../lib/api'
 import './Carousels.css'
 
 const API_BASE = 'https://admin.anick.cn/api/admin'
