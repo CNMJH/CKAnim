@@ -370,7 +370,7 @@ function Actions() {
       formData.append('key', key)
       formData.append('file', replaceVideoFile)
 
-      const uploadResponse = await fetch('https://up.qiniup.com', {
+      const uploadResponse = await fetch('https://up-z2.qiniup.com', {
         method: 'POST',
         body: formData,
       })
