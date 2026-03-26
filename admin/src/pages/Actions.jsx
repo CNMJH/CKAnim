@@ -364,13 +364,13 @@ function Actions() {
 
       const { token, key, url } = tokenResponse.data
 
-      // 2. 上传视频到七牛云
+      // 2. 上传视频到七牛云（华南区域）
       const formData = new FormData()
       formData.append('token', token)
       formData.append('key', key)
       formData.append('file', replaceVideoFile)
 
-      const uploadResponse = await fetch('https://up-z2.qiniup.com', {
+      const uploadResponse = await fetch('https://up-z2.qiniup.com/', {
         method: 'POST',
         body: formData,
       })
@@ -382,7 +382,6 @@ function Actions() {
       }
 
       const uploadResult = await uploadResponse.json()
-      server.log.info('[Video Replace] Qiniu upload result:', uploadResult)
 
       // 3. 调用替换 API
       await videosAPI.replace(editingVideo.id, {
