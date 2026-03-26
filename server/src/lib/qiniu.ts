@@ -20,8 +20,8 @@ export function getUploadToken(key?: string) {
   const options: qiniu.rs.PutPolicyOptions = {
     scope: key ? `${bucket}:${key}` : bucket,
     expires: 7200, // 2 小时
-    // 指定上传区域（华南）
-    zone: qiniu.zone.Zone_z2,
+    // 不指定 zone 参数，让七牛云自动选择
+    // zone: qiniu.zone.Zone_z2,
   };
   
   const putPolicy = new qiniu.rs.PutPolicy(options);
