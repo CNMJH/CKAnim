@@ -9,6 +9,7 @@ import Actions from './pages/Actions'
 import VipPlans from './pages/VipPlans'
 import AvatarReview from './pages/AvatarReview'
 import Database from './pages/Database'
+import Carousels from './pages/Carousels'
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -80,6 +81,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Database />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/carousels"
+        element={
+          <ProtectedRoute>
+            <Carousels />
           </ProtectedRoute>
         }
       />
