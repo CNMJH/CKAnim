@@ -253,14 +253,14 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           actionId?: number;
         };
 
-        server.log.info('[Upload Token] 请求参数:', {
+        server.log.info('[Upload Token] 请求参数:', JSON.stringify({
           filename,
           gameId,
           categoryIds,
           actionId,
           categoryIdsLength: categoryIds.length,
           hasActionId: !!actionId,
-        });
+        }));
 
         if (!filename) {
           return reply.code(400).send({
@@ -303,10 +303,10 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
             orderBy: { level: 'asc' },
           });
           
-          server.log.info('[Upload Token] 查询分类:', {
+          server.log.info('[Upload Token] 查询分类:', JSON.stringify({
             categoryIds: finalCategoryIds,
             foundCategories: categories.map(c => ({ id: c.id, name: c.name, level: c.level })),
-          });
+          }));
           
           // 取最高层级的分类作为文件夹路径
           const maxLevelCategory = categories.reduce((max, cat) => 
@@ -333,7 +333,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
           }
         }
 
-        server.log.info('[Upload Token] 生成的分类路径:', {
+        server.log.info('[Upload Token] 生成的分类路径:', JSON.stringify({
           categoryPath,
           finalCategoryIds,
         });
@@ -341,7 +341,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
         // 生成文件 key（带分类路径）
         const key = generateFileKey(filename, gameId, categoryPath);
 
-        server.log.info('[Upload Token] 生成的文件 key:', {
+        server.log.info('[Upload Token] 生成的文件 key:', JSON.stringify({
           key,
           gameId,
           categoryPath,
@@ -350,7 +350,7 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
         // 生成上传凭证
         const token = getUploadToken(key);
 
-        server.log.info('[Upload Token] 返回上传凭证:', {
+        server.log.info('[Upload Token] 返回上传凭证:', JSON.stringify({
           key,
           tokenLength: token.length,
         });

@@ -378,6 +378,7 @@ function Actions() {
       console.log('[Video Replace] 获取上传凭证成功:', {
         key,
         url,
+        tokenPrefix: token.substring(0, 20),
         tokenLength: token.length,
       })
 
@@ -391,6 +392,7 @@ function Actions() {
         console.log('[Video Replace] 开始上传到七牛云:', {
           endpoint: 'https://up-z2.qiniup.com/',
           key,
+          tokenPrefix: token.substring(0, 20),
           fileSize: replaceVideoFile.size,
           fileName: replaceVideoFile.name,
         })
