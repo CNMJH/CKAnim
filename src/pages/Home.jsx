@@ -97,7 +97,7 @@ function Home() {
       setCurrentBanner((prev) => (prev + 1) % banners.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [banners.length]);
 
   // 换一批 - 随机刷新
   const handleRefresh = async () => {
@@ -129,20 +129,20 @@ function Home() {
       <div className="home-content">
         {/* 左侧轮播图 */}
         <div className="banner-section">
-          {banners.length > 0 ? (
+          {banners.length > 0 && banners[currentBanner] ? (
             <div className="banner">
               <img 
-                src={banners[currentBanner].imageUrl} 
-                alt={banners[currentBanner].title}
+                src={banners[currentBanner]?.imageUrl || 'https://placehold.co/1200x400/3b82f6/ffffff?text=CKAnim'} 
+                alt={banners[currentBanner]?.title || '轮播图'}
                 className="banner-image"
                 onClick={() => {
-                  if (banners[currentBanner].targetUrl) {
+                  if (banners[currentBanner]?.targetUrl) {
                     window.open(banners[currentBanner].targetUrl, '_blank');
                   }
                 }}
-                style={{ cursor: banners[currentBanner].targetUrl ? 'pointer' : 'default' }}
+                style={{ cursor: banners[currentBanner]?.targetUrl ? 'pointer' : 'default' }}
               />
-              <div className="banner-title">{banners[currentBanner].title}</div>
+              <div className="banner-title">{banners[currentBanner]?.title || ''}</div>
             </div>
           ) : (
             <div className="banner">

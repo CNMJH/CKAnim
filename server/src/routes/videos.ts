@@ -571,6 +571,157 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
   );
 
   // 更新视频
+  // 替换视频（上传新视频，生成新封面，删除旧文件）
+  server.post(
+    '/videos/:id/replace',
+    { preHandler: [authenticate] },
+    async (request, reply) => {
+      try {
+        const { id } = request.params as { id: string };
+        const videoId = parseInt(id);
+        const {
+          qiniuKey,
+          qiniuUrl,
+          duration,
+          generateCover = true,
+        } = request.body as {
+          qiniuKey: string;
+          qiniuUrl: string;
+          duration?: number;
+          generateCover?: boolean;
+        };
+
+        // 必选参数验证
+        if (!qiniuKey || !qiniuUrl) {
+          return reply.code(400).send({
+            error: 'Bad Request',
+            message: 'qiniuKey and qiniuUrl are required',
+          });
+        }
+
+        // 查找原视频
+        const oldVideo = await prisma.video.findUnique({
+          where: { id: videoId },
+          include: {
+            action: true,
+          },
+        });
+
+        if (!oldVideo) {
+          return reply.code(404).send({
+            error: 'Not Found',
+            message: 'Video not found',
+          });
+        }
+
+        server.log.info(`[Video Replace] Replacing video ${videoId}, old qiniuKey: ${oldVideo.qiniuKey}`);
+
+        let coverUrl = oldVideo.coverUrl;
+        let coverUrlJpg = oldVideo.coverUrlJpg;
+        let coverUrlWebp = oldVideo.coverUrlWebp;
+
+        // 生成新封面图
+        if (generateCover) {
+          try {
+            server.log.info('[Video Replace] Generating new thumbnail...');
+            
+            // 生成缩略图
+            const tempThumbnailPath = await generateThumbnail(qiniuUrl, videoId);
+            server.log.info('[Video Replace] Thumbnail generated at:', tempThumbnailPath);
+
+            // 上传缩略图到七牛云
+            const { key: coverKey, url: coverUploadUrl } = await uploadThumbnailToQiniu(
+              tempThumbnailPath,
+              oldVideo.gameId,
+              oldVideo.title
+            );
+            server.log.info('[Video Replace] Cover uploaded to Qiniu:', coverKey);
+
+            // 清理临时文件
+            await cleanupTempFile(tempThumbnailPath);
+            server.log.info('[Video Replace] Temp file cleaned up');
+
+            // 生成封面 URL
+            coverUrl = coverUploadUrl;
+            coverUrlJpg = coverUploadUrl;
+            coverUrlWebp = generateWebpCoverUrl(coverUploadUrl);
+            server.log.info('[Video Replace] Cover URLs generated:', { coverUrl, coverUrlJpg, coverUrlWebp });
+          } catch (error) {
+            server.log.error('[Video Replace] Failed to generate cover:', error);
+            // 封面生成失败不影响视频替换，继续使用旧封面
+          }
+        }
+
+        // 删除七牛云上的旧视频文件（如果存在）
+        if (oldVideo.qiniuKey) {
+          try {
+            await deleteFile(oldVideo.qiniuKey);
+            server.log.info(`[Video Replace] Deleted old qiniu video: ${oldVideo.qiniuKey}`);
+          } catch (err: any) {
+            if (err.message.includes('612')) {
+              server.log.warn(`[Video Replace] Old qiniu file not found (612), skipping: ${oldVideo.qiniuKey}`);
+            } else {
+              server.log.error(`[Video Replace] Failed to delete old qiniu video: ${oldVideo.qiniuKey}`, err);
+            }
+          }
+        }
+
+        // 更新视频记录
+        const updatedVideo = await prisma.video.update({
+          where: { id: videoId },
+          data: {
+            qiniuKey,
+            qiniuUrl,
+            duration: duration || oldVideo.duration,
+            coverUrl,
+            coverUrlJpg,
+            coverUrlWebp,
+          },
+          include: {
+            action: {
+              select: {
+                id: true,
+                name: true,
+                characterId: true,
+                character: {
+                  select: {
+                    id: true,
+                    name: true,
+                    gameId: true,
+                  },
+                },
+              },
+            },
+            game: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            categories: {
+              select: {
+                id: true,
+                name: true,
+                level: true,
+              },
+            },
+          },
+        });
+
+        server.log.info(`[Video Replace] Video ${videoId} replaced successfully`);
+
+        reply.send(updatedVideo);
+      } catch (error) {
+        server.log.error('[Video Replace] Error:', error);
+        reply.code(500).send({
+          error: 'Internal Server Error',
+          message: 'Failed to replace video',
+        });
+      }
+    }
+  );
+
+  // 更新视频信息
   server.put(
     '/videos/:id',
     { preHandler: [authenticate] },

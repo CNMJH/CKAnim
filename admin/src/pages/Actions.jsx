@@ -35,6 +35,8 @@ function Actions() {
     actionId: null,
     characterId: null,
   })
+  const [replaceVideoFile, setReplaceVideoFile] = useState(null)
+  const [isReplacing, setIsReplacing] = useState(false)
 
   // 获取游戏列表
   const { data: gamesData = [] } = useQuery({
@@ -325,6 +327,74 @@ function Actions() {
     })
   }
 
+  // 处理视频文件选择
+  const handleReplaceVideoSelect = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (!file.type.startsWith('video/')) {
+        alert('请选择视频文件')
+        return
+      }
+      setReplaceVideoFile(file)
+    }
+  }
+
+  // 执行视频替换
+  const handleReplaceVideo = async () => {
+    if (!replaceVideoFile) {
+      alert('请选择要替换的视频文件')
+      return
+    }
+
+    if (!confirm(`确定要替换视频 "${editingVideo.title}" 吗？\n\n注意：\n1. 旧视频文件将被删除\n2. 将自动生成新的封面图\n3. 此操作不可恢复`)) {
+      return
+    }
+
+    setIsReplacing(true)
+
+    try {
+      // 1. 获取上传凭证
+      const categoryIds = editingVideo.categories?.map(c => c.id) || []
+      const tokenResponse = await videosAPI.getUploadToken(
+        replaceVideoFile.name,
+        editingVideo.gameId,
+        categoryIds,
+        editingVideo.actionId
+      )
+
+      const { token, key, url } = tokenResponse.data
+
+      // 2. 上传视频到七牛云
+      const formData = new FormData()
+      formData.append('token', token)
+      formData.append('key', key)
+      formData.append('file', replaceVideoFile)
+
+      await fetch('https://up.qiniup.com', {
+        method: 'POST',
+        body: formData,
+      })
+
+      // 3. 调用替换 API
+      await videosAPI.replace(editingVideo.id, {
+        qiniuKey: key,
+        qiniuUrl: url,
+        generateCover: true,
+      })
+
+      // 4. 刷新列表
+      queryClient.invalidateQueries(['videos'])
+      setShowEditModal(false)
+      setReplaceVideoFile(null)
+      alert('视频替换成功！')
+    } catch (err) {
+      console.error('替换视频失败:', err)
+      alert('替换失败：' + (err.message || '请稍后重试'))
+    } finally {
+      setIsReplacing(false)
+    }
+  }
+
   // 删除视频
   const handleDelete = (video) => {
     if (confirm(`确定要删除 "${video.title}" 吗？（同时会删除关联的动作）`)) {
@@ -549,7 +619,7 @@ function Actions() {
         {/* 编辑弹窗 */}
         {showEditModal && editingVideo && (
           <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
               <h3>编辑视频信息</h3>
               
               <div className="form-group">
@@ -562,11 +632,60 @@ function Actions() {
                 />
               </div>
 
-              <div className="modal-actions">
+              <hr style={{ margin: '20px 0', border: 'none', borderTop: '1px solid #eee' }} />
+
+              <div className="form-group">
+                <label style={{ fontWeight: 'bold', color: '#d32f2f' }}>🔄 替换视频文件</label>
+                <p style={{ fontSize: '13px', color: '#666', margin: '8px 0' }}>
+                  上传新视频后将自动：删除旧视频、生成新封面图、更新数据库
+                </p>
+                
+                <div style={{ marginTop: '10px' }}>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={handleReplaceVideoSelect}
+                    disabled={isReplacing}
+                    style={{ marginBottom: '10px' }}
+                  />
+                  
+                  {replaceVideoFile && (
+                    <div style={{ 
+                      padding: '10px', 
+                      background: '#f5f5f5', 
+                      borderRadius: '4px',
+                      fontSize: '13px'
+                    }}>
+                      <div>📁 {replaceVideoFile.name}</div>
+                      <div style={{ color: '#666' }}>
+                        {(replaceVideoFile.size / 1024 / 1024).toFixed(2)} MB
+                      </div>
+                    </div>
+                  )}
+                  
+                  {isReplacing && (
+                    <div style={{ 
+                      padding: '10px', 
+                      background: '#e3f2fd', 
+                      borderRadius: '4px',
+                      marginTop: '10px',
+                      textAlign: 'center'
+                    }}>
+                      ⏳ 正在替换视频，请稍候...
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="modal-actions" style={{ marginTop: '20px' }}>
                 <button
                   type="button"
                   className="btn-secondary"
-                  onClick={() => setShowEditModal(false)}
+                  onClick={() => {
+                    setShowEditModal(false)
+                    setReplaceVideoFile(null)
+                  }}
+                  disabled={isReplacing}
                 >
                   取消
                 </button>
@@ -574,8 +693,18 @@ function Actions() {
                   type="button"
                   className="btn-primary"
                   onClick={handleSaveEdit}
+                  disabled={isReplacing}
                 >
-                  保存
+                  💾 保存标题
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleReplaceVideo}
+                  disabled={!replaceVideoFile || isReplacing}
+                  style={{ marginLeft: '10px', background: '#d32f2f' }}
+                >
+                  {isReplacing ? '⏳ 替换中...' : '🔄 替换视频'}
                 </button>
               </div>
             </div>
