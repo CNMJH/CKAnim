@@ -3,7 +3,8 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import multipart from '@fastify/multipart';
 import dotenv from 'dotenv';
-import { writeFileSync } from 'fs';
+import { writeFileSync, appendFileSync } from 'fs';
+import { pipeline } from 'stream/promises';
 import { authRoutes } from './routes/auth';
 import { gameRoutes } from './routes/games';
 import { categoryRoutes } from './routes/categories';
@@ -90,8 +91,13 @@ server.post('/api/admin/upload', {
     }
   }],
   async handler(request, reply) {
+    console.log('===== UPLOAD HANDLER CALLED =====');
     try {
+      console.log('Inside try block, calling request.file()...');
+      request.server.log.info('Upload request received');
       const data = await request.file();
+      console.log('request.file() returned:', data ? 'success' : 'null');
+      request.server.log.info('File data received: ' + (data ? 'yes' : 'no'));
       
       if (!data) {
         return reply.code(400).send({ 
@@ -99,6 +105,9 @@ server.post('/api/admin/upload', {
           message: '未找到上传文件' 
         });
       }
+      
+      request.server.log.info('File mimetype: ' + data.mimetype);
+      request.server.log.info('File filename: ' + data.filename);
       
       // 验证文件类型
       const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
@@ -110,7 +119,8 @@ server.post('/api/admin/upload', {
       }
       
       // 根据 type 参数决定保存位置
-      const uploadType = request.body.type || 'carousel';
+      const uploadType = (request.body as any)?.type || 'carousel';
+      request.server.log.info('Upload type: ' + uploadType);
       let uploadDir = '/var/www/ckanim/public/carousel-images';
       let urlBase = 'https://anick.cn/static/carousel-images';
       
@@ -124,30 +134,41 @@ server.post('/api/admin/upload', {
       const ext = path.extname(data.filename);
       const filename = `${timestamp}-${Math.random().toString(36).substring(2, 8)}${ext}`;
       const filePath = path.join(uploadDir, filename);
+      request.server.log.info('File path: ' + filePath);
       
       // 确保目录存在
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
       
-      // 保存文件
-      await fs.promises.writeFile(filePath, data.file);
+      // 保存文件（使用 toBuffer() 正确处理 stream）
+      request.server.log.info('Starting file save with toBuffer()...');
+      const buffer = await data.toBuffer();
+      request.server.log.info('Buffer size: ' + buffer.length + ' bytes');
+      await fs.promises.writeFile(filePath, buffer);
+      request.server.log.info('File saved successfully');
       
       // 生成 URL
       const url = `${urlBase}/${filename}`;
+      request.server.log.info('Upload complete: ' + url);
       
       return reply.send({ url });
     } catch (error) {
-      request.server.log.error('Upload error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : 'No stack';
+      console.error('===== UPLOAD ERROR =====');
+      console.error('Message:', errorMessage);
+      console.error('Stack:', errorStack);
+      console.error('========================');
       return reply.code(500).send({ 
         error: 'Internal Server Error',
-        message: '上传失败，请稍后重试' 
+        message: `上传失败：${errorMessage}` 
       });
     }
   }
 });
 
-writeFileSync('/tmp/server_startup.log', `Server started at ${new Date().toISOString()}\nRoutes: auth, games, categories, videos, tags, actions\n`, { append: true });
+appendFileSync('/tmp/server_startup.log', `Server started at ${new Date().toISOString()}\nRoutes: auth, games, categories, videos, tags, actions\n`);
 
 console.log('✅ All routes registered, including tags!');
 
