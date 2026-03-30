@@ -1,17 +1,16 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/auth'
 import Login from './pages/Login'
-import Games from './pages/Games'
-import Categories from './pages/Categories'
+import DatabaseManagement from './pages/DatabaseManagement'
 import Settings from './pages/Settings'
-import Characters from './pages/Characters'
-import Actions from './pages/Actions'
 import VipPlans from './pages/VipPlans'
+import UserLibraryLevels from './pages/UserLibraryLevels'
+import VipManagement from './pages/VipManagement'
 import AvatarReview from './pages/AvatarReview'
 import Database from './pages/Database'
 import Carousels from './pages/Carousels'
-import UserLibrary from './pages/UserLibrary'
 import Users from './pages/Users'
+import PageMargins from './pages/PageMargins'
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -26,31 +25,15 @@ function App() {
         path="/"
         element={
           <ProtectedRoute>
-            <Games />
+            <DatabaseManagement />
           </ProtectedRoute>
         }
       />
       <Route
-        path="/categories"
+        path="/database-management"
         element={
           <ProtectedRoute>
-            <Categories />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/characters"
-        element={
-          <ProtectedRoute>
-            <Characters />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/actions"
-        element={
-          <ProtectedRoute>
-            <Actions />
+            <DatabaseManagement />
           </ProtectedRoute>
         }
       />
@@ -63,10 +46,18 @@ function App() {
         }
       />
       <Route
-        path="/vip-plans"
+        path="/vip-management"
         element={
           <ProtectedRoute>
-            <VipPlans />
+            <VipManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/page-margins"
+        element={
+          <ProtectedRoute>
+            <PageMargins />
           </ProtectedRoute>
         }
       />
@@ -91,14 +82,6 @@ function App() {
         element={
           <ProtectedRoute>
             <Carousels />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/user-library"
-        element={
-          <ProtectedRoute>
-            <UserLibrary />
           </ProtectedRoute>
         }
       />

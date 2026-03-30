@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { gamesAPI, charactersAPI, categoriesAPI } from '../lib/services'
-import Layout from '../components/Layout'
 import { useAuthStore } from '../store/auth'
 import './Characters.css'
 
@@ -193,8 +192,7 @@ function Characters() {
   }
 
   return (
-    <Layout>
-      <div className="characters-page">
+    <div className="characters-page">
       <div className="page-header">
         <h1>角色管理</h1>
         {isAdmin && (
@@ -378,8 +376,7 @@ function Characters() {
           </div>
         </div>
       )}
-      </div>
-    </Layout>
+    </div>
   )
 }
 

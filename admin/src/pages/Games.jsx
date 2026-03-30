@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { gamesAPI } from '../lib/services'
-import Layout from '../components/Layout'
 import { useAuthStore } from '../store/auth'
 import './Games.css'
 
@@ -137,8 +136,7 @@ function Games() {
   }
 
   return (
-    <Layout>
-      <div className="games-page">
+    <div className="games-page">
         <div className="page-header">
           <h2>游戏管理</h2>
           {canEditGames && (
@@ -254,8 +252,7 @@ function Games() {
             </div>
           </div>
         )}
-      </div>
-    </Layout>
+    </div>
   )
 }
 

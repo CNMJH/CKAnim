@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
-import Layout from '../components/Layout'
 import { useAuthStore } from '../store/auth'
 import './VipPlans.css'
 
@@ -168,8 +167,7 @@ function VipPlans() {
   if (error) return <div className="error">加载失败：{error.message}</div>
 
   return (
-    <Layout>
-      <div className="vip-plans-page">
+    <div className="vip-plans-page">
         <div className="page-header">
           <h1>VIP 套餐管理</h1>
           <div className="header-actions">
@@ -355,9 +353,8 @@ function VipPlans() {
             </tbody>
           </table>
         )}
-        </div>
       </div>
-    </Layout>
+    </div>
   )
 }
 
