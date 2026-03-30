@@ -40,7 +40,7 @@ module.exports = {
         QINIU_ACCESS_KEY: '7SQACfWTDUZdDgJFlRZGRbKQDIHUFGilt_H3UE2L',
         QINIU_SECRET_KEY: 'LTaPJ6mK_LDudhkxJRmvLmdpnr-PLoL1gvOGDvfn',
         QINIU_BUCKET: 'zhuque-guangdong',
-        QINIU_DOMAIN: 'http://video.jiangmeijixie.com',
+        QINIU_DOMAIN: 'https://video.jiangmeijixie.com',
         QINIU_PREFIX: '参考网站 2026/',
         
         // 数据库配置

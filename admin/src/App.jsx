@@ -10,6 +10,8 @@ import VipPlans from './pages/VipPlans'
 import AvatarReview from './pages/AvatarReview'
 import Database from './pages/Database'
 import Carousels from './pages/Carousels'
+import UserLibrary from './pages/UserLibrary'
+import Users from './pages/Users'
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -89,6 +91,22 @@ function App() {
         element={
           <ProtectedRoute>
             <Carousels />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/user-library"
+        element={
+          <ProtectedRoute>
+            <UserLibrary />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/users"
+        element={
+          <ProtectedRoute>
+            <Users />
           </ProtectedRoute>
         }
       />

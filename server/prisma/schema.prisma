@@ -69,27 +69,27 @@ model VideoTag {
 }
 
 model Video {
-  id          Int            @id @default(autoincrement())
-  title       String
-  description String?
-  duration    Int?
-  thumbnail   String?
-  coverUrl    String?
-  order       Int            @default(0)
-  published   Boolean        @default(false)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  qiniuKey    String
-  qiniuUrl    String
-  coverUrlJpg String?
+  id           Int            @id @default(autoincrement())
+  title        String
+  description  String?
+  duration     Int?
+  thumbnail    String?
+  coverUrl     String?
+  order        Int            @default(0)
+  published    Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  qiniuKey     String
+  qiniuUrl     String
+  gameId       Int
+  actionId     Int?           @unique
+  coverUrlJpg  String?
   coverUrlWebp String?
-  gameId      Int
-  actionId    Int?           @unique
-  VideoTags   VideoTags[]
-  action      Action?        @relation(fields: [actionId], references: [id], onDelete: Cascade)
-  game        Game           @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  categories  GameCategory[] @relation("VideoCategories")
-  favorites   Favorite[]
+  VideoTags    VideoTags[]
+  favorites    Favorite[]
+  action       Action?        @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  game         Game           @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  categories   GameCategory[] @relation("VideoCategories")
 
   @@index([gameId])
   @@index([actionId])
@@ -155,59 +155,59 @@ model VideoTags {
   @@map("_VideoTags")
 }
 
-// ==================== 用户系统 ====================
-
 model User {
-  id          Int                @id @default(autoincrement())
-  username    String             @unique
-  email       String             @unique
-  password    String
-  avatar      String?            // 头像 URL
-  avatarStatus String            @default("pending") // pending, approved, rejected
-  avatarRejectReason String?     // 拒绝原因
-  phone       String?
-  role        String             @default("user")  // user, content_admin, system_admin
-  vipLevel    String             @default("none")  // none, vip1, vip2, vip3
-  vipExpires  DateTime?
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-  favorites   Favorite[]
+  id                  Int                    @id @default(autoincrement())
+  username            String                 @unique
+  email               String                 @unique
+  password            String
+  avatar              String?
+  avatarStatus        String                 @default("pending")
+  avatarRejectReason  String?
+  phone               String?
+  role                String                 @default("user")
+  vipLevel            String                 @default("none")
+  vipExpires          DateTime?
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
   favoriteCollections FavoriteCollection[]
+  favorites           Favorite[]
+  libraryActions      UserLibraryAction[]
+  libraryCategories   UserLibraryCategory[]
+  libraryCharacters   UserLibraryCharacter[]
+  libraryVideos       UserLibraryVideo[]
 
   @@index([email])
   @@index([role])
   @@map("users")
 }
 
-// VIP 套餐模型
 model VipPlan {
-  id          Int       @id @default(autoincrement())
-  name        String    // 套餐名称，如 "VIP1 月卡"
-  level       String    // 套餐等级，如 "vip0", "vip1", "vip2", "vip3"
-  price       String    // 价格显示，如 "¥15/月"
-  originalPrice String? // 原价（可选），如 "¥180"
-  features    String    // 权益列表，JSON 格式：["高清画质", "去广告", "专属标识"]
-  badge       String?   // 徽章标识，如 "热销"、"推荐"
-  order       Int       @default(0) // 排序
-  enabled     Boolean   @default(true) // 是否启用
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            Int      @id @default(autoincrement())
+  name          String
+  level         String
+  price         String
+  originalPrice String?
+  features      String
+  badge         String?
+  order         Int      @default(0)
+  enabled       Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([level])
   @@index([enabled])
   @@map("vip_plans")
 }
 
-// 收藏夹集合（支持多收藏夹，类似 B 站）
 model FavoriteCollection {
   id          Int        @id @default(autoincrement())
   userId      Int
-  name        String     // 收藏夹名称
-  description String?    // 描述
-  isDefault   Boolean    @default(false) // 是否默认收藏夹（不可删除）
-  cover       String?    // 封面图（最新收藏的视频封面）
-  count       Int        @default(0) // 收藏数量
-  order       Int        @default(0) // 排序
+  name        String
+  description String?
+  isDefault   Boolean    @default(false)
+  cover       String?
+  count       Int        @default(0)
+  order       Int        @default(0)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -218,38 +218,138 @@ model FavoriteCollection {
 }
 
 model Favorite {
-  id             Int                @id @default(autoincrement())
-  userId         Int
-  videoId        Int
-  collectionId   Int                // 关联到收藏夹
-  createdAt      DateTime           @default(now())
-  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  video          Video              @relation(fields: [videoId], references: [id], onDelete: Cascade)
-  collection     FavoriteCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  id           Int                @id @default(autoincrement())
+  userId       Int
+  videoId      Int
+  collectionId Int
+  createdAt    DateTime           @default(now())
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video        Video              @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  collection   FavoriteCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, videoId, collectionId]) // 同一视频在同一收藏夹中只能收藏一次
+  @@unique([userId, videoId, collectionId])
   @@index([userId])
   @@index([videoId])
   @@index([collectionId])
   @@map("favorites")
 }
 
-// 轮播图管理
 model Carousel {
-  id          Int      @id @default(autoincrement())
-  title       String   // 轮播图标题
-  imageUrl    String   // 图片 URL
-  targetUrl   String?  // 跳转链接（可选）
-  order       Int      @default(0) // 排序
-  duration    Int      @default(24) // 展示时长（小时）
-  startTime   DateTime // 开始时间
-  endTime     DateTime // 结束时间（自动计算）
-  active      Boolean  @default(true) // 是否激活
-  isDefault   Boolean  @default(false) // 是否默认轮播图（常驻）
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  title     String
+  imageUrl  String
+  targetUrl String?
+  order     Int      @default(0)
+  duration  Int      @default(24)
+  startTime DateTime
+  endTime   DateTime
+  active    Boolean  @default(true)
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([active])
   @@index([endTime])
   @@map("carousels")
+}
+
+model UserLibraryCategory {
+  id         Int                    @id @default(autoincrement())
+  userId     Int
+  name       String
+  icon       String?
+  iconUrl    String?
+  order      Int                    @default(0)
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+  user       User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  characters UserLibraryCharacter[]
+
+  @@index([userId])
+  @@map("user_library_categories")
+}
+
+model UserLibraryCharacter {
+  id          Int                  @id @default(autoincrement())
+  userId      Int
+  name        String
+  avatar      String?
+  description String?
+  categoryId  Int?
+  order       Int                  @default(0)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  actions     UserLibraryAction[]
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    UserLibraryCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@index([categoryId])
+  @@map("user_library_characters")
+}
+
+model UserLibraryAction {
+  id          Int                  @id @default(autoincrement())
+  userId      Int
+  name        String
+  code        String?
+  description String?
+  order       Int                  @default(0)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  characterId Int
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  character   UserLibraryCharacter @relation(fields: [characterId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  video       UserLibraryVideo?
+
+  @@index([userId])
+  @@index([characterId])
+  @@map("user_library_actions")
+}
+
+model UserLibraryVideo {
+  id          Int                @id @default(autoincrement())
+  userId      Int
+  title       String
+  description String?
+  duration    Int?
+  coverUrl    String?
+  qiniuKey    String
+  qiniuUrl    String
+  fileSize    Int                @default(0)
+  actionId    Int?               @unique
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action      UserLibraryAction? @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([actionId])
+  @@map("user_library_videos")
+}
+
+model UserLibrarySettings {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("user_library_settings")
+}
+
+model UserLibraryLevel {
+  id              Int      @id @default(autoincrement())
+  vipLevel        String   @unique  // vip0, vip_monthly, vip_yearly, vip_lifetime
+  name            String   // 等级名称
+  maxStorage      Int      @default(0)  // 最大存储容量 (MB)
+  maxFileSize     Int      @default(0)  // 单个文件最大大小 (MB)
+  maxDailyUploads Int      @default(0)  // 每日最大上传次数
+  enabled         Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([vipLevel])
+  @@map("user_library_levels")
 }

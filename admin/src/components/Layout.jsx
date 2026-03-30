@@ -16,14 +16,13 @@ function Layout({ children }) {
     // 系统管理员：所有菜单
     if (role === 'system_admin') {
       return [
-        { path: '/', label: '游戏管理', icon: '🎮' },
-        { path: '/categories', label: '分类管理', icon: '📁' },
-        { path: '/characters', label: '角色管理', icon: '👤' },
-        { path: '/actions', label: '动作管理', icon: '🎯' },
+        { path: '/database-management', label: '官方参考库管理', icon: '📚' },
         { path: '/carousels', label: '轮播图管理', icon: '🖼️' },
-        { path: '/vip-plans', label: 'VIP 套餐', icon: '💎' },
+        { path: '/vip-management', label: 'VIP 管理', icon: '💎' },
+        { path: '/users', label: '用户管理', icon: '👥' },
         { path: '/avatar-review', label: '头像审核', icon: '🖼️' },
         { path: '/database', label: '数据库管理', icon: '🗄️' },
+        { path: '/page-margins', label: '页面边距', icon: '📐' },
         { path: '/settings', label: '设置', icon: '⚙️' },
       ]
     }
@@ -31,11 +30,9 @@ function Layout({ children }) {
     // 内容管理员：显示所有菜单，但游戏管理无编辑权限
     if (role === 'content_admin') {
       return [
-        { path: '/', label: '游戏管理', icon: '🎮' },  // 只显示，无编辑权限
-        { path: '/categories', label: '分类管理', icon: '📁' },
-        { path: '/characters', label: '角色管理', icon: '👤' },
-        { path: '/actions', label: '动作管理', icon: '🎯' },
+        { path: '/database-management', label: '官方参考库管理', icon: '📚' },  // 只显示，无编辑权限
         { path: '/avatar-review', label: '头像审核', icon: '🖼️' },
+        { path: '/page-margins', label: '页面边距', icon: '📐' },
         { path: '/settings', label: '设置', icon: '⚙️' },
       ]
     }

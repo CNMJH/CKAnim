@@ -86,6 +86,54 @@ sqlite3 db.db "SELECT coverUrl FROM videos WHERE id = 86;"
 - ❌ 不要使用 `DROP TABLE` 除非明确需要
 - ❌ 不要在服务器上直接修改 prisma schema 后不迁移
 
+### 6. 🚨 Prisma 迁移事故教训（2026-03-26）
+
+**事故**：使用 `npx prisma db push --force-reset` 清空了生产数据库
+
+**错误命令**：
+```bash
+# ❌ 绝对禁止在生产环境使用
+npx prisma db push --force-reset
+```
+
+**正确做法**：
+```bash
+# ✅ 安全迁移（不破坏数据）
+npx prisma db push
+
+# ✅ 或者使用 migrate（推荐）
+npx prisma migrate dev --name add_new_table
+
+# ✅ 生产环境迁移
+npx prisma migrate deploy
+```
+
+**操作前必做**：
+```bash
+# 1. 备份数据库
+cp /var/www/ckanim/server/prisma/dev.db /var/www/ckanim/backups/db_backup_$(date +%Y%m%d_%H%M%S).db
+
+# 2. 验证备份
+ls -lh /var/www/ckanim/backups/
+
+# 3. 再执行迁移
+npx prisma db push
+```
+
+**恢复方法**：
+```bash
+# 从备份恢复
+cp /var/www/ckanim/backups/db_backup_YYYYMMDD_HHMMSS.db /var/www/ckanim/server/prisma/dev.db
+pm2 restart ckanim-server --update-env
+```
+
+**教训总结**：
+1. ⚠️ **永远不要在生产环境使用 `--force-reset`**
+2. ✅ 操作前必须备份数据库
+3. ✅ 先在测试环境验证迁移
+4. ✅ 使用 `prisma migrate` 而非 `db push` 管理生产环境
+5. ✅ 定期自动备份（已有备份机制，17:34 的备份救了数据）
+
 ---
 
 ## 🔧 服务器信息
@@ -140,4 +188,21 @@ sqlite3 db.db "SELECT coverUrl FROM videos WHERE id = 86;"
 
 ---
 
-*最后更新：2026-03-26*
+## 📅 今日新增（2026-03-26）
+
+### 完成功能
+- ✅ 视频重新上传功能（动作管理）
+- ✅ VIP 页面优化（头像显示、按钮状态、样式）
+- ✅ 个人参考库功能（用户私人库）
+  - 6 个新数据库表
+  - 分类/角色/动作/视频管理
+  - 前端页面 4 个（~2150 行代码）
+
+### 事故与恢复
+- 🚨 数据库被 --force-reset 清空
+- ✅ 从备份恢复（17:34 备份）
+- ✅ 无数据损失
+
+---
+
+*最后更新：2026-03-26 23:59*

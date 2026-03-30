@@ -644,4 +644,426 @@ export const userRoutes: FastifyPluginAsync = async (server) => {
       }
     }
   )
+
+  // ==================== 管理员 - 用户管理 ====================
+  
+  // 获取所有用户（管理员）
+  server.get(
+    '/admin/users',
+    {
+      preHandler: [async (request, reply) => {
+        const authHeader = request.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return reply.code(401).send({ error: 'Unauthorized', message: '未登录' })
+        }
+        try {
+          const token = authHeader.split(' ')[1]
+          const decoded = jwt.verify(token, JWT_SECRET) as any
+          if (!['system_admin', 'content_admin'].includes(decoded.role)) {
+            return reply.code(403).send({ error: 'Forbidden', message: '权限不足' })
+          }
+          request.user = decoded
+        } catch (err) {
+          return reply.code(401).send({ error: 'Unauthorized', message: 'Token 无效' })
+        }
+      }],
+    },
+    async (request, reply) => {
+      try {
+        const { page = '1', limit = '20', search, vipLevel } = request.query as {
+          page?: string
+          limit?: string
+          search?: string
+          vipLevel?: string
+        }
+
+        const pageNum = parseInt(page)
+        const limitNum = parseInt(limit)
+        const skip = (pageNum - 1) * limitNum
+
+        const where: any = {}
+        
+        if (search) {
+          where.OR = [
+            { username: { contains: search } },
+            { email: { contains: search } },
+          ]
+        }
+        
+        if (vipLevel && vipLevel !== 'all') {
+          where.vipLevel = vipLevel
+        }
+
+        const [users, total] = await Promise.all([
+          prisma.user.findMany({
+            where,
+            skip,
+            take: limitNum,
+            orderBy: { createdAt: 'desc' },
+            select: {
+              id: true,
+              username: true,
+              email: true,
+              avatar: true,
+              role: true,
+              vipLevel: true,
+              vipExpires: true,
+              createdAt: true,
+              _count: {
+                select: {
+                  favorites: true,
+                  libraryVideos: true,
+                }
+              }
+            },
+          }),
+          prisma.user.count({ where }),
+        ])
+
+        // 格式化 VIP 等级显示
+        const vipLevelNames: any = {
+          none: '普通用户',
+          vip_monthly: 'VIP 月卡',
+          vip_yearly: 'VIP 年卡',
+          vip_lifetime: '永久 SVIP',
+        }
+
+        reply.send({
+          users: users.map(u => ({
+            ...u,
+            vipLevelName: vipLevelNames[u.vipLevel] || '普通用户',
+          })),
+          total,
+          page: pageNum,
+          limit: limitNum,
+          totalPages: Math.ceil(total / limitNum),
+        })
+      } catch (error) {
+        server.log.error(error)
+        reply.code(500).send({
+          error: 'Internal Server Error',
+          message: '获取用户列表失败',
+        })
+      }
+    }
+  )
+
+  // 获取单个用户详情（管理员）
+  server.get(
+    '/admin/users/:id',
+    {
+      preHandler: [async (request, reply) => {
+        const authHeader = request.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return reply.code(401).send({ error: 'Unauthorized', message: '未登录' })
+        }
+        try {
+          const token = authHeader.split(' ')[1]
+          const decoded = jwt.verify(token, JWT_SECRET) as any
+          if (!['system_admin', 'content_admin'].includes(decoded.role)) {
+            return reply.code(403).send({ error: 'Forbidden', message: '权限不足' })
+          }
+          request.user = decoded
+        } catch (err) {
+          return reply.code(401).send({ error: 'Unauthorized', message: 'Token 无效' })
+        }
+      }],
+    },
+    async (request, reply) => {
+      try {
+        const { id } = request.params as { id: string }
+        
+        const user = await prisma.user.findUnique({
+          where: { id: parseInt(id) },
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            avatar: true,
+            avatarStatus: true,
+            role: true,
+            vipLevel: true,
+            vipExpires: true,
+            createdAt: true,
+            updatedAt: true,
+            favoriteCollections: {
+              select: { id: true, name: true }
+            },
+            favorites: {
+              take: 10,
+              select: { id: true, videoId: true, createdAt: true }
+            },
+            libraryVideos: {
+              take: 10,
+              select: { id: true, title: true, createdAt: true }
+            },
+          },
+        })
+
+        if (!user) {
+          return reply.code(404).send({ error: 'Not Found', message: '用户不存在' })
+        }
+
+        reply.send({ user })
+      } catch (error) {
+        server.log.error(error)
+        reply.code(500).send({
+          error: 'Internal Server Error',
+          message: '获取用户详情失败',
+        })
+      }
+    }
+  )
+
+  // 更新用户 VIP（管理员）
+  server.put(
+    '/admin/users/:id/vip',
+    {
+      preHandler: [async (request, reply) => {
+        const authHeader = request.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return reply.code(401).send({ error: 'Unauthorized', message: '未登录' })
+        }
+        try {
+          const token = authHeader.split(' ')[1]
+          const decoded = jwt.verify(token, JWT_SECRET) as any
+          if (decoded.role !== 'system_admin') {
+            return reply.code(403).send({ error: 'Forbidden', message: '仅系统管理员可操作' })
+          }
+          request.user = decoded
+        } catch (err) {
+          return reply.code(401).send({ error: 'Unauthorized', message: 'Token 无效' })
+        }
+      }],
+    },
+    async (request, reply) => {
+      try {
+        const { id } = request.params as { id: string }
+        const { vipLevel, vipExpires } = request.body as {
+          vipLevel: string
+          vipExpires?: string
+        }
+
+        const validVipLevels = ['none', 'vip_monthly', 'vip_yearly', 'vip_lifetime']
+        if (!validVipLevels.includes(vipLevel)) {
+          return reply.code(400).send({ error: 'Bad Request', message: '无效的 VIP 等级' })
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { id: parseInt(id) },
+        })
+
+        if (!user) {
+          return reply.code(404).send({ error: 'Not Found', message: '用户不存在' })
+        }
+
+        const updateData: any = { vipLevel }
+        
+        if (vipLevel === 'none') {
+          updateData.vipExpires = null
+        } else if (vipExpires) {
+          updateData.vipExpires = new Date(vipExpires)
+        } else if (vipLevel === 'vip_monthly') {
+          updateData.vipExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        } else if (vipLevel === 'vip_yearly') {
+          updateData.vipExpires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+        } else if (vipLevel === 'vip_lifetime') {
+          updateData.vipExpires = null
+        }
+
+        const updated = await prisma.user.update({
+          where: { id: parseInt(id) },
+          data: updateData,
+        })
+
+        reply.send({
+          user: {
+            id: updated.id,
+            username: updated.username,
+            vipLevel: updated.vipLevel,
+            vipExpires: updated.vipExpires,
+          }
+        })
+      } catch (error) {
+        server.log.error(error)
+        reply.code(500).send({
+          error: 'Internal Server Error',
+          message: '更新用户 VIP 失败',
+        })
+      }
+    }
+  )
+
+  // 重置用户密码（管理员）
+  server.put(
+    '/admin/users/:id/reset-password',
+    {
+      preHandler: [async (request, reply) => {
+        const authHeader = request.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return reply.code(401).send({ error: 'Unauthorized', message: '未登录' })
+        }
+        try {
+          const token = authHeader.split(' ')[1]
+          const decoded = jwt.verify(token, JWT_SECRET) as any
+          if (decoded.role !== 'system_admin') {
+            return reply.code(403).send({ error: 'Forbidden', message: '仅系统管理员可操作' })
+          }
+          request.user = decoded
+        } catch (err) {
+          return reply.code(401).send({ error: 'Unauthorized', message: 'Token 无效' })
+        }
+      }],
+    },
+    async (request, reply) => {
+      try {
+        const { id } = request.params as { id: string }
+        const { newPassword } = request.body as { newPassword: string }
+
+        if (!newPassword || newPassword.length < 6) {
+          return reply.code(400).send({
+            error: 'Bad Request',
+            message: '密码长度至少为 6 位',
+          })
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { id: parseInt(id) },
+        })
+
+        if (!user) {
+          return reply.code(404).send({ error: 'Not Found', message: '用户不存在' })
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+        await prisma.user.update({
+          where: { id: parseInt(id) },
+          data: { password: hashedPassword },
+        })
+
+        reply.send({ success: true, message: '密码已重置' })
+      } catch (error) {
+        server.log.error(error)
+        reply.code(500).send({
+          error: 'Internal Server Error',
+          message: '重置密码失败',
+        })
+      }
+    }
+  )
+
+  // 更新用户角色（仅系统管理员）
+  server.put(
+    '/admin/users/:id/role',
+    {
+      preHandler: [async (request, reply) => {
+        const authHeader = request.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return reply.code(401).send({ error: 'Unauthorized', message: '未登录' })
+        }
+        try {
+          const token = authHeader.split(' ')[1]
+          const decoded = jwt.verify(token, JWT_SECRET) as any
+          if (decoded.role !== 'system_admin') {
+            return reply.code(403).send({ error: 'Forbidden', message: '仅系统管理员可操作' })
+          }
+          request.user = decoded
+        } catch (err) {
+          return reply.code(401).send({ error: 'Unauthorized', message: 'Token 无效' })
+        }
+      }],
+    },
+    async (request, reply) => {
+      try {
+        const { id } = request.params as { id: string }
+        const { role } = request.body as { role: string }
+
+        const validRoles = ['user', 'content_admin', 'system_admin']
+        if (!validRoles.includes(role)) {
+          return reply.code(400).send({ error: 'Bad Request', message: '无效的角色' })
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { id: parseInt(id) },
+        })
+
+        if (!user) {
+          return reply.code(404).send({ error: 'Not Found', message: '用户不存在' })
+        }
+
+        const updated = await prisma.user.update({
+          where: { id: parseInt(id) },
+          data: { role },
+        })
+
+        reply.send({
+          user: {
+            id: updated.id,
+            username: updated.username,
+            role: updated.role,
+          }
+        })
+      } catch (error) {
+        server.log.error(error)
+        reply.code(500).send({
+          error: 'Internal Server Error',
+          message: '更新用户角色失败',
+        })
+      }
+    }
+  )
+
+  // 删除用户（仅系统管理员）
+  server.delete(
+    '/admin/users/:id',
+    {
+      preHandler: [async (request, reply) => {
+        const authHeader = request.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return reply.code(401).send({ error: 'Unauthorized', message: '未登录' })
+        }
+        try {
+          const token = authHeader.split(' ')[1]
+          const decoded = jwt.verify(token, JWT_SECRET) as any
+          if (decoded.role !== 'system_admin') {
+            return reply.code(403).send({ error: 'Forbidden', message: '仅系统管理员可操作' })
+          }
+          request.user = decoded
+        } catch (err) {
+          return reply.code(401).send({ error: 'Unauthorized', message: 'Token 无效' })
+        }
+      }],
+    },
+    async (request, reply) => {
+      try {
+        const { id } = request.params as { id: string }
+
+        const user = await prisma.user.findUnique({
+          where: { id: parseInt(id) },
+        })
+
+        if (!user) {
+          return reply.code(404).send({ error: 'Not Found', message: '用户不存在' })
+        }
+
+        // 不允许删除管理员
+        if (['system_admin', 'content_admin'].includes(user.role)) {
+          return reply.code(400).send({ error: 'Bad Request', message: '不能删除管理员账号' })
+        }
+
+        await prisma.user.delete({
+          where: { id: parseInt(id) },
+        })
+
+        reply.send({ success: true, message: '用户已删除' })
+      } catch (error) {
+        server.log.error(error)
+        reply.code(500).send({
+          error: 'Internal Server Error',
+          message: '删除用户失败',
+        })
+      }
+    }
+  )
 }

@@ -329,3 +329,66 @@ export const favoritesAPI = {
     return favoritesApi.post('/favorites/batch-remove', { videoIds, collectionId });
   },
 };
+
+// ==================== 用户个人参考库 API ====================
+const userLibraryApi = axios.create({
+  baseURL: '/api',
+  timeout: 30000, // 上传需要更长时间
+  headers: {
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
+  },
+});
+
+// 添加认证头
+userLibraryApi.interceptors.request.use(config => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  if (config.method === 'get') {
+    config.params = {
+      ...config.params,
+      _t: Date.now(),
+    };
+  }
+  return config;
+});
+
+export const userLibraryAPI = {
+  // ===== 分类管理 =====
+  getCategories: () => userLibraryApi.get('/user-library/categories'),
+  createCategory: (data) => userLibraryApi.post('/user-library/categories', data),
+  updateCategory: (id, data) => userLibraryApi.put(`/user-library/categories/${id}`, data),
+  deleteCategory: (id) => userLibraryApi.delete(`/user-library/categories/${id}`),
+  
+  // ===== 角色管理 =====
+  getCharacters: (categoryId) => userLibraryApi.get('/user-library/characters', {
+    params: categoryId ? { categoryId } : {}
+  }),
+  createCharacter: (data) => userLibraryApi.post('/user-library/characters', data),
+  updateCharacter: (id, data) => userLibraryApi.put(`/user-library/characters/${id}`, data),
+  deleteCharacter: (id) => userLibraryApi.delete(`/user-library/characters/${id}`),
+  
+  // ===== 动作管理 =====
+  getActions: (characterId) => userLibraryApi.get(`/user-library/characters/${characterId}/actions`),
+  createAction: (characterId, data) => userLibraryApi.post(`/user-library/characters/${characterId}/actions`, data),
+  updateAction: (id, data) => userLibraryApi.put(`/user-library/actions/${id}`, data),
+  deleteAction: (id) => userLibraryApi.delete(`/user-library/actions/${id}`),
+  
+  // ===== 视频管理 =====
+  getUploadToken: (filename, characterId, actionId) => userLibraryApi.get('/user-library/videos/upload-token', {
+    params: { filename, characterId, actionId }
+  }),
+  getCoverUploadToken: (key) => userLibraryApi.get('/user-library/videos/cover-upload-token', {
+    params: { key }
+  }),
+  saveVideo: (data) => userLibraryApi.post('/user-library/videos', data),
+  
+  // ===== 统计 =====
+  getStats: () => userLibraryApi.get('/user-library/stats'),
+  
+  // ===== 管理员配置 =====
+  getAdminSettings: () => userLibraryApi.get('/user-library/admin/settings'),
+  updateAdminSetting: (key, data) => userLibraryApi.put(`/user-library/admin/settings/${key}`, data),
+};

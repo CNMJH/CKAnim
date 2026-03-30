@@ -28,6 +28,7 @@ function AuthModal({ isOpen, onClose, onLoginSuccess }) {
           password: formData.password,
         })
         authUtils.setToken(data.token)
+        localStorage.setItem('user', JSON.stringify(data.user))
         onLoginSuccess?.(data.user)
         onClose()
       } else {
@@ -43,6 +44,7 @@ function AuthModal({ isOpen, onClose, onLoginSuccess }) {
           password: formData.password,
         })
         authUtils.setToken(data.token)
+        localStorage.setItem('user', JSON.stringify(data.user))
         onLoginSuccess?.(data.user)
         onClose()
       }

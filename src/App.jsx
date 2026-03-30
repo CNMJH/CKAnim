@@ -7,6 +7,8 @@ import Search from './pages/Search';
 import UserCenter from './pages/UserCenter';
 import FavoriteCollections from './pages/FavoriteCollections';
 import FavoriteDetail from './pages/FavoriteDetail';
+import UserLibrary from './pages/UserLibrary';
+import UserLibraryManage from './pages/UserLibraryManage';
 import './App.css';
 
 function App() {
@@ -24,6 +26,8 @@ function App() {
             <Route path="/user/vip" element={<UserCenter />} />
             <Route path="/user/favorites" element={<FavoriteCollections />} />
             <Route path="/user/favorites/:id" element={<FavoriteDetail />} />
+            <Route path="/user/library" element={<UserLibrary />} />
+            <Route path="/user/library/manage" element={<UserLibraryManage />} />
           </Routes>
         </main>
         <Footer />

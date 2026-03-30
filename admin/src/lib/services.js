@@ -41,6 +41,7 @@ export const videosAPI = {
   create: (data) => api.post('/admin/videos', data),
   update: (id, data) => api.put(`/admin/videos/${id}`, data),
   delete: (id) => api.delete(`/admin/videos/${id}`),
+  replace: (id, data) => api.post(`/admin/videos/${id}/replace`, data),
 }
 
 export const tagsAPI = {

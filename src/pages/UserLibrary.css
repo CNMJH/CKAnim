@@ -1,0 +1,272 @@
+.user-library-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.library-header {
+  margin-bottom: 32px;
+}
+
+.library-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  color: #1a1a1a;
+}
+
+.library-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+/* 播放器区域 */
+.library-player-section {
+  margin-bottom: 32px;
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.player-info {
+  margin-top: 16px;
+}
+
+.player-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  color: #1a1a1a;
+}
+
+.video-description {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* 筛选区域 */
+.library-filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.filter-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.loading {
+  padding: 20px;
+  text-align: center;
+  color: #999;
+}
+
+.empty-hint {
+  padding: 24px;
+  text-align: center;
+  color: #999;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.empty-hint p {
+  margin: 8px 0 0 0;
+  font-size: 13px;
+}
+
+/* 分类列表 */
+.category-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.category-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: white;
+  border: 2px solid #e8e8e8;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-item:hover {
+  border-color: #667eea;
+  background: #f5f7ff;
+}
+
+.category-item.active {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.category-icon {
+  font-size: 16px;
+}
+
+.category-count {
+  margin-left: 4px;
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.category-item.active .category-count {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 角色网格 - 个人参考库页面 */
+.library-filter-section .character-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.character-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  background: white;
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.character-card:hover {
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.character-card.active {
+  border-color: #667eea;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+}
+
+.character-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 8px;
+  border: 2px solid #e8e8e8;
+}
+
+.character-card.active .character-avatar {
+  border-color: #667eea;
+}
+
+.character-avatar-placeholder {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.character-name {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.character-count {
+  font-size: 12px;
+  color: #999;
+}
+
+/* 动作按钮 */
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.action-btn {
+  padding: 10px 20px;
+  background: white;
+  border: 2px solid #e8e8e8;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-btn:hover:not(:disabled) {
+  border-color: #667eea;
+  background: #f5f7ff;
+}
+
+.action-btn.active {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.action-btn.has-video {
+  border-color: #52c41a;
+}
+
+.action-btn.has-video:hover:not(:disabled) {
+  background: #f6ffed;
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.play-icon {
+  font-size: 10px;
+}
+
+/* 空状态 */
+.library-empty-state {
+  padding: 80px 24px;
+  text-align: center;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.library-empty-state h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: #1a1a1a;
+}
+
+.library-empty-state p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}

@@ -23,6 +23,7 @@ function UserCenter() {
   })
   const [message, setMessage] = useState({ type: '', text: '' })
   const [vipPlans, setVipPlans] = useState([]) // VIP 套餐列表
+  const [userVipLevel, setUserVipLevel] = useState('none') // 当前用户 VIP 等级
   const [collections, setCollections] = useState([]) // 收藏夹列表
   const [collectionsLoading, setCollectionsLoading] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false) // 头像上传中
@@ -72,6 +73,7 @@ function UserCenter() {
     try {
       const { data } = await userAPI.getMe()
       setUser(data.user)
+      setUserVipLevel(data.user.vipLevel || 'none')
       setFormData({
         avatar: data.user.avatar || '',
         phone: data.user.phone || '',
@@ -412,25 +414,41 @@ function UserCenter() {
               <p className="empty-hint">会员套餐加载中...</p>
             ) : (
               <div className="vip-cards">
-                {vipPlans.map((plan, index) => (
-                  <div 
-                    key={plan.id} 
-                    className={`vip-card ${plan.badge ? 'featured' : ''}`}
-                  >
-                    {plan.badge && <span className="vip-badge">{plan.badge}</span>}
-                    <h3>{plan.name}</h3>
-                    <p className="vip-price">{plan.price}</p>
-                    {plan.originalPrice && (
-                      <p className="vip-original-price">{plan.originalPrice}</p>
-                    )}
-                    <ul className="vip-features">
-                      {plan.features.map((feature, idx) => (
-                        <li key={idx}>✓ {feature}</li>
-                      ))}
-                    </ul>
-                    <button className="btn-vip">立即开通</button>
-                  </div>
-                ))}
+                {vipPlans.map((plan, index) => {
+                  // 判断是否是当前用户的套餐 - 使用 level 字段匹配
+                  const isCurrentPlan = (
+                    (userVipLevel === 'none' && plan.level === 'vip0') ||
+                    (userVipLevel === 'vip_monthly' && plan.level === 'vip1') ||
+                    (userVipLevel === 'vip_yearly' && plan.level === 'vip2') ||
+                    (userVipLevel === 'vip_lifetime' && plan.level === 'vip3')
+                  )
+                  
+                  return (
+                    <div 
+                      key={plan.id} 
+                      className={`vip-card ${plan.badge ? 'featured' : ''}`}
+                    >
+                      {plan.badge && <span className="vip-badge">{plan.badge}</span>}
+                      <h3>{plan.name}</h3>
+                      <p className="vip-price">{plan.price}</p>
+                      {plan.originalPrice && (
+                        <p className="vip-original-price">{plan.originalPrice}</p>
+                      )}
+                      <ul className="vip-features">
+                        {plan.features.map((feature, idx) => (
+                          <li key={idx}>{feature}</li>
+                        ))}
+                      </ul>
+                      {isCurrentPlan ? (
+                        <button className="btn-vip" disabled style={{ background: '#ccc', cursor: 'not-allowed' }}>
+                          当前套餐
+                        </button>
+                      ) : (
+                        <button className="btn-vip">立即开通</button>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
             <p className="vip-hint">会员功能开发中，敬请期待...</p>

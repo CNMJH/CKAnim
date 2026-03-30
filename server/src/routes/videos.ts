@@ -525,9 +525,9 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
               qiniuUrl,
               duration,
               thumbnail,
-              coverUrl: finalCoverUrl,
-              coverUrlJpg: finalCoverUrlJpg,
-              coverUrlWebp: finalCoverUrlWebp,
+              coverUrl: coverUrl,
+              coverUrlJpg: coverUrlJpg,
+              coverUrlWebp: coverUrlWebp,
               order,
               published: true, // ⭐ 默认发布，前台可访问
               actionId, // ⭐ 直接关联到动作
@@ -571,6 +571,103 @@ export const videoRoutes: FastifyPluginAsync = async (server) => {
   );
 
   // 更新视频
+  // 替换视频（上传新视频，生成新封面，删除旧文件）
+  server.post(
+    '/videos/:id/replace',
+    { preHandler: [authenticate] },
+    async (request, reply) => {
+      try {
+        const { id } = request.params as { id: string };
+        const videoId = parseInt(id);
+        const {
+          qiniuKey,
+          qiniuUrl,
+          duration,
+          coverUrl,
+          coverUrlJpg,
+          coverUrlWebp,
+        } = request.body as {
+          qiniuKey: string;
+          qiniuUrl: string;
+          duration?: number;
+          coverUrl?: string;
+          coverUrlJpg?: string;
+          coverUrlWebp?: string;
+        };
+
+        // 简单替换：前端已经上传好视频和封面，直接更新数据库
+        server.log.info('[Video Replace] Request:', { videoId, qiniuKey, coverUrl, coverUrlJpg, coverUrlWebp });
+
+        // 必选参数验证
+        if (!qiniuKey || !qiniuUrl) {
+          return reply.code(400).send({
+            error: 'Bad Request',
+            message: 'qiniuKey and qiniuUrl are required',
+          });
+        }
+
+        // 查找原视频
+        const oldVideo = await prisma.video.findUnique({
+          where: { id: videoId },
+        });
+
+        if (!oldVideo) {
+          return reply.code(404).send({
+            error: 'Not Found',
+            message: 'Video not found',
+          });
+        }
+
+        server.log.info(`[Video Replace] Replacing video ${videoId}, old qiniuKey: ${oldVideo.qiniuKey}`);
+
+        // 删除七牛云上的旧视频文件（如果存在）
+        if (oldVideo.qiniuKey && oldVideo.qiniuKey !== qiniuKey) {
+          try {
+            await deleteFile(oldVideo.qiniuKey);
+            server.log.info(`[Video Replace] Deleted old qiniu video: ${oldVideo.qiniuKey}`);
+          } catch (err: any) {
+            if (err.message.includes('612')) {
+              server.log.warn(`[Video Replace] Old qiniu file not found (612), skipping: ${oldVideo.qiniuKey}`);
+            } else {
+              server.log.error(`[Video Replace] Failed to delete old qiniu video: ${oldVideo.qiniuKey}`, err);
+            }
+          }
+        }
+
+        // 更新视频记录
+        const updatedVideo = await prisma.video.update({
+          where: { id: videoId },
+          data: {
+            qiniuKey,
+            qiniuUrl,
+            duration: duration || oldVideo.duration,
+            // 如果前端没传封面，保留旧的
+            coverUrl: coverUrl || oldVideo.coverUrl,
+            // 自动生成 JPG 和 WebP URL（如果前端没传）
+            coverUrlJpg: coverUrlJpg || (coverUrl ? coverUrl : oldVideo.coverUrlJpg),
+            coverUrlWebp: coverUrlWebp || (coverUrl ? coverUrl + '?imageMogr2/format/webp/quality/75' : oldVideo.coverUrlWebp),
+          },
+          include: {
+            action: true,
+            game: true,
+            categories: true,
+          },
+        });
+
+        server.log.info(`[Video Replace] Video ${videoId} replaced successfully`);
+
+        reply.send(updatedVideo);
+      } catch (error) {
+        server.log.error('[Video Replace] Error:', error);
+        reply.code(500).send({
+          error: 'Internal Server Error',
+          message: 'Failed to replace video',
+        });
+      }
+    }
+  );
+
+  // 更新视频信息
   server.put(
     '/videos/:id',
     { preHandler: [authenticate] },

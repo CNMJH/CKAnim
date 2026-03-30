@@ -22,6 +22,7 @@ import { favoriteRoutes } from './routes/favorites';
 import { databaseRoutes } from './routes/database';
 import { carouselRoutes } from './routes/carousels';
 import { publicCarouselRoutes } from './routes/public-carousels';
+import { userLibraryRoutes } from './routes/user-library';
 import path from 'path';
 import fs from 'fs';
 
@@ -75,6 +76,9 @@ await server.register(databaseRoutes, { prefix: '/api/admin' });
 // 轮播图路由：公开 + 管理员
 await server.register(publicCarouselRoutes, { prefix: '/api/carousels' }); // /api/carousels/active（公开）
 await server.register(carouselRoutes, { prefix: '/api/admin/carousels' }); // /api/admin/carousels/*（管理员）
+
+// 用户个人参考库路由
+await server.register(userLibraryRoutes, { prefix: '/api' });
 
 // 通用上传路由（供前端各页面使用）
 server.post('/api/admin/upload', {
