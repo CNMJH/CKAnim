@@ -76,3 +76,18 @@ export const settingsAPI = {
   batchUpdate: (settings) => api.post('/settings/batch', { settings }),
   init: () => api.post('/settings/init'),
 }
+
+export const userLibraryAdminAPI = {
+  getSettings: () => api.get('/user-library/admin/settings'),
+  updateSetting: (key, data) => api.put(`/user-library/admin/settings/${key}`, data),
+  batchUpdateSettings: (settings) => api.post('/user-library/admin/settings/batch', { settings }),
+}
+
+export const userAdminAPI = {
+  getUsers: (params) => api.get('/admin/users', { params }),
+  getUser: (id) => api.get(`/admin/users/${id}`),
+  updateUserVip: (id, data) => api.put(`/admin/users/${id}/vip`, data),
+  resetUserPassword: (id, data) => api.put(`/admin/users/${id}/reset-password`, data),
+  updateUserRole: (id, data) => api.put(`/admin/users/${id}/role`, data),
+  deleteUser: (id) => api.delete(`/admin/users/${id}`),
+}
