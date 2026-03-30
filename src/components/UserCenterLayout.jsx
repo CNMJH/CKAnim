@@ -79,6 +79,7 @@ export default function UserCenterLayout({ children }) {
     { label: '我的收藏', path: '/user/favorites' },
     { label: '📚 个人参考库', path: '/user/library' },
     { label: '⚙️ 参考库管理', path: '/user/library/manage' },
+    { label: '🎰 每日抽奖', path: '/user/lottery' },
     { label: '账号安全', path: '/user/security' },
     { label: '会员开通', path: '/user/vip' },
   ]

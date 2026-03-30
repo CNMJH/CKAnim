@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { lotteryAPI, authUtils } from '../lib/api'
+import UserCenterLayout from '../components/UserCenterLayout'
 import './Lottery.css'
 
 function Lottery() {
@@ -78,14 +79,17 @@ function Lottery() {
 
   if (loading) {
     return (
-      <div className="lottery-page loading">
-        <p>加载中...</p>
-      </div>
+      <UserCenterLayout>
+        <div className="lottery-page loading">
+          <p>加载中...</p>
+        </div>
+      </UserCenterLayout>
     )
   }
 
   return (
-    <div className="lottery-page">
+    <UserCenterLayout>
+      <div className="lottery-page">
       {!config ? (
         <div className="no-activity">
           <h1>🎰 暂无抽奖活动</h1>
@@ -197,6 +201,7 @@ function Lottery() {
         </>
       )}
     </div>
+    </UserCenterLayout>
   )
 }
 

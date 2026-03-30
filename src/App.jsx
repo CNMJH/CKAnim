@@ -29,7 +29,7 @@ function App() {
             <Route path="/user/favorites/:id" element={<FavoriteDetail />} />
             <Route path="/user/library" element={<UserLibrary />} />
             <Route path="/user/library/manage" element={<UserLibraryManage />} />
-            <Route path="/lottery" element={<Lottery />} />
+            <Route path="/user/lottery" element={<Lottery />} />
           </Routes>
         </main>
         <Footer />
