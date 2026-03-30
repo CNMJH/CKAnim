@@ -407,8 +407,9 @@ function Actions() {
         
         if (coverUploadResponse.ok) {
           const coverResult = await coverUploadResponse.json()
-          coverUrl = coverResult.url
-          console.log('[Video Replace] 封面上传成功:', coverUrl)
+          // 手动生成封面 URL（与批量上传保持一致）
+          coverUrl = `https://video.jiangmeijixie.com/${coverKey}`
+          console.log('[Video Replace] 封面上传成功:', coverUrl, '七牛云返回:', coverResult)
         } else {
           console.warn('[Video Replace] 封面上传失败，继续替换视频')
         }
