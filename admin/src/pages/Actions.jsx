@@ -226,7 +226,6 @@ function Actions() {
           
           // 压缩封面图（限制最大 640×360）
           const resizedBlob = await resizeCover(coverBlob, 640, 360)
-          console.log(`[封面生成] 成功：${width}x${height} → 640×360, 大小：${(coverBlob.size / 1024).toFixed(2)} KB → ${(resizedBlob.size / 1024).toFixed(2)} KB`)
           
           // 获取封面上传凭证
           const coverKey = key.replace('.mp4', '-thumbnail.jpg')
@@ -387,14 +386,11 @@ function Actions() {
       // 3. ⭐ 生成封面图（前端生成，与批量上传一致）
       let coverUrl = null
       try {
-        console.log('[Video Replace] 正在生成封面...')
         // 生成封面（截取第 1 秒，60% 质量）
         const { blob: coverBlob } = await generateVideoCover(replaceVideoFile, 1, 0.6)
-        console.log(`[Video Replace] 封面生成成功（原始）：${(coverBlob.size / 1024).toFixed(2)} KB`)
         
         // 压缩封面图（限制最大 640×360）
         const resizedBlob = await resizeCover(coverBlob, 640, 360)
-        console.log(`[Video Replace] 封面压缩后：${(resizedBlob.size / 1024).toFixed(2)} KB`)
         
         // 获取封面上传凭证
         const coverKey = key.replace('.mp4', '-thumbnail.jpg')
