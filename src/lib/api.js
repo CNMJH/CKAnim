@@ -392,3 +392,18 @@ export const userLibraryAPI = {
   getAdminSettings: () => userLibraryApi.get('/user-library/admin/settings'),
   updateAdminSetting: (key, data) => userLibraryApi.put(`/user-library/admin/settings/${key}`, data),
 };
+
+// ===== 抽奖 API =====
+export const lotteryAPI = {
+  // 获取活跃抽奖配置
+  getActive: () => api.get('/lottery/active'),
+
+  // 获取每日剩余次数
+  getDailyCount: () => api.get('/lottery/daily-count'),
+
+  // 执行抽奖
+  draw: (configId) => api.post('/lottery/draw', { configId }),
+
+  // 获取用户抽奖记录
+  getUserRecords: (page = 1, limit = 20) => api.get('/lottery/records', { params: { page, limit } }),
+};

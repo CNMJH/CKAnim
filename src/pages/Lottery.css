@@ -1,0 +1,341 @@
+.lottery-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+/* No Activity */
+.no-activity {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.no-activity h1 {
+  font-size: 32px;
+  margin-bottom: 16px;
+  color: #1a1a1a;
+}
+
+.no-activity p {
+  color: #888;
+  font-size: 16px;
+}
+
+/* Header */
+.lottery-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.lottery-header h1 {
+  font-size: 32px;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+.description {
+  color: #666;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.activity-info {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  font-size: 14px;
+  color: #888;
+}
+
+/* Lottery Container */
+.lottery-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+.wheel-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Wheel */
+.wheel {
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+  transition: transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+}
+
+.wheel.spinning {
+  animation: spin 2s ease-out;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(1440deg);
+  }
+}
+
+.wheel-segment {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  transform-origin: 100% 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  color: white;
+  text-align: center;
+}
+
+.segment-0 { transform: rotate(0deg) translate(40px, 40px); }
+.segment-1 { transform: rotate(45deg) translate(40px, 40px); }
+.segment-2 { transform: rotate(90deg) translate(40px, 40px); }
+.segment-3 { transform: rotate(135deg) translate(40px, 40px); }
+.segment-4 { transform: rotate(180deg) translate(40px, 40px); }
+.segment-5 { transform: rotate(225deg) translate(40px, 40px); }
+.segment-6 { transform: rotate(270deg) translate(40px, 40px); }
+.segment-7 { transform: rotate(315deg) translate(40px, 40px); }
+
+.segment-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.segment-name {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.segment-prob {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+/* Draw Button */
+.draw-button {
+  margin-top: 24px;
+  padding: 16px 48px;
+  font-size: 20px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 16px rgba(245, 87, 108, 0.4);
+}
+
+.draw-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(245, 87, 108, 0.5);
+}
+
+.draw-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Prizes Preview */
+.prizes-preview h3 {
+  font-size: 20px;
+  color: #1a1a1a;
+  margin-bottom: 20px;
+}
+
+.prizes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.prize-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+}
+
+.prize-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.prize-icon {
+  font-size: 28px;
+}
+
+.prize-info {
+  flex: 1;
+}
+
+.prize-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.prize-prob {
+  font-size: 12px;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.prize-stock {
+  font-size: 11px;
+  color: #888;
+}
+
+/* Records Section */
+.records-section {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.records-section h3 {
+  font-size: 20px;
+  color: #1a1a1a;
+  margin-bottom: 20px;
+}
+
+.no-records {
+  text-align: center;
+  color: #888;
+  padding: 40px 0;
+}
+
+.records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.record-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.record-date {
+  font-size: 14px;
+  color: #888;
+}
+
+.record-prize {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+/* Result Modal */
+.result-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.result-modal {
+  background: white;
+  border-radius: 24px;
+  padding: 40px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  animation: popIn 0.3s ease-out;
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.result-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.result-modal h2 {
+  font-size: 24px;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+.result-prize {
+  font-size: 28px;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 16px;
+}
+
+.result-description {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.result-points {
+  color: #2e7d32;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .lottery-container {
+    grid-template-columns: 1fr;
+  }
+
+  .wheel {
+    width: 280px;
+    height: 280px;
+  }
+
+  .prizes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-info {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
