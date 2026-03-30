@@ -416,16 +416,11 @@ function Actions() {
         console.warn('[Video Replace] 封面生成失败:', err)
       }
 
-      // 4. 调用替换 API（传递 JPG 和 WebP 封面 URL）
-      const coverUrlJpg = coverUrl ? coverUrl.replace('-thumbnail.jpg', '-thumbnail.jpg') : null
-      const coverUrlWebp = coverUrl ? coverUrl.replace('-thumbnail.jpg', '-thumbnail.webp') : null
-      
+      // 4. 调用替换 API（只传 coverUrl，后端自动生成 coverUrlJpg 和 coverUrlWebp）
       await videosAPI.replace(editingVideo.id, {
         qiniuKey: key,
         qiniuUrl: url,
         coverUrl: coverUrl,
-        coverUrlJpg: coverUrlJpg,
-        coverUrlWebp: coverUrlWebp,
       })
 
       // 5. 刷新列表
