@@ -9,6 +9,7 @@ import FavoriteCollections from './pages/FavoriteCollections';
 import FavoriteDetail from './pages/FavoriteDetail';
 import UserLibrary from './pages/UserLibrary';
 import UserLibraryManage from './pages/UserLibraryManage';
+import Lottery from './pages/Lottery';
 import './App.css';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
             <Route path="/user/favorites/:id" element={<FavoriteDetail />} />
             <Route path="/user/library" element={<UserLibrary />} />
             <Route path="/user/library/manage" element={<UserLibraryManage />} />
+            <Route path="/lottery" element={<Lottery />} />
           </Routes>
         </main>
         <Footer />

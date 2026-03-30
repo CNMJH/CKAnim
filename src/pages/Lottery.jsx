@@ -1,87 +1,88 @@
 import { useState, useEffect } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { lotteryAPI } from '../lib/services'
-import { useAuthStore } from '../store/auth'
+import { lotteryAPI, authUtils } from '../lib/api'
 import './Lottery.css'
 
 function Lottery() {
-  const queryClient = useQueryClient()
-  const { user } = useAuthStore()
+  const [user, setUser] = useState(null)
+  const [config, setConfig] = useState(null)
+  const [prizes, setPrizes] = useState([])
+  const [remaining, setRemaining] = useState(0)
+  const [records, setRecords] = useState([])
   const [spinning, setSpinning] = useState(false)
   const [result, setResult] = useState(null)
   const [showResult, setShowResult] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  // 获取活跃抽奖配置
-  const { data: activeData } = useQuery({
-    queryKey: ['activeLottery'],
-    queryFn: async () => {
-      const res = await lotteryAPI.getActive()
-      return res.data
-    },
-    refetchInterval: 60000, // 每分钟刷新
-  })
+  // 加载用户信息
+  useEffect(() => {
+    const token = authUtils.getToken()
+    if (token) {
+      loadUserInfo()
+    }
+    loadLotteryData()
+  }, [])
 
-  // 获取每日剩余次数
-  const { data: countData, refetch: refetchCount } = useQuery({
-    queryKey: ['dailyDrawCount'],
-    queryFn: async () => {
-      const res = await lotteryAPI.getDailyCount()
-      return res.data
-    },
-    enabled: !!user,
-  })
+  const loadUserInfo = async () => {
+    try {
+      const { data } = await lotteryAPI.getDailyCount()
+      setRemaining(data.remaining || 0)
+      setUser({ loggedIn: true })
+      
+      // 加载用户抽奖记录
+      const { data: recordsData } = await lotteryAPI.getUserRecords()
+      setRecords(recordsData.records || [])
+    } catch (err) {
+      console.error('加载用户信息失败:', err)
+    }
+  }
 
-  // 获取用户抽奖记录
-  const { data: recordsData } = useQuery({
-    queryKey: ['userLotteryRecords'],
-    queryFn: async () => {
-      const res = await lotteryAPI.getUserRecords()
-      return res.data
-    },
-    enabled: !!user,
-  })
+  const loadLotteryData = async () => {
+    try {
+      const { data } = await lotteryAPI.getActive()
+      setConfig(data.config)
+      setPrizes(data.prizes || [])
+    } catch (err) {
+      console.error('加载抽奖数据失败:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  // 抽奖 mutation
-  const drawMutation = useMutation({
-    mutationFn: async () => {
-      const res = await lotteryAPI.draw(activeData?.config?.id)
-      return res.data
-    },
-    onMutate: () => {
-      setSpinning(true)
-      setResult(null)
-    },
-    onSuccess: (data) => {
-      setTimeout(() => {
-        setSpinning(false)
-        setResult(data.prize)
-        setShowResult(true)
-        queryClient.invalidateQueries(['dailyDrawCount'])
-        queryClient.invalidateQueries(['userLotteryRecords'])
-      }, 2000) // 2 秒后显示结果
-    },
-    onError: (error) => {
-      setSpinning(false)
-      alert(error.response?.data?.message || '抽奖失败，请稍后重试')
-    },
-  })
-
-  const handleDraw = () => {
+  const handleDraw = async () => {
     if (!user) {
       alert('请先登录')
       return
     }
-    if (!countData || countData.remaining <= 0) {
+    if (remaining <= 0) {
       alert('今日抽奖次数已用完，明天再来吧！')
       return
     }
-    drawMutation.mutate()
+
+    setSpinning(true)
+    setResult(null)
+
+    try {
+      const { data } = await lotteryAPI.draw()
+      setTimeout(() => {
+        setSpinning(false)
+        setResult(data.prize)
+        setShowResult(true)
+        // 更新剩余次数和记录
+        loadUserInfo()
+      }, 2000)
+    } catch (err) {
+      setSpinning(false)
+      alert(err.response?.data?.message || '抽奖失败，请稍后重试')
+    }
   }
 
-  const config = activeData?.config
-  const prizes = activeData?.prizes || []
-  const records = recordsData?.records || []
-  const remaining = countData?.remaining || 0
+  if (loading) {
+    return (
+      <div className="lottery-page loading">
+        <p>加载中...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="lottery-page">
@@ -96,7 +97,7 @@ function Lottery() {
             <h1>{config.name}</h1>
             <p className="description">{config.description}</p>
             <div className="activity-info">
-              <span>📅 {config.startDate.split('T')[0]} ~ {config.endDate.split('T')[0]}</span>
+              <span>📅 {config.startDate?.split('T')[0]} ~ {config.endDate?.split('T')[0]}</span>
               <span>🎫 剩余次数：{remaining}/{config.dailyLimit}</span>
             </div>
           </div>
@@ -151,15 +152,15 @@ function Lottery() {
           </div>
 
           {/* 抽奖记录 */}
-          <div className="records-section">
-            <h3>📊 我的抽奖记录</h3>
-            {records.length === 0 ? (
-              <p className="no-records">暂无抽奖记录</p>
-            ) : (
+          {user && records.length > 0 && (
+            <div className="records-section">
+              <h3>📊 我的抽奖记录</h3>
               <div className="records-list">
                 {records.map((record) => (
                   <div key={record.id} className="record-item">
-                    <span className="record-date">{record.drawDate}</span>
+                    <span className="record-date">
+                      {new Date(record.drawDate).toLocaleString('zh-CN')}
+                    </span>
                     <span className="record-prize">
                       {record.prizeName || '未中奖'}
                       {record.prizeType === 'points' && ` (+${record.prizeValue}积分)`}
@@ -167,8 +168,8 @@ function Lottery() {
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* 中奖结果弹窗 */}
           {showResult && result && (

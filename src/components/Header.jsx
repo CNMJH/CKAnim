@@ -42,6 +42,9 @@ function Header() {
           <Link to="/games" className="nav-link">
             游戏参考
           </Link>
+          <Link to="/lottery" className="nav-link lottery-link">
+            🎰 每日抽奖
+          </Link>
         </nav>
 
         {/* 中间搜索框 */}
