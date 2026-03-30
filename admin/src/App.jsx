@@ -12,6 +12,8 @@ import Carousels from './pages/Carousels'
 import Users from './pages/Users'
 import PageMargins from './pages/PageMargins'
 import ActivityManagement from './pages/ActivityManagement'
+import DailyLottery from './pages/DailyLottery'
+import Placeholder from './pages/Placeholder'
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -101,7 +103,11 @@ function App() {
             <ActivityManagement />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route path="daily-lottery" element={<DailyLottery />} />
+        <Route path="placeholder" element={<Placeholder />} />
+        <Route index element={<Navigate to="daily-lottery" replace />} />
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
