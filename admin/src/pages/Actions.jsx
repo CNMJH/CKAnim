@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { actionsAPI, charactersAPI, categoriesAPI, gamesAPI, videosAPI } from '../lib/services'
-import { generateVideoCover } from '../lib/cover-generator'
+import { generateVideoCover, resizeCover } from '../lib/cover-generator'
 import { useAuthStore } from '../store/auth'
 import './Actions.css'
 
@@ -221,10 +221,12 @@ function Actions() {
             idx === i ? { ...item, progress: 0, status: 'generating_cover' } : item
           ))
           
-          // 生成封面（截取第 1 秒，80% 质量）
-          const { blob: coverBlob, width, height } = await generateVideoCover(file, 1, 0.8)
+          // 生成封面（截取第 1 秒，60% 质量）
+          const { blob: coverBlob, width, height } = await generateVideoCover(file, 1, 0.6)
           
-          console.log(`[封面生成] 成功：${width}x${height}, 大小：${(coverBlob.size / 1024).toFixed(2)} KB`)
+          // 压缩封面图（限制最大 640×360）
+          const resizedBlob = await resizeCover(coverBlob, 640, 360)
+          console.log(`[封面生成] 成功：${width}x${height} → 640×360, 大小：${(coverBlob.size / 1024).toFixed(2)} KB → ${(resizedBlob.size / 1024).toFixed(2)} KB`)
           
           // 获取封面上传凭证
           const coverKey = key.replace('.mp4', '-thumbnail.jpg')
@@ -235,7 +237,7 @@ function Actions() {
           const coverFormData = new FormData()
           coverFormData.append('token', coverToken)
           coverFormData.append('key', coverKey)
-          coverFormData.append('file', coverBlob)
+          coverFormData.append('file', resizedBlob)
           
           await new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest()
@@ -386,8 +388,13 @@ function Actions() {
       let coverUrl = null
       try {
         console.log('[Video Replace] 正在生成封面...')
-        const { blob: coverBlob } = await generateVideoCover(replaceVideoFile, 1, 0.8)
-        console.log(`[Video Replace] 封面生成成功：${(coverBlob.size / 1024).toFixed(2)} KB`)
+        // 生成封面（截取第 1 秒，60% 质量）
+        const { blob: coverBlob } = await generateVideoCover(replaceVideoFile, 1, 0.6)
+        console.log(`[Video Replace] 封面生成成功（原始）：${(coverBlob.size / 1024).toFixed(2)} KB`)
+        
+        // 压缩封面图（限制最大 640×360）
+        const resizedBlob = await resizeCover(coverBlob, 640, 360)
+        console.log(`[Video Replace] 封面压缩后：${(resizedBlob.size / 1024).toFixed(2)} KB`)
         
         // 获取封面上传凭证
         const coverKey = key.replace('.mp4', '-thumbnail.jpg')
@@ -398,7 +405,7 @@ function Actions() {
         const coverFormData = new FormData()
         coverFormData.append('token', coverToken)
         coverFormData.append('key', coverKey)
-        coverFormData.append('file', coverBlob)
+        coverFormData.append('file', resizedBlob)
         
         const coverUploadResponse = await fetch('https://up-z2.qiniup.com', {
           method: 'POST',

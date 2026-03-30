@@ -9,10 +9,10 @@
  * 
  * @param {File} file - 视频文件
  * @param {number} time - 截取时间（秒），默认 1 秒
- * @param {number} quality - 图片质量 (0.1-1.0)，默认 0.8
+ * @param {number} quality - 图片质量 (0.1-1.0)，默认 0.6（优化后）
  * @returns {Promise<{ blob: Blob, url: string, width: number, height: number }>}
  */
-export function generateVideoCover(file, time = 1, quality = 0.8) {
+export function generateVideoCover(file, time = 1, quality = 0.6) {
   return new Promise((resolve, reject) => {
     // 1. 创建 Video 元素
     const video = document.createElement('video');
