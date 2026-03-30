@@ -21,10 +21,13 @@ function Settings() {
   const [siteName, setSiteName] = useState('CKAnim')
   const [siteNamePosition, setSiteNamePosition] = useState('header')
   const [footerText, setFooterText] = useState('')
-  const [footerLinks, setFooterLinks] = useState([]) // 改为数组
+  const [footerLinks, setFooterLinks] = useState([])
   const [announcementText, setAnnouncementText] = useState('')
   const [announcementEnabled, setAnnouncementEnabled] = useState(true)
   const [announcementColor, setAnnouncementColor] = useState('#666')
+  
+  // 会员登录按钮显示开关
+  const [showVipLoginButton, setShowVipLoginButton] = useState(true)
 
   // 获取设置
   const { data: settingsData, isLoading: settingsLoading } = useQuery({
@@ -38,55 +41,62 @@ function Settings() {
   // 加载设置数据
   useEffect(() => {
     if (settingsData) {
+      // 加载网站名称
       if (settingsData.siteName?.value) {
         setSiteName(settingsData.siteName.value)
       }
+      // 加载网站名称位置
       if (settingsData.siteNamePosition?.value) {
         setSiteNamePosition(settingsData.siteNamePosition.value)
       }
+      // 加载页脚信息
       if (settingsData.siteFooter?.value) {
         try {
           const footer = JSON.parse(settingsData.siteFooter.value)
           setFooterText(footer.text || '')
-          setFooterLinks(footer.links || []) // 直接存储数组
+          setFooterLinks(footer.links || [])
         } catch (e) {
-          console.error('解析页脚失败:', e)
+          console.error('解析页脚信息失败:', e)
         }
       }
+      // 加载公告信息
       if (settingsData.siteAnnouncement?.value) {
         try {
           const announcement = JSON.parse(settingsData.siteAnnouncement.value)
           setAnnouncementText(announcement.text || '')
-          setAnnouncementEnabled(announcement.enabled !== false)
+          setAnnouncementEnabled(announcement.enabled ?? true)
           setAnnouncementColor(announcement.color || '#666')
         } catch (e) {
-          console.error('解析公告失败:', e)
+          console.error('解析公告信息失败:', e)
         }
+      }
+      // 加载会员登录按钮设置
+      if (settingsData.showVipLoginButton?.value !== undefined) {
+        setShowVipLoginButton(settingsData.showVipLoginButton.value === 'true')
       }
     }
   }, [settingsData])
 
-  // 初始化默认设置
-  const initMutation = useMutation({
-    mutationFn: () => settingsAPI.init(),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['siteSettings'])
-      alert('默认设置已初始化！')
-    },
-    onError: (err) => {
-      alert('初始化失败：' + err.message)
-    },
-  })
-
-  // 保存设置
+  // 保存网站设置
   const saveMutation = useMutation({
     mutationFn: async () => {
       const settings = [
-        { key: 'siteName', value: siteName, description: '网站名称' },
-        { key: 'siteNamePosition', value: siteNamePosition, description: '网站名称显示位置' },
+        {
+          key: 'siteName',
+          value: siteName,
+          description: '网站名称',
+        },
+        {
+          key: 'siteNamePosition',
+          value: siteNamePosition,
+          description: '网站名称显示位置',
+        },
         {
           key: 'siteFooter',
-          value: JSON.stringify({ text: footerText, links: footerLinks }),
+          value: JSON.stringify({
+            text: footerText,
+            links: footerLinks,
+          }),
           description: '网站页脚信息',
         },
         {
@@ -97,6 +107,11 @@ function Settings() {
             color: announcementColor,
           }),
           description: '全站公告',
+        },
+        {
+          key: 'showVipLoginButton',
+          value: showVipLoginButton ? 'true' : 'false',
+          description: '是否显示视频播放器会员登录按钮',
         },
       ]
       await settingsAPI.batchUpdate(settings)
@@ -119,66 +134,58 @@ function Settings() {
       if (newPassword.length < 6) {
         throw new Error('新密码长度至少为 6 位')
       }
-      await authAPI.updatePassword(currentPassword, newPassword)
+      await authAPI.changePassword(currentPassword, newPassword)
     },
     onSuccess: () => {
-      setSuccess('密码修改成功！请重新登录')
-      setError('')
+      alert('密码修改成功！请重新登录')
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
-      setTimeout(() => logout(), 3000)
+      logout()
     },
     onError: (err) => {
-      setError(err.message || '修改失败')
-      setSuccess('')
+      setError(err.message || '密码修改失败')
     },
   })
 
-  const handlePasswordSubmit = (e) => {
-    e.preventDefault()
+  const handleSave = () => {
+    saveMutation.mutate()
+  }
+
+  const handlePasswordChange = () => {
     setError('')
-    setSuccess('')
     passwordMutation.mutate()
   }
 
-  // 添加链接
   const handleAddLink = () => {
     setFooterLinks([...footerLinks, { text: '', url: '' }])
   }
 
-  // 删除链接
-  const handleRemoveLink = (index) => {
-    setFooterLinks(footerLinks.filter((_, i) => i !== index))
-  }
-
-  // 更新链接
   const handleUpdateLink = (index, field, value) => {
     const newLinks = [...footerLinks]
     newLinks[index][field] = value
     setFooterLinks(newLinks)
   }
 
+  const handleRemoveLink = (index) => {
+    setFooterLinks(footerLinks.filter((_, i) => i !== index))
+  }
+
+  if (settingsLoading) {
+    return <Layout><div className="loading">加载中...</div></Layout>
+  }
+
   return (
     <Layout>
       <div className="settings-page">
         <div className="settings-header">
-          <h2>⚙️ 设置</h2>
-          {isSystemAdmin && (
-            <button
-              className="btn-secondary"
-              onClick={() => initMutation.mutate()}
-              disabled={initMutation.isPending}
-            >
-              {initMutation.isPending ? '初始化中...' : '🔄 初始化默认设置'}
-            </button>
-          )}
+          <h1>⚙️ 设置</h1>
         </div>
 
-        {/* 网站配置 - 仅系统管理员可见 */}
-        {isSystemAdmin && (
+        {/* 网站配置 */}
         <div className="settings-section">
-          <h3>🌐 网站配置</h3>
+          <h2>🌐 网站配置</h2>
+          <p className="section-description">配置网站基本信息和显示内容</p>
           
           <div className="form-group">
             <label>网站名称</label>
@@ -186,9 +193,8 @@ function Settings() {
               type="text"
               value={siteName}
               onChange={(e) => setSiteName(e.target.value)}
-              placeholder="例如：CKAnim"
+              placeholder="请输入网站名称"
             />
-            <small className="hint">显示在浏览器标题栏和导航栏</small>
           </div>
 
           <div className="form-group">
@@ -196,62 +202,57 @@ function Settings() {
             <select
               value={siteNamePosition}
               onChange={(e) => setSiteNamePosition(e.target.value)}
+              style={{ padding: '10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ddd', width: '200px' }}
             >
               <option value="header">仅页眉</option>
               <option value="footer">仅页脚</option>
-              <option value="both">页眉和页脚</option>
+              <option value="both">页眉和页脚都显示</option>
             </select>
           </div>
 
           <div className="form-group">
             <label>页脚文字</label>
-            <input
-              type="text"
+            <textarea
               value={footerText}
               onChange={(e) => setFooterText(e.target.value)}
-              placeholder="© 2026 CKAnim. All rights reserved."
+              placeholder="请输入页脚文字"
+              rows={3}
+              style={{ width: '100%', padding: '10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ddd', resize: 'vertical' }}
             />
-            <small className="hint">显示在网站底部的版权信息</small>
           </div>
 
           <div className="form-group">
             <label>页脚链接</label>
-            <div style={{ marginBottom: '12px' }}>
-              {footerLinks.map((link, index) => (
-                <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
-                  <input
-                    type="text"
-                    placeholder="链接文字"
-                    value={link.text}
-                    onChange={(e) => handleUpdateLink(index, 'text', e.target.value)}
-                    style={{ flex: 1, padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="链接地址"
-                    value={link.url}
-                    onChange={(e) => handleUpdateLink(index, 'url', e.target.value)}
-                    style={{ flex: 2, padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                  <button
-                    onClick={() => handleRemoveLink(index)}
-                    style={{ padding: '8px 12px', background: '#ff4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                  >
-                    删除
-                  </button>
-                </div>
-              ))}
-            </div>
+            {footerLinks.map((link, index) => (
+              <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  value={link.text}
+                  onChange={(e) => handleUpdateLink(index, 'text', e.target.value)}
+                  placeholder="链接文字"
+                  style={{ flex: 1, padding: '8px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ddd' }}
+                />
+                <input
+                  type="text"
+                  value={link.url}
+                  onChange={(e) => handleUpdateLink(index, 'url', e.target.value)}
+                  placeholder="链接地址"
+                  style={{ flex: 2, padding: '8px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ddd' }}
+                />
+                <button
+                  onClick={() => handleRemoveLink(index)}
+                  style={{ padding: '8px 12px', background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  删除
+                </button>
+              </div>
+            ))}
             <button
-              type="button"
               onClick={handleAddLink}
-              style={{ padding: '8px 16px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+              style={{ marginTop: '8px', padding: '8px 16px', background: '#667eea', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
             >
               + 添加链接
             </button>
-            <small className="hint" style={{ display: 'block', marginTop: '8px' }}>
-              添加显示在网站底部的友情链接
-            </small>
           </div>
 
           <div className="form-group">
@@ -260,19 +261,20 @@ function Settings() {
               type="text"
               value={announcementText}
               onChange={(e) => setAnnouncementText(e.target.value)}
-              placeholder="随机参考，每日一看"
+              placeholder="请输入公告文字"
             />
-            <small className="hint">显示在首页搜索框下方的提醒文字</small>
           </div>
 
           <div className="form-group">
-            <label className="checkbox-label">
+            <label>公告显示</label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
               <input
                 type="checkbox"
                 checked={announcementEnabled}
                 onChange={(e) => setAnnouncementEnabled(e.target.checked)}
+                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
               />
-              启用公告
+              <span>显示公告</span>
             </label>
           </div>
 
@@ -285,94 +287,87 @@ function Settings() {
               style={{ width: '100px', height: '40px', padding: '2px', cursor: 'pointer' }}
             />
           </div>
-
-          <button
-            className="btn-primary"
-            onClick={() => saveMutation.mutate()}
-            disabled={saveMutation.isPending}
-          >
-            {saveMutation.isPending ? '保存中...' : '💾 保存设置'}
-          </button>
-        </div>
-        )}
-
-        {/* 修改密码 */}
-        <div className="settings-section">
-          <h3>🔐 修改密码</h3>
-          <form onSubmit={handlePasswordSubmit}>
-            <div className="form-group">
-              <label>当前密码</label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-                placeholder="请输入当前密码"
-              />
-            </div>
-            <div className="form-group">
-              <label>新密码</label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                placeholder="请输入新密码（至少 6 位）"
-                minLength={6}
-              />
-            </div>
-            <div className="form-group">
-              <label>确认新密码</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                placeholder="请再次输入新密码"
-              />
-            </div>
-
-            {error && <div className="error-message">{error}</div>}
-            {success && <div className="success-message">{success}</div>}
-
-            <button 
-              type="submit" 
-              className="btn-primary"
-              disabled={passwordMutation.isPending}
-            >
-              {passwordMutation.isPending ? '修改中...' : '修改密码'}
-            </button>
-          </form>
         </div>
 
-        {/* 账户信息 */}
+        {/* 视频播放器设置 */}
         <div className="settings-section">
-          <h3>👤 账户信息</h3>
-          <div className="info-row">
-            <span className="label">用户名：</span>
-            <span className="value">{user?.username || '-'}</span>
-          </div>
-          <div className="info-row">
-            <span className="label">角色：</span>
-            <span className="value">
-              {user?.role === 'system_admin' ? '系统管理员' : 
-               user?.role === 'content_admin' ? '内容管理员' : 
-               user?.role || '-'}
+          <h2>🎬 视频播放器设置</h2>
+          <p className="section-description">控制视频播放器中会员登录按钮的显示与隐藏，便于备案审查</p>
+          
+          <div className="form-group">
+            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={showVipLoginButton}
+                onChange={(e) => setShowVipLoginButton(e.target.checked)}
+                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+              />
+              <span style={{ fontSize: '14px', color: '#333' }}>显示会员登录按钮</span>
+            </label>
+            <span style={{ fontSize: '12px', color: showVipLoginButton ? '#52c41a' : '#ff4d4f', marginLeft: '12px' }}>
+              {showVipLoginButton ? '✓ 开启' : '✗ 关闭'}
             </span>
           </div>
         </div>
 
-        {/* 系统信息 */}
+        {/* 修改密码 */}
         <div className="settings-section">
-          <h3>ℹ️ 系统信息</h3>
-          <div className="info-row">
-            <span className="label">版本：</span>
-            <span className="value">v1.0.0</span>
+          <h2>🔒 修改密码</h2>
+          <p className="section-description">定期修改密码可以提高账户安全性</p>
+          
+          {error && <div className="error-message">{error}</div>}
+          {success && <div className="success-message">{success}</div>}
+
+          <div className="form-group">
+            <label>当前密码</label>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="请输入当前密码"
+            />
           </div>
-          <div className="info-row">
-            <span className="label">最后更新：</span>
-            <span className="value">2026-03-19</span>
+
+          <div className="form-group">
+            <label>新密码</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="请输入新密码"
+            />
           </div>
+
+          <div className="form-group">
+            <label>确认新密码</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="请再次输入新密码"
+            />
+          </div>
+
+          <div className="form-actions">
+            <button 
+              className="btn btn-primary" 
+              onClick={handlePasswordChange}
+              disabled={passwordMutation.isPending}
+            >
+              {passwordMutation.isPending ? '修改中...' : '🔑 修改密码'}
+            </button>
+          </div>
+        </div>
+
+        {/* 保存按钮 */}
+        <div className="form-actions" style={{ marginTop: '24px' }}>
+          <button 
+            className="btn btn-primary btn-large" 
+            onClick={handleSave}
+            disabled={saveMutation.isPending}
+          >
+            {saveMutation.isPending ? '保存中...' : '💾 保存设置'}
+          </button>
         </div>
       </div>
     </Layout>
