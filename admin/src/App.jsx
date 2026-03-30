@@ -11,6 +11,7 @@ import Database from './pages/Database'
 import Carousels from './pages/Carousels'
 import Users from './pages/Users'
 import PageMargins from './pages/PageMargins'
+import ActivityManagement from './pages/ActivityManagement'
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -90,6 +91,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Users />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/activity-management"
+        element={
+          <ProtectedRoute>
+            <ActivityManagement />
           </ProtectedRoute>
         }
       />

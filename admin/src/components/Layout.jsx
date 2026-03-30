@@ -21,6 +21,7 @@ function Layout({ children }) {
         { path: '/vip-management', label: 'VIP 管理', icon: '💎' },
         { path: '/users', label: '用户管理', icon: '👥' },
         { path: '/avatar-review', label: '头像审核', icon: '🖼️' },
+        { path: '/activity-management', label: '活动配置', icon: '🎰' },
         { path: '/database', label: '数据库管理', icon: '🗄️' },
         { path: '/page-margins', label: '页面边距', icon: '📐' },
         { path: '/settings', label: '设置', icon: '⚙️' },
@@ -32,6 +33,7 @@ function Layout({ children }) {
       return [
         { path: '/database-management', label: '官方参考库管理', icon: '📚' },  // 只显示，无编辑权限
         { path: '/avatar-review', label: '头像审核', icon: '🖼️' },
+        { path: '/activity-management', label: '活动配置', icon: '🎰' },
         { path: '/page-margins', label: '页面边距', icon: '📐' },
         { path: '/settings', label: '设置', icon: '⚙️' },
       ]

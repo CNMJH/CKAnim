@@ -91,3 +91,41 @@ export const userAdminAPI = {
   updateUserRole: (id, data) => api.put(`/admin/users/${id}/role`, data),
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
 }
+
+export const lotteryAPI = {
+  // 获取抽奖配置列表
+  getConfigs: () => api.get('/lottery/configs'),
+
+  // 获取单个配置
+  getConfig: (id) => api.get(`/lottery/configs/${id}`),
+
+  // 创建配置
+  createConfig: (data) => api.post('/lottery/configs', data),
+
+  // 更新配置
+  updateConfig: (id, data) => api.put(`/lottery/configs/${id}`, data),
+
+  // 删除配置
+  deleteConfig: (id) => api.delete(`/lottery/configs/${id}`),
+
+  // 获取奖品列表
+  getPrizes: (configId) => api.get(`/lottery/configs/${configId}/prizes`),
+
+  // 创建奖品
+  createPrize: (configId, data) => api.post(`/lottery/configs/${configId}/prizes`, data),
+
+  // 更新奖品
+  updatePrize: (id, data) => api.put(`/lottery/prizes/${id}`, data),
+
+  // 删除奖品
+  deletePrize: (id) => api.delete(`/lottery/prizes/${id}`),
+
+  // 获取抽奖记录
+  getRecords: (params) => api.get('/lottery/records', { params }),
+
+  // 参与抽奖
+  draw: (configId) => api.post('/lottery/draw', { configId }),
+
+  // 获取用户今日抽奖次数
+  getUserTodayDraws: (configId) => api.get(`/lottery/user-draws/${configId}`),
+}

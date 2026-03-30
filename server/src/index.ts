@@ -23,6 +23,7 @@ import { databaseRoutes } from './routes/database';
 import { carouselRoutes } from './routes/carousels';
 import { publicCarouselRoutes } from './routes/public-carousels';
 import { userLibraryRoutes } from './routes/user-library';
+import { lotteryRoutes } from './routes/lottery';
 import path from 'path';
 import fs from 'fs';
 
@@ -79,6 +80,9 @@ await server.register(carouselRoutes, { prefix: '/api/admin/carousels' }); // /a
 
 // 用户个人参考库路由
 await server.register(userLibraryRoutes, { prefix: '/api' });
+
+// 每日抽奖路由
+await server.register(lotteryRoutes, { prefix: '/api' });
 
 // 通用上传路由（供前端各页面使用）
 server.post('/api/admin/upload', {

@@ -175,6 +175,7 @@ model User {
   libraryCategories   UserLibraryCategory[]
   libraryCharacters   UserLibraryCharacter[]
   libraryVideos       UserLibraryVideo[]
+  lotteryRecords      LotteryRecord[]
 
   @@index([email])
   @@index([role])
@@ -352,4 +353,64 @@ model UserLibraryLevel {
 
   @@index([vipLevel])
   @@map("user_library_levels")
+}
+
+model LotteryConfig {
+  id          Int              @id @default(autoincrement())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  dailyLimit  Int              @default(1)
+  totalBudget Int?
+  enabled     Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  prizes      LotteryPrize[]
+  records     LotteryRecord[]
+
+  @@index([enabled])
+  @@map("lottery_configs")
+}
+
+model LotteryPrize {
+  id            Int            @id @default(autoincrement())
+  configId      Int
+  name          String
+  type          String         // points, item, physical
+  value         Int
+  displayName   String
+  description   String?
+  image         String?
+  probability   Float          @default(0)
+  totalStock    Int?
+  remainingStock Int?
+  enabled       Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  config        LotteryConfig  @relation(fields: [configId], references: [id], onDelete: Cascade)
+  records       LotteryRecord[]
+
+  @@index([configId])
+  @@map("lottery_prizes")
+}
+
+model LotteryRecord {
+  id         Int           @id @default(autoincrement())
+  userId     Int
+  configId   Int
+  prizeId    Int?
+  prizeType  String?       // points, item, physical
+  prizeName  String?
+  prizeValue Int?
+  drawDate   DateTime
+  createdAt  DateTime      @default(now())
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  config     LotteryConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+  prize      LotteryPrize? @relation(fields: [prizeId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([configId])
+  @@index([drawDate])
+  @@map("lottery_records")
 }
