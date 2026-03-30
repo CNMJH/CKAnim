@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { prisma } from '../lib/db';
+import { authenticate, requireAdmin } from '../middleware/auth';
 
 // 奖品类型
 export type PrizeType = 'points' | 'item' | 'physical';
@@ -34,7 +35,7 @@ export async function lotteryRoutes(server: FastifyInstance) {
    * 获取所有抽奖配置
    */
   server.get('/admin/lottery/configs', {
-    preHandler: [server.authenticate],
+    preHandler: [requireAdmin],
   }, async (request, reply) => {
     try {
       const configs = await prisma.lotteryConfig.findMany({
@@ -53,7 +54,7 @@ export async function lotteryRoutes(server: FastifyInstance) {
    * 获取单个抽奖配置及奖品列表
    */
   server.get('/admin/lottery/configs/:id', {
-    preHandler: [server.authenticate],
+    preHandler: [requireAdmin],
   }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
@@ -79,7 +80,7 @@ export async function lotteryRoutes(server: FastifyInstance) {
    * 创建抽奖配置
    */
   server.post('/admin/lottery/configs', {
-    preHandler: [server.authenticate],
+    preHandler: [requireAdmin],
   }, async (request, reply) => {
     try {
       const body = request.body as any;
@@ -112,7 +113,7 @@ export async function lotteryRoutes(server: FastifyInstance) {
    * 更新抽奖配置
    */
   server.put('/admin/lottery/configs/:id', {
-    preHandler: [server.authenticate],
+    preHandler: [requireAdmin],
   }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
@@ -144,7 +145,7 @@ export async function lotteryRoutes(server: FastifyInstance) {
    * 删除抽奖配置
    */
   server.delete('/admin/lottery/configs/:id', {
-    preHandler: [server.authenticate],
+    preHandler: [requireAdmin],
   }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
@@ -169,7 +170,7 @@ export async function lotteryRoutes(server: FastifyInstance) {
    * 获取奖品列表
    */
   server.get('/admin/lottery/configs/:configId/prizes', {
-    preHandler: [server.authenticate],
+    preHandler: [requireAdmin],
   }, async (request, reply) => {
     try {
       const { configId } = request.params as { configId: string };
@@ -193,7 +194,7 @@ export async function lotteryRoutes(server: FastifyInstance) {
    * 创建奖品
    */
   server.post('/admin/lottery/configs/:configId/prizes', {
-    preHandler: [server.authenticate],
+    preHandler: [requireAdmin],
   }, async (request, reply) => {
     try {
       const { configId } = request.params as { configId: string };
@@ -231,7 +232,7 @@ export async function lotteryRoutes(server: FastifyInstance) {
    * 更新奖品
    */
   server.put('/admin/lottery/prizes/:id', {
-    preHandler: [server.authenticate],
+    preHandler: [requireAdmin],
   }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
@@ -266,7 +267,7 @@ export async function lotteryRoutes(server: FastifyInstance) {
    * 删除奖品
    */
   server.delete('/admin/lottery/prizes/:id', {
-    preHandler: [server.authenticate],
+    preHandler: [requireAdmin],
   }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
@@ -288,7 +289,7 @@ export async function lotteryRoutes(server: FastifyInstance) {
    * 获取抽奖记录（管理员）
    */
   server.get('/admin/lottery/records', {
-    preHandler: [server.authenticate],
+    preHandler: [requireAdmin],
   }, async (request, reply) => {
     try {
       const query = request.query as any;
@@ -364,7 +365,7 @@ export async function lotteryRoutes(server: FastifyInstance) {
    * 获取用户今日剩余抽奖次数
    */
   server.get('/lottery/daily-count', {
-    preHandler: [server.authenticateUser],
+    preHandler: [authenticate],
   }, async (request, reply) => {
     try {
       const userId = (request as any).user?.id;
@@ -411,7 +412,7 @@ export async function lotteryRoutes(server: FastifyInstance) {
    * 执行抽奖
    */
   server.post('/lottery/draw', {
-    preHandler: [server.authenticateUser],
+    preHandler: [authenticate],
   }, async (request, reply) => {
     try {
       const userId = (request as any).user?.id;
@@ -507,7 +508,7 @@ export async function lotteryRoutes(server: FastifyInstance) {
    * 获取用户抽奖记录
    */
   server.get('/lottery/records', {
-    preHandler: [server.authenticateUser],
+    preHandler: [authenticate],
   }, async (request, reply) => {
     try {
       const userId = (request as any).user?.id;
