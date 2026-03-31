@@ -1,0 +1,170 @@
+.resume-list-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.resume-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.resume-list-header h1 {
+  font-size: 28px;
+  color: #1a202c;
+}
+
+.create-btn {
+  background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.create-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  background: #f7fafc;
+  border-radius: 12px;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.empty-state p {
+  color: #718096;
+  font-size: 18px;
+  margin-bottom: 30px;
+}
+
+.create-btn-large {
+  background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+  color: white;
+  border: none;
+  padding: 16px 40px;
+  border-radius: 10px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.create-btn-large:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(49, 130, 206, 0.4);
+}
+
+.resume-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.resume-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.resume-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.resume-preview {
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 48px;
+  font-weight: bold;
+}
+
+.resume-info {
+  padding: 20px;
+}
+
+.resume-info h3 {
+  font-size: 18px;
+  color: #1a202c;
+  margin-bottom: 8px;
+}
+
+.template-badge {
+  display: inline-block;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.update-time {
+  color: #a0aec0;
+  font-size: 14px;
+}
+
+.resume-actions {
+  display: flex;
+  gap: 8px;
+  padding: 16px 20px;
+  background: #f7fafc;
+}
+
+.resume-actions button {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.resume-actions button:first-child {
+  background: #3182ce;
+  color: white;
+}
+
+.resume-actions button:first-child:hover {
+  background: #2c5282;
+}
+
+.resume-actions button:last-child {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.resume-actions button:last-child:hover {
+  background: #cbd5e0;
+}
+
+.loading {
+  text-align: center;
+  padding: 80px 20px;
+  color: #718096;
+  font-size: 18px;
+}

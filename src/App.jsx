@@ -10,6 +10,8 @@ import FavoriteDetail from './pages/FavoriteDetail';
 import UserLibrary from './pages/UserLibrary';
 import UserLibraryManage from './pages/UserLibraryManage';
 import Lottery from './pages/Lottery';
+import ResumeList from './pages/ResumeList';
+import ResumeEditor from './pages/ResumeEditor';
 import './App.css';
 
 function App() {
@@ -30,6 +32,8 @@ function App() {
             <Route path="/user/library" element={<UserLibrary />} />
             <Route path="/user/library/manage" element={<UserLibraryManage />} />
             <Route path="/user/lottery" element={<Lottery />} />
+            <Route path="/resume" element={<ResumeList />} />
+            <Route path="/resume/edit/:id" element={<ResumeEditor />} />
           </Routes>
         </main>
         <Footer />

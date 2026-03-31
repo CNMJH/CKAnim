@@ -42,6 +42,9 @@ function Header() {
           <Link to="/games" className="nav-link">
             游戏参考
           </Link>
+          <Link to="/resume" className="nav-link">
+            📄 简历模板
+          </Link>
         </nav>
 
         {/* 中间搜索框 */}
