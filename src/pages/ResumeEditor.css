@@ -41,6 +41,45 @@
   font-size: 18px;
   color: #1a202c;
   font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.resume-name:hover {
+  background: #edf2f7;
+}
+
+.resume-name-input {
+  font-size: 18px;
+  color: #1a202c;
+  font-weight: 600;
+  padding: 4px 8px;
+  border: 2px solid #3182ce;
+  border-radius: 6px;
+  background: white;
+  outline: none;
+  min-width: 200px;
+}
+
+/* 保存状态提示 */
+.save-status {
+  font-size: 14px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  margin-left: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+.save-status.saving {
+  color: #718096;
+  background: #edf2f7;
+}
+
+.save-status.saved {
+  color: #38a169;
+  background: #c6f6d5;
 }
 
 .toolbar-center {

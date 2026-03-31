@@ -25,6 +25,7 @@ const DEFAULT_TEMPLATES = [
 function ResumeList() {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, name }
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -79,11 +80,22 @@ function ResumeList() {
     navigate(`/resume/edit/${newResume.id}`);
   };
 
-  // 删除简历
-  const handleDelete = (id, name) => {
-    if (!window.confirm(`确定删除 "${name}" 吗？`)) return;
-    const updated = resumes.filter(r => r.id !== id);
+  // 删除简历 - 显示确认弹窗
+  const handleDeleteClick = (id, name) => {
+    setDeleteConfirm({ id, name });
+  };
+
+  // 确认删除
+  const handleDeleteConfirm = () => {
+    if (!deleteConfirm) return;
+    const updated = resumes.filter(r => r.id !== deleteConfirm.id);
     saveResumes(updated);
+    setDeleteConfirm(null);
+  };
+
+  // 取消删除
+  const handleDeleteCancel = () => {
+    setDeleteConfirm(null);
   };
 
   // 获取模板颜色
@@ -152,12 +164,28 @@ function ResumeList() {
                 <button onClick={() => navigate(`/resume/edit/${resume.id}`)}>
                   ✏️ 编辑
                 </button>
-                <button onClick={() => handleDelete(resume.id, resume.name)}>
+                <button onClick={() => handleDeleteClick(resume.id, resume.name)}>
                   🗑️ 删除
                 </button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* 删除确认弹窗 */}
+      {deleteConfirm && (
+        <div className="delete-confirm-overlay" onClick={handleDeleteCancel}>
+          <div className="delete-confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className="delete-confirm-icon">🗑️</div>
+            <h3>确认删除</h3>
+            <p>确定要删除简历「{deleteConfirm.name}」吗？</p>
+            <p className="delete-confirm-warning">⚠️ 此操作无法撤销</p>
+            <div className="delete-confirm-buttons">
+              <button className="cancel-btn" onClick={handleDeleteCancel}>取消</button>
+              <button className="delete-btn" onClick={handleDeleteConfirm}>确认删除</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './ResumeEditor.css';
 
 const STORAGE_KEY = 'ckanim_resumes';
+const AUTO_SAVE_DELAY = 2000; // 2秒后自动保存
 
 const TEMPLATES = [
   { id: 'classic', name: 'Classic', category: '传统经典', color: '#333333' },
@@ -39,10 +40,37 @@ function ResumeEditor() {
   const [template, setTemplate] = useState('modern');
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [activeSection, setActiveSection] = useState('personal');
+  const [saveStatus, setSaveStatus] = useState(''); // 'saving' | 'saved' | ''
+  const [editingName, setEditingName] = useState(false);
+  const [resumeName, setResumeName] = useState('');
+  
+  const autoSaveTimer = useRef(null);
 
   useEffect(() => {
     loadResume();
   }, [id]);
+
+  // 自动保存 - 监听 content 和 template 变化
+  useEffect(() => {
+    if (loading || !resume) return;
+    
+    // 清除之前的定时器
+    if (autoSaveTimer.current) {
+      clearTimeout(autoSaveTimer.current);
+    }
+    
+    // 设置新的自动保存定时器
+    setSaveStatus('');
+    autoSaveTimer.current = setTimeout(() => {
+      performSave(content, template);
+    }, AUTO_SAVE_DELAY);
+    
+    return () => {
+      if (autoSaveTimer.current) {
+        clearTimeout(autoSaveTimer.current);
+      }
+    };
+  }, [content, template, loading, resume]);
 
   const loadResume = () => {
     try {
@@ -55,6 +83,7 @@ function ResumeEditor() {
         return;
       }
       setResume(found);
+      setResumeName(found.name);
       setTemplate(found.template || 'modern');
       setContent(found.content || DEFAULT_CONTENT);
     } catch (error) {
@@ -65,24 +94,48 @@ function ResumeEditor() {
     }
   };
 
-  const saveToStorage = (newContent, newTemplate) => {
+  // 执行保存操作
+  const performSave = useCallback((newContent, newTemplate, newName) => {
+    setSaveStatus('saving');
+    
     const stored = localStorage.getItem(STORAGE_KEY);
     const resumes = stored ? JSON.parse(stored) : [];
     const index = resumes.findIndex(r => r.id === parseInt(id));
-    if (index === -1) return;
+    if (index === -1) {
+      setSaveStatus('');
+      return;
+    }
+    
     resumes[index] = {
       ...resumes[index],
+      name: newName || resumeName || resume?.name,
       template: newTemplate || template,
       content: newContent || content,
       updatedAt: new Date().toISOString(),
     };
+    
     localStorage.setItem(STORAGE_KEY, JSON.stringify(resumes));
     setResume(resumes[index]);
+    if (newName) setResumeName(newName);
+    
+    // 显示保存成功提示，3秒后消失
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus(''), 3000);
+  }, [id, resumeName, resume, template, content]);
+
+  // 手动保存
+  const handleSave = () => {
+    if (autoSaveTimer.current) {
+      clearTimeout(autoSaveTimer.current);
+    }
+    performSave(content, template);
+    alert('保存成功！');
   };
 
-  const handleSave = () => {
-    saveToStorage(content, template);
-    alert('保存成功');
+  // 更新简历名称
+  const handleNameChange = (newName) => {
+    setResumeName(newName);
+    performSave(content, template, newName);
   };
 
   const exportPDF = async () => {
@@ -166,13 +219,31 @@ function ResumeEditor() {
       <div className="editor-toolbar">
         <div className="toolbar-left">
           <button className="back-btn" onClick={() => navigate('/resume')}>← 返回</button>
-          <span className="resume-name">{resume?.name}</span>
+          {editingName ? (
+            <input 
+              className="resume-name-input" 
+              value={resumeName} 
+              onChange={e => setResumeName(e.target.value)}
+              onBlur={() => { handleNameChange(resumeName); setEditingName(false); }}
+              onKeyDown={e => { if (e.key === 'Enter') { handleNameChange(resumeName); setEditingName(false); }}}
+              autoFocus
+            />
+          ) : (
+            <span className="resume-name" onClick={() => setEditingName(true)} title="点击编辑名称">
+              {resumeName || resume?.name} ✏️
+            </span>
+          )}
         </div>
         <div className="toolbar-center">
           <button className="template-btn" onClick={() => setShowTemplatePicker(true)}>
             <span className="template-preview" style={{ backgroundColor: currentTemplate.color }}></span>
             {currentTemplate.name}
           </button>
+          {saveStatus && (
+            <span className={`save-status ${saveStatus}`}>
+              {saveStatus === 'saving' ? '⏳ 保存中...' : '✅ 已保存'}
+            </span>
+          )}
         </div>
         <div className="toolbar-right">
           <button className="save-btn" onClick={handleSave}>💾 保存</button>
