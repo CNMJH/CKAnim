@@ -1,88 +1,101 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authUtils } from '../lib/api';
 import './ResumeList.css';
 
+// 本地存储 key
+const STORAGE_KEY = 'ckanim_resumes';
+
 // 默认模板配置
-const DEFAULT_TEMPLATE_COLORS = {
-  classic: '#333333',
-  modern: '#3182ce',
-};
-const DEFAULT_TEMPLATE_NAMES = {
-  classic: 'Classic',
-  modern: 'Modern',
-};
+const DEFAULT_TEMPLATES = [
+  { id: 'classic', name: 'Classic', category: '传统经典', color: '#333333' },
+  { id: 'formal', name: 'Formal', category: '传统经典', color: '#1a365d' },
+  { id: 'academic', name: 'Academic', category: '传统经典', color: '#2d3748' },
+  { id: 'modern', name: 'Modern', category: '现代简约', color: '#3182ce' },
+  { id: 'minimalist', name: 'Minimalist', category: '现代简约', color: '#000000' },
+  { id: 'clean', name: 'Clean', category: '现代简约', color: '#48bb78' },
+  { id: 'creative', name: 'Creative', category: '创意设计', color: '#ed8936' },
+  { id: 'colorful', name: 'Colorful', category: '创意设计', color: '#9f7aea' },
+  { id: 'bold', name: 'Bold', category: '创意设计', color: '#e53e3e' },
+  { id: 'developer', name: 'Developer', category: '技术专业', color: '#667eea' },
+  { id: 'techblue', name: 'TechBlue', category: '技术专业', color: '#2563eb' },
+  { id: 'onepage', name: 'OnePage', category: '特殊用途', color: '#374151' },
+  { id: 'english', name: 'English', category: '特殊用途', color: '#1e40af' },
+];
 
 function ResumeList() {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [templateConfig, setTemplateConfig] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchResumes();
-    fetchTemplates();
+    loadResumes();
   }, []);
 
-  const fetchTemplates = async () => {
+  // 从 localStorage 加载简历列表
+  const loadResumes = () => {
     try {
-      const { data } = await authUtils.authFetch('/api/resume/templates');
-      if (data && data.length > 0) {
-        const colors = {};
-        const names = {};
-        data.forEach(t => {
-          colors[t.id] = t.color;
-          names[t.id] = t.name;
-        });
-        setTemplateConfig({ colors, names });
-      }
+      const stored = localStorage.getItem(STORAGE_KEY);
+      const data = stored ? JSON.parse(stored) : [];
+      // 按更新时间排序
+      data.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+      setResumes(data);
     } catch (error) {
-      console.error('Failed to fetch templates:', error);
-    }
-  };
-
-  const getTemplateColor = (templateId) => {
-    return templateConfig.colors?.[templateId] || DEFAULT_TEMPLATE_COLORS[templateId] || '#3182ce';
-  };
-
-  const getTemplateName = (templateId) => {
-    return templateConfig.names?.[templateId] || DEFAULT_TEMPLATE_NAMES[templateId] || 'Modern';
-  };
-
-  const fetchResumes = async () => {
-    try {
-      const { data } = await authUtils.authFetch('/api/resume/list');
-      setResumes(data || []);
-    } catch (error) {
-      console.error('Failed to fetch resumes:', error);
+      console.error('Failed to load resumes:', error);
+      setResumes([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreate = async () => {
-    try {
-      const name = `我的简历 ${new Date().toLocaleDateString()}`;
-      const { data } = await authUtils.authFetch('/api/resume/create', {
-        method: 'POST',
-        body: JSON.stringify({ name, template: 'modern' }),
-      });
-      navigate(`/resume/edit/${data.id}`);
-    } catch (error) {
-      console.error('Failed to create resume:', error);
-      alert('创建失败，请重试');
-    }
+  // 保存到 localStorage
+  const saveResumes = (data) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    setResumes(data);
   };
 
-  const handleDelete = async (id, name) => {
+  // 创建新简历
+  const handleCreate = () => {
+    const newResume = {
+      id: Date.now(), // 用时间戳作为唯一 ID
+      name: `我的简历 ${new Date().toLocaleDateString()}`,
+      template: 'modern',
+      content: {
+        personal: { name: '', phone: '', email: '', avatar: '', location: '', website: '', summary: '' },
+        education: [],
+        experience: [],
+        skills: [],
+        projects: [],
+        certifications: [],
+        languages: [],
+        interests: [],
+      },
+      isDefault: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    const updated = [...resumes, newResume];
+    saveResumes(updated);
+    navigate(`/resume/edit/${newResume.id}`);
+  };
+
+  // 删除简历
+  const handleDelete = (id, name) => {
     if (!window.confirm(`确定删除 "${name}" 吗？`)) return;
-    try {
-      await authUtils.authFetch(`/api/resume/${id}`, { method: 'DELETE' });
-      setResumes(resumes.filter(r => r.id !== id));
-    } catch (error) {
-      console.error('Failed to delete resume:', error);
-      alert('删除失败，请重试');
-    }
+    const updated = resumes.filter(r => r.id !== id);
+    saveResumes(updated);
+  };
+
+  // 获取模板颜色
+  const getTemplateColor = (templateId) => {
+    const template = DEFAULT_TEMPLATES.find(t => t.id === templateId);
+    return template?.color || '#3182ce';
+  };
+
+  // 获取模板名称
+  const getTemplateName = (templateId) => {
+    const template = DEFAULT_TEMPLATES.find(t => t.id === templateId);
+    return template?.name || 'Modern';
   };
 
   if (loading) {
@@ -97,6 +110,7 @@ function ResumeList() {
     <div className="resume-list-page">
       <div className="resume-list-header">
         <h1>📄 我的简历</h1>
+        <p className="storage-tip">💡 简历数据存储在本地浏览器，清除浏览器数据会丢失</p>
         <button className="create-btn" onClick={handleCreate}>
           ➕ 创建新简历
         </button>

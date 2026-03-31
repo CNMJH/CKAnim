@@ -6,14 +6,29 @@
 
 .resume-list-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 12px;
   margin-bottom: 40px;
 }
 
 .resume-list-header h1 {
   font-size: 28px;
   color: #1a202c;
+  margin: 0;
+}
+
+.storage-tip {
+  color: #718096;
+  font-size: 14px;
+  margin: 0;
+  padding: 10px 16px;
+  background: #fef3c7;
+  border-radius: 8px;
+  border-left: 4px solid #f59e0b;
+}
+
+.resume-list-header .create-btn {
+  align-self: flex-start;
 }
 
 .create-btn {
