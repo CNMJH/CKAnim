@@ -93,11 +93,12 @@ function Home() {
 
   // 自动轮播
   useEffect(() => {
+    if (banners.length === 0) return;
     const timer = setInterval(() => {
       setCurrentBanner((prev) => (prev + 1) % banners.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [banners.length]);
 
   // 换一批 - 随机刷新
   const handleRefresh = async () => {
@@ -170,7 +171,7 @@ function Home() {
           ) : (
             <>
               {/* 视频卡片 - 2 行×3 列 = 6 个 */}
-              {videos.slice(0, 6).map(video => (
+              {videos.slice(0, 6).filter(video => video).map(video => (
                 <VideoCard key={video.id} video={video} />
               ))}
 
@@ -196,7 +197,7 @@ function Home() {
       {/* 下方视频网格 - 2 行×5 列 = 10 个 */}
       {!loading && videos.length > 6 && (
         <div className="video-grid-full">
-          {videos.slice(6, 16).map(video => (
+          {videos.slice(6, 16).filter(video => video).map(video => (
             <VideoCard key={video.id} video={video} />
           ))}
         </div>
