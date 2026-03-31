@@ -27,7 +27,7 @@ export const resumeRoutes: FastifyPluginAsync = async (server) => {
   server.get('/list', { preHandler: [authenticate] }, async (request, reply) => {
     try {
       const resumes = await prisma.resume.findMany({
-        where: { userId: request.user!.id },
+        where: { userId: (request.user as any).userId },
         orderBy: { updatedAt: 'desc' },
       });
       reply.send(resumes);
@@ -42,7 +42,7 @@ export const resumeRoutes: FastifyPluginAsync = async (server) => {
     try {
       const { id } = request.params as { id: string };
       const resume = await prisma.resume.findFirst({
-        where: { id: parseInt(id), userId: request.user!.id },
+        where: { id: parseInt(id), userId: (request.user as any).userId },
       });
       if (!resume) {
         return reply.code(404).send({ error: 'Resume not found' });
@@ -60,7 +60,7 @@ export const resumeRoutes: FastifyPluginAsync = async (server) => {
       const { name, template, content } = request.body as {
         name: string;
         template?: string;
-        content?: string;
+        content?: object;
       };
 
       if (!name) {
@@ -69,10 +69,10 @@ export const resumeRoutes: FastifyPluginAsync = async (server) => {
 
       const resume = await prisma.resume.create({
         data: {
-          userId: request.user!.id,
+          userId: (request.user as any).userId,
           name,
           template: template || 'modern',
-          content: content || JSON.stringify(defaultContent),
+          content: JSON.stringify(content || defaultContent),
         },
       });
       reply.send(resume);
@@ -89,13 +89,13 @@ export const resumeRoutes: FastifyPluginAsync = async (server) => {
       const { name, template, content, isDefault } = request.body as {
         name?: string;
         template?: string;
-        content?: string;
+        content?: object;
         isDefault?: boolean;
       };
 
       // 检查简历是否属于当前用户
       const existing = await prisma.resume.findFirst({
-        where: { id: parseInt(id), userId: request.user!.id },
+        where: { id: parseInt(id), userId: (request.user as any).userId },
       });
 
       if (!existing) {
@@ -105,7 +105,7 @@ export const resumeRoutes: FastifyPluginAsync = async (server) => {
       // 如果设置为默认，先取消其他默认
       if (isDefault) {
         await prisma.resume.updateMany({
-          where: { userId: request.user!.id, isDefault: true },
+          where: { userId: (request.user as any).userId, isDefault: true },
           data: { isDefault: false },
         });
       }
@@ -115,7 +115,7 @@ export const resumeRoutes: FastifyPluginAsync = async (server) => {
         data: {
           name: name ?? existing.name,
           template: template ?? existing.template,
-          content: content ?? existing.content,
+          content: content ? JSON.stringify(content) : existing.content,
           isDefault: isDefault ?? existing.isDefault,
         },
       });
@@ -133,7 +133,7 @@ export const resumeRoutes: FastifyPluginAsync = async (server) => {
 
       // 检查是否属于当前用户
       const existing = await prisma.resume.findFirst({
-        where: { id: parseInt(id), userId: request.user!.id },
+        where: { id: parseInt(id), userId: (request.user as any).userId },
       });
 
       if (!existing) {
