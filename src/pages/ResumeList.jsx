@@ -26,6 +26,7 @@ function ResumeList() {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, name }
+  const [importError, setImportError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -98,6 +99,79 @@ function ResumeList() {
     setDeleteConfirm(null);
   };
 
+  // 复制简历
+  const handleDuplicate = (resume) => {
+    const newResume = {
+      ...resume,
+      id: Date.now(),
+      name: `${resume.name} (副本)`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const updated = [...resumes, newResume];
+    saveResumes(updated);
+  };
+
+  // 导出 JSON
+  const handleExport = (resume) => {
+    const dataStr = JSON.stringify(resume, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${resume.name}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // 导入 JSON
+  const handleImport = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const imported = JSON.parse(e.target.result);
+        // 验证数据结构
+        if (!imported.content || !imported.template) {
+          setImportError('无效的简历文件格式');
+          return;
+        }
+        const newResume = {
+          ...imported,
+          id: Date.now(),
+          name: imported.name ? `${imported.name} (导入)` : `导入的简历 ${new Date().toLocaleDateString()}`,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        const updated = [...resumes, newResume];
+        saveResumes(updated);
+        setImportError('');
+      } catch (error) {
+        setImportError('文件解析失败，请检查文件格式');
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // 清空 input
+  };
+
+  // 导出所有简历
+  const handleExportAll = () => {
+    const dataStr = JSON.stringify(resumes, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ckanim_resumes_backup_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // 获取模板颜色
   const getTemplateColor = (templateId) => {
     const template = DEFAULT_TEMPLATES.find(t => t.id === templateId);
@@ -123,9 +197,21 @@ function ResumeList() {
       <div className="resume-list-header">
         <h1>📄 我的简历</h1>
         <p className="storage-tip">💡 简历数据存储在本地浏览器，清除浏览器数据会丢失</p>
-        <button className="create-btn" onClick={handleCreate}>
-          ➕ 创建新简历
-        </button>
+        <div className="header-actions">
+          <button className="create-btn" onClick={handleCreate}>
+            ➕ 创建新简历
+          </button>
+          {resumes.length > 0 && (
+            <button className="export-all-btn" onClick={handleExportAll}>
+              📥 导出全部
+            </button>
+          )}
+          <label className="import-btn">
+            📤 导入简历
+            <input type="file" accept=".json" onChange={handleImport} hidden />
+          </label>
+        </div>
+        {importError && <p className="import-error">⚠️ {importError}</p>}
       </div>
 
       {resumes.length === 0 ? (
@@ -161,10 +247,16 @@ function ResumeList() {
                 </p>
               </div>
               <div className="resume-actions">
-                <button onClick={() => navigate(`/resume/edit/${resume.id}`)}>
+                <button className="edit-btn" onClick={() => navigate(`/resume/edit/${resume.id}`)}>
                   ✏️ 编辑
                 </button>
-                <button onClick={() => handleDeleteClick(resume.id, resume.name)}>
+                <button className="duplicate-btn" onClick={() => handleDuplicate(resume)}>
+                  📋 复制
+                </button>
+                <button className="export-btn" onClick={() => handleExport(resume)}>
+                  💾 导出
+                </button>
+                <button className="delete-btn" onClick={() => handleDeleteClick(resume.id, resume.name)}>
                   🗑️ 删除
                 </button>
               </div>
