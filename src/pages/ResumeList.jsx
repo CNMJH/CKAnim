@@ -3,46 +3,51 @@ import { useNavigate } from 'react-router-dom';
 import { authUtils } from '../lib/api';
 import './ResumeList.css';
 
-const TEMPLATE_COLORS = {
+// 默认模板配置
+const DEFAULT_TEMPLATE_COLORS = {
   classic: '#333333',
-  formal: '#1a365d',
-  academic: '#2d3748',
   modern: '#3182ce',
-  minimalist: '#000000',
-  clean: '#48bb78',
-  creative: '#ed8936',
-  colorful: '#9f7aea',
-  bold: '#e53e3e',
-  developer: '#667eea',
-  techblue: '#2563eb',
-  onepage: '#374151',
-  english: '#1e40af',
 };
-
-const TEMPLATE_NAMES = {
+const DEFAULT_TEMPLATE_NAMES = {
   classic: 'Classic',
-  formal: 'Formal',
-  academic: 'Academic',
   modern: 'Modern',
-  minimalist: 'Minimalist',
-  clean: 'Clean',
-  creative: 'Creative',
-  colorful: 'Colorful',
-  bold: 'Bold',
-  developer: 'Developer',
-  techblue: 'TechBlue',
-  onepage: 'OnePage',
-  english: 'English',
 };
 
 function ResumeList() {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [templateConfig, setTemplateConfig] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchResumes();
+    fetchTemplates();
   }, []);
+
+  const fetchTemplates = async () => {
+    try {
+      const { data } = await authUtils.authFetch('/api/resume/templates');
+      if (data && data.length > 0) {
+        const colors = {};
+        const names = {};
+        data.forEach(t => {
+          colors[t.id] = t.color;
+          names[t.id] = t.name;
+        });
+        setTemplateConfig({ colors, names });
+      }
+    } catch (error) {
+      console.error('Failed to fetch templates:', error);
+    }
+  };
+
+  const getTemplateColor = (templateId) => {
+    return templateConfig.colors?.[templateId] || DEFAULT_TEMPLATE_COLORS[templateId] || '#3182ce';
+  };
+
+  const getTemplateName = (templateId) => {
+    return templateConfig.names?.[templateId] || DEFAULT_TEMPLATE_NAMES[templateId] || 'Modern';
+  };
 
   const fetchResumes = async () => {
     try {
@@ -112,7 +117,7 @@ function ResumeList() {
               <div className="resume-preview">
                 <div 
                   className="preview-placeholder" 
-                  style={{ backgroundColor: TEMPLATE_COLORS[resume.template] || '#3182ce' }}
+                  style={{ backgroundColor: getTemplateColor(resume.template) }}
                 >
                   <span>{resume.name.charAt(0)}</span>
                 </div>
@@ -121,9 +126,9 @@ function ResumeList() {
                 <h3>{resume.name}</h3>
                 <p 
                   className="template-badge" 
-                  style={{ backgroundColor: TEMPLATE_COLORS[resume.template] || '#3182ce' }}
+                  style={{ backgroundColor: getTemplateColor(resume.template) }}
                 >
-                  {TEMPLATE_NAMES[resume.template] || 'Modern'}
+                  {getTemplateName(resume.template)}
                 </p>
                 <p className="update-time">
                   更新于 {new Date(resume.updatedAt).toLocaleDateString()}

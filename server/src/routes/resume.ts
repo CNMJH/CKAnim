@@ -15,12 +15,18 @@ const defaultContent = {
   },
   education: [],
   experience: [],
-  skills: [],
+  skills: [],  // 格式: [{ name: string, level: string }]
   projects: [],
   certifications: [],
   languages: [],
   interests: [],
 };
+
+// 有效的模板 ID 列表
+const VALID_TEMPLATES = [
+  'classic', 'formal', 'academic', 'modern', 'minimalist', 'clean',
+  'creative', 'colorful', 'bold', 'developer', 'techblue', 'onepage', 'english',
+];
 
 export const resumeRoutes: FastifyPluginAsync = async (server) => {
   // 获取用户所有简历
@@ -67,11 +73,24 @@ export const resumeRoutes: FastifyPluginAsync = async (server) => {
         return reply.code(400).send({ error: 'Name is required' });
       }
 
+      // 验证模板
+      const validTemplate = VALID_TEMPLATES.includes(template?.toLowerCase() || 'modern')
+        ? template?.toLowerCase() || 'modern'
+        : 'modern';
+
+      // 检查简历数量上限（每个用户最多 20 份）
+      const count = await prisma.resume.count({
+        where: { userId: (request.user as any).userId },
+      });
+      if (count >= 20) {
+        return reply.code(400).send({ error: 'Maximum resume limit reached (20)' });
+      }
+
       const resume = await prisma.resume.create({
         data: {
           userId: (request.user as any).userId,
           name,
-          template: template || 'modern',
+          template: validTemplate,
           content: JSON.stringify(content || defaultContent),
         },
       });
@@ -102,6 +121,11 @@ export const resumeRoutes: FastifyPluginAsync = async (server) => {
         return reply.code(404).send({ error: 'Resume not found' });
       }
 
+      // 验证模板
+      const validTemplate = template && VALID_TEMPLATES.includes(template.toLowerCase())
+        ? template.toLowerCase()
+        : existing.template;
+
       // 如果设置为默认，先取消其他默认
       if (isDefault) {
         await prisma.resume.updateMany({
@@ -114,7 +138,7 @@ export const resumeRoutes: FastifyPluginAsync = async (server) => {
         where: { id: parseInt(id) },
         data: {
           name: name ?? existing.name,
-          template: template ?? existing.template,
+          template: validTemplate,
           content: content ? JSON.stringify(content) : existing.content,
           isDefault: isDefault ?? existing.isDefault,
         },

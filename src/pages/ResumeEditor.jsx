@@ -1,38 +1,30 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { authUtils } from '../lib/api';
 import './ResumeEditor.css';
 
-// 模板配置
-const TEMPLATES = [
+// 默认模板配置（API 未返回时使用）
+const DEFAULT_TEMPLATES = [
   { id: 'classic', name: 'Classic', category: '传统经典', color: '#333333' },
-  { id: 'formal', name: 'Formal', category: '传统经典', color: '#1a365d' },
-  { id: 'academic', name: 'Academic', category: '传统经典', color: '#2d3748' },
   { id: 'modern', name: 'Modern', category: '现代简约', color: '#3182ce' },
-  { id: 'minimalist', name: 'Minimalist', category: '现代简约', color: '#000000' },
-  { id: 'clean', name: 'Clean', category: '现代简约', color: '#48bb78' },
-  { id: 'creative', name: 'Creative', category: '创意设计', color: '#ed8936' },
-  { id: 'colorful', name: 'Colorful', category: '创意设计', color: '#9f7aea' },
-  { id: 'bold', name: 'Bold', category: '创意设计', color: '#e53e3e' },
-  { id: 'developer', name: 'Developer', category: '技术专业', color: '#667eea' },
-  { id: 'techblue', name: 'TechBlue', category: '技术专业', color: '#2563eb' },
-  { id: 'onepage', name: 'OnePage', category: '特殊用途', color: '#374151' },
-  { id: 'english', name: 'English', category: '特殊用途', color: '#1e40af' },
 ];
 
 function ResumeEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const previewRef = useRef(null);
+  const autoSaveTimer = useRef(null);
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState(null);
   const [resume, setResume] = useState(null);
+  const [templates, setTemplates] = useState(DEFAULT_TEMPLATES);
   const [content, setContent] = useState({
     personal: { name: '', phone: '', email: '', avatar: '', location: '', website: '', summary: '' },
     education: [],
     experience: [],
-    skills: [],
+    skills: [],  // 格式: [{ name: string, level: string }]
     projects: [],
     certifications: [],
     languages: [],
@@ -44,7 +36,38 @@ function ResumeEditor() {
 
   useEffect(() => {
     fetchResume();
+    fetchTemplates();
   }, [id]);
+
+  // 自动保存（内容变化后 3 秒自动保存）
+  useEffect(() => {
+    if (!resume || loading) return;
+    
+    if (autoSaveTimer.current) {
+      clearTimeout(autoSaveTimer.current);
+    }
+    
+    autoSaveTimer.current = setTimeout(() => {
+      handleAutoSave();
+    }, 3000);
+    
+    return () => {
+      if (autoSaveTimer.current) {
+        clearTimeout(autoSaveTimer.current);
+      }
+    };
+  }, [content, template]);
+
+  const fetchTemplates = async () => {
+    try {
+      const { data } = await authUtils.authFetch('/api/resume/templates');
+      if (data && data.length > 0) {
+        setTemplates(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch templates:', error);
+    }
+  };
 
   const fetchResume = async () => {
     try {
@@ -63,6 +86,21 @@ function ResumeEditor() {
     }
   };
 
+  const handleAutoSave = async () => {
+    setSaving(true);
+    try {
+      await authUtils.authFetch(`/api/resume/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ template, content }),
+      });
+      setLastSaved(new Date());
+    } catch (error) {
+      console.error('Auto save failed:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -70,9 +108,10 @@ function ResumeEditor() {
         method: 'PUT',
         body: JSON.stringify({
           template,
-          content: JSON.stringify(content),
+          content,  // 直接传对象，后端会 stringify
         }),
       });
+      setLastSaved(new Date());
       alert('保存成功');
     } catch (error) {
       console.error('Failed to save resume:', error);
@@ -218,7 +257,7 @@ function ResumeEditor() {
     );
   }
 
-  const currentTemplate = TEMPLATES.find(t => t.id === template) || TEMPLATES[3];
+  const currentTemplate = templates.find(t => t.id === template) || templates[3] || DEFAULT_TEMPLATES[1];
 
   return (
     <div className="resume-editor-page">
@@ -229,6 +268,11 @@ function ResumeEditor() {
             ← 返回
           </button>
           <span className="resume-name">{resume?.name}</span>
+          {lastSaved && (
+            <span className="auto-save-status" style={{ fontSize: '12px', color: '#718096' }}>
+              已保存 {lastSaved.toLocaleTimeString()}
+            </span>
+          )}
         </div>
         <div className="toolbar-center">
           <button className="template-btn" onClick={() => setShowTemplatePicker(true)}>
@@ -571,7 +615,7 @@ function ResumeEditor() {
           <div className="template-picker" onClick={(e) => e.stopPropagation()}>
             <h2>选择模板</h2>
             <div className="template-grid">
-              {TEMPLATES.map(t => (
+              {templates.map(t => (
                 <div
                   key={t.id}
                   className={`template-card ${template === t.id ? 'selected' : ''}`}
