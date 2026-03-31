@@ -5,20 +5,11 @@ import './ResumeEditor.css';
 const STORAGE_KEY = 'ckanim_resumes';
 const AUTO_SAVE_DELAY = 2000; // 2秒后自动保存
 
+// 简历模板配置 - 3 种独特布局风格
 const TEMPLATES = [
-  { id: 'classic', name: 'Classic', category: '传统经典', color: '#333333' },
-  { id: 'formal', name: 'Formal', category: '传统经典', color: '#1a365d' },
-  { id: 'academic', name: 'Academic', category: '传统经典', color: '#2d3748' },
-  { id: 'modern', name: 'Modern', category: '现代简约', color: '#3182ce' },
-  { id: 'minimalist', name: 'Minimalist', category: '现代简约', color: '#000000' },
-  { id: 'clean', name: 'Clean', category: '现代简约', color: '#48bb78' },
-  { id: 'creative', name: 'Creative', category: '创意设计', color: '#ed8936' },
-  { id: 'colorful', name: 'Colorful', category: '创意设计', color: '#9f7aea' },
-  { id: 'bold', name: 'Bold', category: '创意设计', color: '#e53e3e' },
-  { id: 'developer', name: 'Developer', category: '技术专业', color: '#667eea' },
-  { id: 'techblue', name: 'TechBlue', category: '技术专业', color: '#2563eb' },
-  { id: 'onepage', name: 'OnePage', category: '特殊用途', color: '#374151' },
-  { id: 'english', name: 'English', category: '特殊用途', color: '#1e40af' },
+  { id: 'professional', name: 'Professional', category: '专业商务', color: '#1e3a5f', description: '左右分栏，左侧深色 Sidebar，技能进度条' },
+  { id: 'modern', name: 'Modern', category: '现代简约', color: '#3182ce', description: '经典上下结构，居中标题，双栏内容' },
+  { id: 'creative', name: 'Creative', category: '创意设计', color: '#dd6b20', description: '顶部彩色 Header，头像，时间轴设计' },
 ];
 
 const DEFAULT_CONTENT = {
@@ -379,81 +370,215 @@ function ResumeEditor() {
   );
 }
 
+// 简历预览组件 - 支持多种专业模板
 function ResumePreview({ content, template }) {
-  const style = getTemplateStyle(template);
-  return (
-    <div className="resume-preview-document" style={style.document}>
-      <div className="preview-header" style={style.header}>
-        <div className="preview-name" style={style.name}>{content.personal.name || '您的姓名'}</div>
-        <div className="preview-contact" style={style.contact}>
-          {content.personal.phone && <span>📱 {content.personal.phone}</span>}
-          {content.personal.email && <span>📧 {content.personal.email}</span>}
-          {content.personal.location && <span>📍 {content.personal.location}</span>}
+  const renderProfessional = () => (
+    <div className="template-professional">
+      <div className="prof-sidebar">
+        <div className="prof-avatar">{content.personal.name ? content.personal.name.charAt(0) : '我'}</div>
+        <div className="prof-contact">
+          {content.personal.phone && <div className="prof-contact-item">📱 {content.personal.phone}</div>}
+          {content.personal.email && <div className="prof-contact-item">📧 {content.personal.email}</div>}
+          {content.personal.location && <div className="prof-contact-item">📍 {content.personal.location}</div>}
+          {content.personal.website && <div className="prof-contact-item">🔗 {content.personal.website}</div>}
         </div>
-        {content.personal.summary && <div className="preview-summary" style={style.summary}>{content.personal.summary}</div>}
+        {content.skills.length > 0 && (
+          <div className="prof-section">
+            <div className="prof-section-title">专业技能</div>
+            {content.skills.map((s, i) => (
+              <div key={i} className="prof-skill">
+                <span className="prof-skill-name">{s.name}</span>
+                <div className="prof-skill-bar"><div className="prof-skill-fill" style={{ width: s.level === '精通' ? '100%' : s.level === '高级' ? '80%' : s.level === '中级' ? '60%' : '40%' }} /></div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      {content.education.length > 0 && (
-        <div className="preview-section">
-          <div className="preview-section-title" style={style.sectionTitle}>🎓 教育经历</div>
-          {content.education.map((edu, i) => (
-            <div key={i} className="preview-item">
-              <div className="preview-item-header"><span className="preview-item-title">{edu.school}</span><span className="preview-item-date">{edu.startDate} - {edu.endDate}</span></div>
-              <div className="preview-item-sub">{edu.degree} · {edu.major}</div>
-            </div>
-          ))}
+      <div className="prof-main">
+        <div className="prof-header">
+          <div className="prof-name">{content.personal.name || '您的姓名'}</div>
+          {content.personal.summary && <div className="prof-summary">{content.personal.summary}</div>}
         </div>
-      )}
-      {content.experience.length > 0 && (
-        <div className="preview-section">
-          <div className="preview-section-title" style={style.sectionTitle}>💼 工作经历</div>
-          {content.experience.map((exp, i) => (
-            <div key={i} className="preview-item">
-              <div className="preview-item-header"><span className="preview-item-title">{exp.company}</span><span className="preview-item-date">{exp.startDate} - {exp.endDate}</span></div>
-              <div className="preview-item-sub">{exp.position}</div>
-              {exp.description && <div className="preview-item-desc">{exp.description}</div>}
-            </div>
-          ))}
-        </div>
-      )}
-      {content.skills.length > 0 && (
-        <div className="preview-section">
-          <div className="preview-section-title" style={style.sectionTitle}>⚡ 专业技能</div>
-          <div className="preview-skills">{content.skills.map((s, i) => <span key={i} className="preview-skill-tag" style={style.skillTag}>{s.name} · {s.level}</span>)}</div>
-        </div>
-      )}
-      {content.projects.length > 0 && (
-        <div className="preview-section">
-          <div className="preview-section-title" style={style.sectionTitle}>🚀 项目经历</div>
-          {content.projects.map((proj, i) => (
-            <div key={i} className="preview-item">
-              <div className="preview-item-header"><span className="preview-item-title">{proj.name}</span><span className="preview-item-date">{proj.startDate} - {proj.endDate}</span></div>
-              <div className="preview-item-sub">{proj.role}</div>
-              {proj.description && <div className="preview-item-desc">{proj.description}</div>}
-            </div>
-          ))}
-        </div>
-      )}
+        {content.experience.length > 0 && (
+          <div className="prof-section">
+            <div className="prof-section-title">工作经历</div>
+            {content.experience.map((exp, i) => (
+              <div key={i} className="prof-item">
+                <div className="prof-item-header">
+                  <span className="prof-item-title">{exp.company}</span>
+                  <span className="prof-item-date">{exp.startDate} - {exp.endDate}</span>
+                </div>
+                <div className="prof-item-sub">{exp.position}</div>
+                {exp.description && <div className="prof-item-desc">{exp.description}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+        {content.education.length > 0 && (
+          <div className="prof-section">
+            <div className="prof-section-title">教育经历</div>
+            {content.education.map((edu, i) => (
+              <div key={i} className="prof-item">
+                <div className="prof-item-header">
+                  <span className="prof-item-title">{edu.school}</span>
+                  <span className="prof-item-date">{edu.startDate} - {edu.endDate}</span>
+                </div>
+                <div className="prof-item-sub">{edu.degree} · {edu.major}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        {content.projects.length > 0 && (
+          <div className="prof-section">
+            <div className="prof-section-title">项目经历</div>
+            {content.projects.map((proj, i) => (
+              <div key={i} className="prof-item">
+                <div className="prof-item-header">
+                  <span className="prof-item-title">{proj.name}</span>
+                  <span className="prof-item-date">{proj.startDate} - {proj.endDate}</span>
+                </div>
+                <div className="prof-item-sub">{proj.role}</div>
+                {proj.description && <div className="prof-item-desc">{proj.description}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
-}
 
-function getTemplateStyle(template) {
-  const base = {
-    document: { backgroundColor: '#fff', padding: '40px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-    header: { marginBottom: '24px', borderBottom: '2px solid #e2e8f0', paddingBottom: '16px' },
-    name: { fontSize: '28px', fontWeight: 'bold', marginBottom: '8px' },
-    contact: { fontSize: '14px', color: '#718096', display: 'flex', gap: '16px' },
-    summary: { fontSize: '14px', color: '#4a5568', marginTop: '12px', lineHeight: '1.6' },
-    sectionTitle: { fontSize: '18px', fontWeight: 'bold', marginBottom: '12px', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px' },
-    skillTag: { display: 'inline-block', padding: '4px 12px', borderRadius: '4px', fontSize: '13px', backgroundColor: '#edf2f7', color: '#4a5568' },
-  };
-  const overrides = {
-    classic: { document: { ...base.document, fontFamily: 'Georgia, serif' }, header: { ...base.header, borderBottom: '2px solid #333' }, name: { ...base.name, color: '#333' }, sectionTitle: { ...base.sectionTitle, color: '#333', borderBottom: '1px solid #333' }, skillTag: { ...base.skillTag, backgroundColor: '#333', color: '#fff' } },
-    modern: { header: { ...base.header, borderBottom: '2px solid #3182ce' }, name: { ...base.name, color: '#2c5282' }, sectionTitle: { ...base.sectionTitle, color: '#3182ce', borderBottom: '2px solid #bee3f8' }, skillTag: { ...base.skillTag, backgroundColor: '#bee3f8', color: '#2c5282' } },
-    developer: { document: { ...base.document, backgroundColor: '#f7fafc' }, header: { ...base.header, borderBottom: '2px solid #667eea' }, name: { ...base.name, color: '#553c9a' }, sectionTitle: { ...base.sectionTitle, color: '#667eea' }, skillTag: { ...base.skillTag, backgroundColor: '#e9d8fd', color: '#553c9a' } },
-    creative: { header: { ...base.header, borderBottom: 'none', backgroundColor: '#ed8936', padding: '16px', borderRadius: '8px' }, name: { ...base.name, color: '#fff' }, contact: { ...base.contact, color: '#fff' }, summary: { ...base.summary, color: '#fff' }, sectionTitle: { ...base.sectionTitle, color: '#c05621' }, skillTag: { ...base.skillTag, backgroundColor: '#feebc8', color: '#c05621' } },
-  };
-  return overrides[template] || base;
+  const renderModern = () => (
+    <div className="template-modern">
+      <div className="modern-header">
+        <div className="modern-name">{content.personal.name || '您的姓名'}</div>
+        <div className="modern-contact">
+          {content.personal.phone && <span>{content.personal.phone}</span>}
+          {content.personal.email && <span>{content.personal.email}</span>}
+          {content.personal.location && <span>{content.personal.location}</span>}
+        </div>
+        {content.personal.summary && <div className="modern-summary">{content.personal.summary}</div>}
+      </div>
+      <div className="modern-content">
+        {content.experience.length > 0 && (
+          <div className="modern-section">
+            <div className="modern-section-title">工作经历</div>
+            {content.experience.map((exp, i) => (
+              <div key={i} className="modern-item">
+                <div className="modern-item-header">
+                  <span className="modern-item-company">{exp.company}</span>
+                  <span className="modern-item-date">{exp.startDate} - {exp.endDate}</span>
+                </div>
+                <div className="modern-item-position">{exp.position}</div>
+                {exp.description && <div className="modern-item-desc">{exp.description}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+        {content.education.length > 0 && (
+          <div className="modern-section">
+            <div className="modern-section-title">教育经历</div>
+            {content.education.map((edu, i) => (
+              <div key={i} className="modern-item">
+                <div className="modern-item-header">
+                  <span className="modern-item-company">{edu.school}</span>
+                  <span className="modern-item-date">{edu.startDate} - {edu.endDate}</span>
+                </div>
+                <div className="modern-item-position">{edu.degree} · {edu.major}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        {content.skills.length > 0 && (
+          <div className="modern-section">
+            <div className="modern-section-title">专业技能</div>
+            <div className="modern-skills">
+              {content.skills.map((s, i) => <span key={i} className="modern-skill-tag">{s.name}</span>)}
+            </div>
+          </div>
+        )}
+        {content.projects.length > 0 && (
+          <div className="modern-section">
+            <div className="modern-section-title">项目经历</div>
+            {content.projects.map((proj, i) => (
+              <div key={i} className="modern-item">
+                <div className="modern-item-header">
+                  <span className="modern-item-company">{proj.name}</span>
+                  <span className="modern-item-date">{proj.startDate} - {proj.endDate}</span>
+                </div>
+                <div className="modern-item-position">{proj.role}</div>
+                {proj.description && <div className="modern-item-desc">{proj.description}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderCreative = () => (
+    <div className="template-creative">
+      <div className="creative-header">
+        <div className="creative-avatar">{content.personal.name ? content.personal.name.charAt(0) : '我'}</div>
+        <div className="creative-header-info">
+          <div className="creative-name">{content.personal.name || '您的姓名'}</div>
+          <div className="creative-contact">
+            {content.personal.phone && <span>📱 {content.personal.phone}</span>}
+            {content.personal.email && <span>📧 {content.personal.email}</span>}
+            {content.personal.location && <span>📍 {content.personal.location}</span>}
+          </div>
+        </div>
+      </div>
+      {content.personal.summary && <div className="creative-summary">{content.personal.summary}</div>}
+      <div className="creative-content">
+        {content.experience.length > 0 && (
+          <div className="creative-section">
+            <div className="creative-section-title">💼 工作经历</div>
+            {content.experience.map((exp, i) => (
+              <div key={i} className="creative-item">
+                <div className="creative-item-header">
+                  <span className="creative-item-company">{exp.company}</span>
+                  <span className="creative-item-date">{exp.startDate} - {exp.endDate}</span>
+                </div>
+                <div className="creative-item-position">{exp.position}</div>
+                {exp.description && <div className="creative-item-desc">{exp.description}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+        {content.education.length > 0 && (
+          <div className="creative-section">
+            <div className="creative-section-title">🎓 教育经历</div>
+            {content.education.map((edu, i) => (
+              <div key={i} className="creative-item">
+                <div className="creative-item-header">
+                  <span className="creative-item-company">{edu.school}</span>
+                  <span className="creative-item-date">{edu.startDate} - {edu.endDate}</span>
+                </div>
+                <div className="creative-item-position">{edu.degree} · {edu.major}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        {content.skills.length > 0 && (
+          <div className="creative-section">
+            <div className="creative-section-title">⚡ 专业技能</div>
+            <div className="creative-skills">
+              {content.skills.map((s, i) => <span key={i} className="creative-skill-tag">{s.name}</span>)}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // 根据模板选择渲染方式
+  if (template === 'professional') {
+    return <div className="resume-preview-document template-professional">{renderProfessional()}</div>;
+  }
+  if (template === 'creative') {
+    return <div className="resume-preview-document template-creative">{renderCreative()}</div>;
+  }
+  return <div className="resume-preview-document template-modern">{renderModern()}</div>;
 }
 
 export default ResumeEditor;

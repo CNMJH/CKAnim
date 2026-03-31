@@ -5,21 +5,11 @@ import './ResumeList.css';
 // 本地存储 key
 const STORAGE_KEY = 'ckanim_resumes';
 
-// 默认模板配置
+// 默认模板配置 - 与 ResumeEditor.jsx 保持一致
 const DEFAULT_TEMPLATES = [
-  { id: 'classic', name: 'Classic', category: '传统经典', color: '#333333' },
-  { id: 'formal', name: 'Formal', category: '传统经典', color: '#1a365d' },
-  { id: 'academic', name: 'Academic', category: '传统经典', color: '#2d3748' },
+  { id: 'professional', name: 'Professional', category: '专业商务', color: '#1e3a5f' },
   { id: 'modern', name: 'Modern', category: '现代简约', color: '#3182ce' },
-  { id: 'minimalist', name: 'Minimalist', category: '现代简约', color: '#000000' },
-  { id: 'clean', name: 'Clean', category: '现代简约', color: '#48bb78' },
-  { id: 'creative', name: 'Creative', category: '创意设计', color: '#ed8936' },
-  { id: 'colorful', name: 'Colorful', category: '创意设计', color: '#9f7aea' },
-  { id: 'bold', name: 'Bold', category: '创意设计', color: '#e53e3e' },
-  { id: 'developer', name: 'Developer', category: '技术专业', color: '#667eea' },
-  { id: 'techblue', name: 'TechBlue', category: '技术专业', color: '#2563eb' },
-  { id: 'onepage', name: 'OnePage', category: '特殊用途', color: '#374151' },
-  { id: 'english', name: 'English', category: '特殊用途', color: '#1e40af' },
+  { id: 'creative', name: 'Creative', category: '创意设计', color: '#dd6b20' },
 ];
 
 function ResumeList() {

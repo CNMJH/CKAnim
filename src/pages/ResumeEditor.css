@@ -476,6 +476,358 @@
   color: #4a5568;
 }
 
+/* ========== Professional 模板 - 左右分栏 ========== */
+.template-professional {
+  display: flex;
+  min-height: 100%;
+}
+
+.prof-sidebar {
+  width: 32%;
+  background: #1e3a5f;
+  color: white;
+  padding: 30px 20px;
+}
+
+.prof-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.prof-contact {
+  margin-bottom: 30px;
+}
+
+.prof-contact-item {
+  font-size: 12px;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+
+.prof-main {
+  flex: 1;
+  padding: 30px;
+  background: white;
+}
+
+.prof-header {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #1e3a5f;
+}
+
+.prof-name {
+  font-size: 28px;
+  font-weight: bold;
+  color: #1a202c;
+  margin-bottom: 10px;
+}
+
+.prof-summary {
+  font-size: 13px;
+  color: #4a5568;
+  line-height: 1.6;
+}
+
+.prof-section {
+  margin-bottom: 25px;
+}
+
+.prof-section-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #1e3a5f;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.prof-sidebar .prof-section-title {
+  color: white;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  padding-bottom: 8px;
+}
+
+.prof-item {
+  margin-bottom: 15px;
+}
+
+.prof-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.prof-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.prof-item-date {
+  font-size: 12px;
+  color: #718096;
+}
+
+.prof-item-sub {
+  font-size: 13px;
+  color: #4a5568;
+}
+
+.prof-item-desc {
+  font-size: 12px;
+  color: #718096;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.prof-skill {
+  margin-bottom: 10px;
+}
+
+.prof-skill-name {
+  font-size: 12px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.prof-skill-bar {
+  height: 4px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 2px;
+}
+
+.prof-skill-fill {
+  height: 100%;
+  background: white;
+  border-radius: 2px;
+}
+
+/* ========== Modern 模板 - 经典上下结构 ========== */
+.template-modern {
+  padding: 40px;
+}
+
+.modern-header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 3px solid #3182ce;
+}
+
+.modern-name {
+  font-size: 32px;
+  font-weight: bold;
+  color: #1a202c;
+  margin-bottom: 10px;
+}
+
+.modern-contact {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  font-size: 13px;
+  color: #718096;
+}
+
+.modern-summary {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #4a5568;
+  line-height: 1.6;
+}
+
+.modern-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.modern-section {
+  margin-bottom: 25px;
+}
+
+.modern-section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #3182ce;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #bee3f8;
+}
+
+.modern-item {
+  margin-bottom: 15px;
+}
+
+.modern-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.modern-item-company {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.modern-item-date {
+  font-size: 12px;
+  color: #718096;
+}
+
+.modern-item-position {
+  font-size: 13px;
+  color: #4a5568;
+}
+
+.modern-item-desc {
+  font-size: 12px;
+  color: #718096;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.modern-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.modern-skill-tag {
+  background: #edf2f7;
+  color: #4a5568;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* ========== Creative 模板 - 顶部彩色 Header ========== */
+.template-creative {
+  padding: 0;
+}
+
+.creative-header {
+  background: #dd6b20;
+  color: white;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.creative-avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  border: 3px solid white;
+}
+
+.creative-name {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.creative-contact {
+  display: flex;
+  gap: 15px;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.creative-summary {
+  background: #fffaf0;
+  padding: 20px 30px;
+  font-size: 14px;
+  color: #4a5568;
+  line-height: 1.6;
+}
+
+.creative-content {
+  padding: 30px;
+}
+
+.creative-section {
+  margin-bottom: 25px;
+}
+
+.creative-section-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #dd6b20;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.creative-item {
+  margin-bottom: 15px;
+  padding-left: 15px;
+  border-left: 3px solid #dd6b20;
+}
+
+.creative-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.creative-item-company {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.creative-item-date {
+  font-size: 12px;
+  color: #718096;
+}
+
+.creative-item-position {
+  font-size: 13px;
+  color: #4a5568;
+}
+
+.creative-item-desc {
+  font-size: 12px;
+  color: #718096;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.creative-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.creative-skill-tag {
+  background: #feebc8;
+  color: #c05621;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
 /* 模板选择弹窗 */
 .template-picker-overlay {
   position: fixed;
